@@ -28,11 +28,7 @@
 (defmethod setup-handler :ratpack
   [handler ^RatpackServerSpec spec]
   (letfn [(rhandler [_]
-            (reify Handler
-              (^void handle [_ ^Context context]
-                (let [rsp (handler context)]
-                  (when (satisfies? ratpack/IHandlerResponse rsp)
-                    (ratpack/handle-response rsp context))))))]
+            (ratpack/ratpack-adapter handler))]
     (.handler spec ^Function (utils/function rhandler))))
 
 (defmethod setup-handler :ratpack-router

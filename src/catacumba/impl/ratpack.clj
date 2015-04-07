@@ -65,24 +65,22 @@
 ;; Protocol Implementations
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 (extend-protocol IHandlerResponse
   String
   (handle-response [data ^Context context]
     (let [response (get-response context)]
       (send data response))))
 
-  ;; clojure.lang.IPersistentVector
-  ;; (handle-response [rsp ^Context context]
-  ;;   (let [^Response response (.getResponse context)]
-  ;;     (if (= (count rsp) 2)
-  ;;       (let [[data status] rsp]
-  ;;         (.status response status)
-  ;;         (handle-response data context))
-  ;;       (let [[data status headers]]
-  ;;         (.status response status)
-
 (extend-protocol IResponse
   String
   (send [data ^Response response]
     (.send response data)))
+
+(defn ratpack-adapter
+  [handler]
+  (reify Handler
+    (^void handle [_ ^Context context]
+      (let [rsp (handler context)]
+        (when (satisfies? IHandlerResponse rsp)
+          (handle-response rsp context))))))
+

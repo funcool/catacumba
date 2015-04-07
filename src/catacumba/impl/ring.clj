@@ -36,7 +36,7 @@
 (extend-protocol IRingResponse
   clojure.lang.IPersistentMap
   (handle-ring-response [rsp ^Context context]
-  (let [^Response response (.getResponse context)
+  (let [^Response response (ratpack/get-response context)
         {:keys [status headers body]} rsp]
     (when status
       (.status response ^long status))
@@ -52,7 +52,7 @@
 
   InputStream
   (handle-ring-body [body ^Context context]
-    (let [^Response response (.getResponse context)
+    (let [^Response response (ratpack/get-response context)
           ^bytes buffer (byte-array 1024)
           ^ByteBuf buf (Unpooled/buffer (.available body))]
       (loop [index 0]

@@ -57,35 +57,35 @@
       (is (= (get-in request-map [:headers "authorization"])
              "Basic dXNlcjpwYXNzd29yZA==")))))
 
-;; (deftest request-post
-;;   (with-ring-server echo-rhandler
-;;     (let [response (http/post base-url {:body "foobar"})
-;;           request-map (read-request response)]
-;;       (is (= (:request-method request-map) :post))
-;;       (is (= "foobar" (:body request-map))))))
+(deftest request-post
+  (with-ring-server echo-rhandler
+    (let [response (http/post base-url {:body "foobar"})
+          request-map (read-request response)]
+      (is (= (:request-method request-map) :post))
+      (is (= "foobar" (:body response))))))
 
-;; (deftest request-put
-;;   (with-ring-server echo-rhandler
-;;     (let [response (http/put base-url {:body "foobar"})
-;;           request-map (read-request response)]
-;;       (is (= (:request-method request-map) :put))
-;;       (is (= "foobar" (:body request-map))))))
+(deftest request-put
+  (with-ring-server echo-rhandler
+    (let [response (http/put base-url {:body "foobar"})
+          request-map (read-request response)]
+      (is (= (:request-method request-map) :put))
+      (is (= "foobar" (:body response))))))
 
-;; (deftest request-translate
-;;   (with-ring-server echo-rhandler
-;;     (let [url (str base-url "/foo/bar/baz?surname=jones&age=123")
-;;           response (http/post url {:body "hello"})]
-;;       (is (= (:status response) 200))
-;;       (is (= (:body response) "hello"))
-;;       (let [request-map (read-request response)]
-;;         (is (= (:query-string request-map) "surname=jones&age=123"))
-;;         (is (= (:uri request-map) "/foo/bar/baz"))
-;;         (is (= (:content-length request-map) 5))
-;;         (is (= (:character-encoding request-map) "UTF-8"))
-;;         (is (= (:request-method request-map) :post))
-;;         (is (= (:content-type request-map) "text/plain"))
-;;         (is (= (:remote-addr request-map) "127.0.0.1"))
-;;         (is (= (:scheme request-map) :http))
-;;         (is (= (:server-name request-map) "127.0.0.1"))
-;;         (is (= (:server-port request-map) 5050))
-;;         (is (= (:ssl-client-cert request-map) nil))))))
+(deftest request-translate
+  (with-ring-server echo-rhandler
+    (let [url (str base-url "/foo/bar/baz?surname=jones&age=123")
+          response (http/post url {:body "hello"})]
+      (is (= (:status response) 200))
+      (is (= (:body response) "hello"))
+      (let [request-map (read-request response)]
+        (is (= (:query-string request-map) "surname=jones&age=123"))
+        (is (= (:uri request-map) "/foo/bar/baz"))
+        (is (= (:content-length request-map) 5))
+        (is (= (:character-encoding request-map) "UTF-8"))
+        (is (= (:request-method request-map) :post))
+        (is (= (:content-type request-map) "text/plain"))
+        (is (= (:remote-addr request-map) "127.0.0.1"))
+        (is (= (:scheme request-map) :http))
+        (is (= (:server-name request-map) "127.0.0.1"))
+        (is (= (:server-port request-map) 5050))
+        (is (= (:ssl-client-cert request-map) nil))))))

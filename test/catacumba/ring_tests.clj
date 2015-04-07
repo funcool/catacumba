@@ -24,18 +24,18 @@
        ~@body
        (finally (.stop server#)))))
 
-;; (defn hello-world-rhandler
-;;   [request]
-;;   (println 111 request)
-;;   {:status 200
-;;    :headers {"content-type" "text/html"}
-;;    :body "hello world"})
-
-(defn echo-rhandler
+(defn echo-handler
   [request]
   {:status 200
    :headers {"request-map" (pr-str (dissoc request :body))}
    :body (:body request)})
+
+(defn content-type-handler
+  [content-type]
+  (fn [request]
+    {:status  200
+     :headers {"Content-Type" content-type}
+     :body    ""}))
 
 (defn read-request
   [response]
@@ -50,7 +50,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest request-get
-  (with-ring-server echo-rhandler
+  (with-ring-server echo-handler
     (let [response (http/get base-url {:basic-auth ["user" "password"]})
           request-map (read-request response)]
       (is (= (:request-method request-map) :get))
@@ -58,21 +58,21 @@
              "Basic dXNlcjpwYXNzd29yZA==")))))
 
 (deftest request-post
-  (with-ring-server echo-rhandler
+  (with-ring-server echo-handler
     (let [response (http/post base-url {:body "foobar"})
           request-map (read-request response)]
       (is (= (:request-method request-map) :post))
       (is (= "foobar" (:body response))))))
 
 (deftest request-put
-  (with-ring-server echo-rhandler
+  (with-ring-server echo-handler
     (let [response (http/put base-url {:body "foobar"})
           request-map (read-request response)]
       (is (= (:request-method request-map) :put))
       (is (= "foobar" (:body response))))))
 
 (deftest request-translate
-  (with-ring-server echo-rhandler
+  (with-ring-server echo-handler
     (let [url (str base-url "/foo/bar/baz?surname=jones&age=123")
           response (http/post url {:body "hello"})]
       (is (= (:status response) 200))
@@ -89,3 +89,9 @@
         (is (= (:server-name request-map) "127.0.0.1"))
         (is (= (:server-port request-map) 5050))
         (is (= (:ssl-client-cert request-map) nil))))))
+
+(deftest custom-content-type
+  (with-ring-server (content-type-handler "text/plain;charset=UTF-16;version=1")
+    (let [response (http/get base-url)]
+      (is (= (get-in response [:headers "content-type"])
+             "text/plain;charset=UTF-16;version=1")))))

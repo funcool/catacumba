@@ -41,7 +41,7 @@
     (when status
       (.status response ^long status))
     (when headers
-      (ratpack/set-headers response headers))
+      (ratpack/set-headers! response headers))
     (handle-ring-body body context))))
 
 (extend-protocol IRingBody

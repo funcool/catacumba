@@ -40,7 +40,7 @@
         ^Map headers (.asMultiValueMap headers)]
     (into {} utils/lowercase-keys-t headers)))
 
-(defn set-headers
+(defn set-headers!
   [response headers]
   (let [^Response response (if (instance? Response response)
                              response

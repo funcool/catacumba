@@ -5,6 +5,7 @@
             :url "http://opensource.org/licenses/BSD-2-Clause"}
   :dependencies [[io.ratpack/ratpack-core "0.9.15"]
                  [org.slf4j/slf4j-simple "1.7.10"]
+                 [environ "1.0.0"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]]
   :profiles {:dev {:global-vars {*warn-on-reflection* true
                                  *unchecked-math* :warn-on-boxed}

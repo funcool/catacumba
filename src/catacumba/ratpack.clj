@@ -38,13 +38,6 @@
 ;; Routing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- chain-handler
-  [handler]
-  (impl/ratpack-adapter
-   (fn [^Context context]
-     (let [params (into {} (.getPathTokens context))]
-       (handler context params)))))
-
 (defmulti attach-route
   (fn [chain [method & _]] method))
 
@@ -60,7 +53,7 @@
 
 (defmethod attach-route :default
   [^Chain chain [method ^String path & handlers]]
-  (let [^java.util.List handlers (mapv chain-handler handlers)]
+  (let [^java.util.List handlers (mapv impl/ratpack-adapter handlers)]
     (condp = method
       :get (.get chain path (Handlers/chain handlers))
       :post (.post chain path (Handlers/chain handlers))

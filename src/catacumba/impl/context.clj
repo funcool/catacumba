@@ -2,22 +2,8 @@
   "Functions and helpers for work in a clojure
   way with ratpack types."
   (:import ratpack.handling.Context
-           ratpack.handling.Chain
-           ratpack.handling.Handler
-           ratpack.handling.Handlers
            ratpack.registry.Registry
-           ratpack.registry.Registries
-           ratpack.http.Request
-           ratpack.http.Response
-           ratpack.http.Headers
-           ratpack.http.TypedData
-           ratpack.http.MutableHeaders
-           ratpack.func.Action
-           ratpack.func.Function
-           io.netty.buffer.Unpooled
-           io.netty.buffer.ByteBuf
-           java.io.InputStream
-           java.util.Map))
+           ratpack.registry.Registries))
 
 (defrecord ContextData [payload])
 (alter-meta! #'->ContextData assoc :private true)
@@ -33,7 +19,7 @@
   ([^Context context]
    (.next context))
   ([^Context context data]
-   (let [reg (Registries/just (ContextData. data))]
+   (let [^Registry reg (Registries/just (ContextData. data))]
      (.next context reg))))
 
 (defn context-params

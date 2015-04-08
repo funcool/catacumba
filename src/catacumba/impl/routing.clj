@@ -4,21 +4,9 @@
             [catacumba.utils :as utils])
   (:import ratpack.handling.Context
            ratpack.handling.Chain
-           ratpack.handling.Handler
            ratpack.handling.Handlers
-           ratpack.registry.Registry
-           ratpack.registry.Registries
-           ratpack.http.Request
-           ratpack.http.Response
-           ratpack.http.Headers
-           ratpack.http.TypedData
-           ratpack.http.MutableHeaders
            ratpack.func.Action
-           ratpack.func.Function
-           io.netty.buffer.Unpooled
-           io.netty.buffer.ByteBuf
-           java.io.InputStream
-           java.util.Map))
+           java.util.List))
 
 (defmulti attach-route
   (fn [chain [method & _]] method))
@@ -35,7 +23,7 @@
 
 (defmethod attach-route :default
   [^Chain chain [method ^String path & handlers]]
-  (let [^java.util.List handlers (mapv handlers/ratpack-adapter handlers)]
+  (let [^List handlers (mapv handlers/ratpack-adapter handlers)]
     (condp = method
       :get (.get chain path (Handlers/chain handlers))
       :post (.post chain path (Handlers/chain handlers))

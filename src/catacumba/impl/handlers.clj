@@ -2,19 +2,12 @@
   (:refer-clojure :exclude [send])
   (:require [catacumba.utils :as utils]
             [catacumba.impl.helpers :as helpers])
-  (:import ratpack.server.RatpackServer
-           ratpack.server.ServerConfig
-           ratpack.server.RatpackServerSpec
-           ratpack.handling.Handler
+  (:import ratpack.handling.Handler
            ratpack.handling.Context
-           ratpack.stream.Streams
            ratpack.http.Request
            ratpack.http.Response
            ratpack.http.Headers
-           ratpack.http.TypedData
            ratpack.http.MutableHeaders
-           ratpack.func.Action
-           ratpack.func.Function
            io.netty.buffer.Unpooled
            io.netty.buffer.ByteBuf
            java.io.InputStream

@@ -7,21 +7,9 @@
            ratpack.server.ServerConfig
            ratpack.server.RatpackServerSpec
            ratpack.registry.RegistrySpec
-           ratpack.handling.Handler
-           ratpack.handling.Context
-           ratpack.stream.Streams
-           ratpack.http.Request
-           ratpack.http.Response
-           ratpack.http.Headers
-           ratpack.http.TypedData
-           ratpack.http.MutableHeaders
            ratpack.func.Action
            ratpack.func.Function
-           io.netty.buffer.Unpooled
-           io.netty.buffer.ByteBuf
-           java.nio.file.Path
-           java.io.InputStream
-           java.util.Map))
+           java.nio.file.Path))
 
 (defmulti ^:private setup-handler
   "A polymorphic ratpack handler constructor."

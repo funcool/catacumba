@@ -1,7 +1,7 @@
-(ns catacumba.impl
+(ns catacumba.impl.server
   (:require [catacumba.utils :as utils]
-            [catacumba.impl.ring :as ring]
-            [catacumba.impl.ratpack :as ratpack]
+            [catacumba.impl.helpers :as helpers]
+            [catacumba.impl.handlers :as handlers]
             [environ.core :refer [env]])
   (:import ratpack.server.RatpackServer
            ratpack.server.ServerConfig
@@ -30,19 +30,17 @@
 
 (defmethod setup-handler :ratpack
   [handler ^RatpackServerSpec spec]
-  (letfn [(rhandler [_]
-            (ratpack/ratpack-adapter handler))]
-    (.handler spec ^Function (utils/function rhandler))))
+  (letfn [(rhandler [_] (handlers/ratpack-adapter handler))]
+    (.handler spec ^Function (helpers/function rhandler))))
 
 (defmethod setup-handler :ratpack-router
   [handler ^RatpackServerSpec spec]
-  (.handlers spec (utils/action handler)))
+  (.handlers spec (helpers/action handler)))
 
 (defmethod setup-handler :ring
-  [handler spec]
-  (let [handler (-> (ring/ring-adapter handler)
-                    (with-meta {:type :ratpack}))]
-    (setup-handler handler spec)))
+  [handler ^RatpackServerSpec spec]
+  (letfn [(rhandler [_] (handlers/ring-adapter handler))]
+    (.handler spec ^Function (helpers/function rhandler))))
 
 (defn- bootstrap-registry
   [^RegistrySpec registryspec setup]
@@ -64,9 +62,29 @@
     (.development config (boolean debug))
     (.build config)))
 
-(defn configure-server
+(defn- configure-server
   "The ratpack server configuration callback."
   [^RatpackServerSpec spec handler {:keys [setup] :as options}]
   (.serverConfig spec ^ServerConfig (build-server-config options))
-  (.registryOf spec (utils/action #(bootstrap-registry % setup)))
+  (.registryOf spec (helpers/action #(bootstrap-registry % setup)))
   (setup-handler handler spec))
+
+(defn run-server
+  "Start and ratpack webserver to serve the given handler according
+  to the supplied options:
+
+  - `:port`    - the port to listen on (defaults to 5050)
+  - `:threads` - the number of threads (default: number of cores * 2)
+  - `:debug`   - start in development mode or not (default: true)
+  - `:setup`   - callback for add additional entries in ratpack registry.
+  - `:basedir` - the application base directory.
+                 Used mainly for resolve relative paths and assets; It is also can be set using
+                 the `CATACUMBA_BASEDIR` environment variable or `catacumba.basedir` system property.
+
+  Returns an Ratpack server instance."
+  ([handler] (run-server handler {}))
+  ([handler options]
+   (let [^Action callback (helpers/action #(configure-server % handler options))
+         ^RatpackServer server (RatpackServer/of callback)]
+     (.start server)
+    server)))

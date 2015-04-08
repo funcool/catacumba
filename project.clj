@@ -6,6 +6,7 @@
   :dependencies [[io.ratpack/ratpack-core "0.9.15"]
                  [org.slf4j/slf4j-simple "1.7.10"]
                  [environ "1.0.0"]
+                 [potemkin "0.3.12"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]]
   :profiles {:dev {:global-vars {*warn-on-reflection* true}
                                  ;; *unchecked-math* :warn-on-boxed}

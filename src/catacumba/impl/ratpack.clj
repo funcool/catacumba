@@ -55,7 +55,7 @@
 ;; Protocol Definition
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defprotocol IResponse
+(defprotocol ISend
   (send [data response] "Send data."))
 
 (defprotocol IHandlerResponse
@@ -71,7 +71,7 @@
     (let [response (get-response context)]
       (send data response))))
 
-(extend-protocol IResponse
+(extend-protocol ISend
   String
   (send [data ^Response response]
     (.send response data)))

@@ -1,6 +1,7 @@
 (ns catacumba.utils
   (:import ratpack.func.Action
-           ratpack.func.Function))
+           ratpack.func.Function
+           java.nio.file.Paths))
 
 (def ^{:doc "Transducer for lowercase headers keys."}
   lowercase-keys-t (map (fn [[^String key value]]
@@ -22,3 +23,6 @@
     (apply [_ x]
       (callable x))))
 
+(defn str->path
+  [^String path]
+  (Paths/get path (into-array String [])))

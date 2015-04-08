@@ -51,15 +51,21 @@
     (println "in hello-world-handler" data)
     "hello world"))
 
-(defn chain-handler
-  [chain]
-  (rp/route chain
-            [[:prefix "foo"
-              [:get ":name" simple-chained hello-world-handler]]]))
+(def myroutes
+  (rp/routes [[:prefix "static"
+               [:assets "public"]]
+              [:prefix "foo"
+               [:get ":name" simple-chained hello-world-handler]]]))
 
 (deftest experiments
-  (with-router-server chain-handler
+  (with-router-server myroutes
     (let [response (http/get (str base-url "/foo/bar"))
           response2 (http/get (str base-url "/foo/bar"))]
       (is (= (:body response) "hello world"))
+      (is (= (:status response) 200)))))
+
+(deftest experiments2
+  (with-router-server myroutes
+    (let [response (http/get (str base-url "/static/test.txt"))]
+      (is (= (:body response) "hello world from test.txt\n"))
       (is (= (:status response) 200)))))

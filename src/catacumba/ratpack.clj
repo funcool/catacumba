@@ -40,24 +40,42 @@
 
 (defn- chain-handler
   [handler]
-  (fn [^Context context]
-    (let [params (into {} (.getPathTokens context))]
-      (handler context params))))
+  (impl/ratpack-adapter
+   (fn [^Context context]
+     (let [params (into {} (.getPathTokens context))]
+       (handler context params)))))
 
-(defn route
-  [^Chain chain routes]
-  (let [make-handler (comp impl/ratpack-adapter chain-handler)]
-    (reduce (fn [^Chain chain [method path & handlers]]
-              (condp = method
-                :get (.get chain path (Handlers/chain (mapv make-handler handlers)))
-                :post (.post chain path (Handlers/chain (mapv make-handler handlers)))
-                :put (.put chain path (Handlers/chain (mapv make-handler handlers)))
-                :patch (.patch chain path (Handlers/chain (mapv make-handler handlers)))
-                :delete (.delete chain path (Handlers/chain (mapv make-handler handlers)))
-                :all (.handler chain path (Handlers/chain (mapv make-handler handlers)))
-                :prefix (.prefix chain path (utils/action #(route % handlers)))))
-            chain
-            routes)))
+(defmulti attach-route
+  (fn [chain [method & _]] method))
+
+(defmethod attach-route :assets
+  [^Chain chain [_ ^String path & indexes]]
+  (let [indexes (into-array String indexes)]
+    (.assets chain path indexes)))
+
+(defmethod attach-route :prefix
+  [^Chain chain [_ ^String path & handlers]]
+  (let [callback #(reduce attach-route % handlers)]
+    (.prefix chain path ^Action (utils/action callback))))
+
+(defmethod attach-route :default
+  [^Chain chain [method ^String path & handlers]]
+  (let [^java.util.List handlers (mapv chain-handler handlers)]
+    (condp = method
+      :get (.get chain path (Handlers/chain handlers))
+      :post (.post chain path (Handlers/chain handlers))
+      :put (.put chain path (Handlers/chain handlers))
+      :patch (.patch chain path (Handlers/chain handlers))
+      :delete (.delete chain path (Handlers/chain handlers))
+      :all (.handler chain path (Handlers/chain handlers)))))
+
+(defn routes
+  "Is a high order function that access a routes vector
+  as argument and return a ratpack router type handler."
+  [routes]
+  (with-meta
+    (fn [chain] (reduce attach-route chain routes))
+    {:type :ratpack-router}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Handlers Communication

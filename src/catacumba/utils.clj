@@ -7,6 +7,10 @@
   lowercase-keys-t (map (fn [[^String key value]]
                           [(.toLowerCase key) value])))
 
+(def ^{:doc "Transducer for keywordice."}
+  keywordice-keys-t (map (fn [[^String key value]]
+                           [(keyword key) value])))
+
 (defn action
   "Coerce a plain clojure function into
   ratpacks's Action interface."

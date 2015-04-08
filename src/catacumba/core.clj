@@ -14,6 +14,4 @@
  [catacumba.impl.handlers
   get-request-headers
   set-response-headers!
-  send!]
-
-)
+  send!])

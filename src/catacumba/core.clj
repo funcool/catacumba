@@ -11,6 +11,10 @@
   - `:port`    - the port to listen on (defaults to 5050)
   - `:threads` - the number of threads (default: number of cores * 2)
   - `:debug`   - start in development mode or not (default: true)
+  - `:setup`   - callback for add additional entries in ratpack registry.
+  - `:basedir` - the application base directory.
+                 Used mainly for resolve relative paths and assets; It is also can be set using
+                 the `CATACUMBA_BASEDIR` environment variable or `catacumba.basedir` system property.
 
   Returns an Ratpack server instance."
   ([handler] (run-server handler {}))

@@ -77,10 +77,11 @@
     (.send response data)))
 
 (defn ratpack-adapter
+  "Adapt a function based handler into ratpack
+  compatible handler instance."
   [handler]
   (reify Handler
     (^void handle [_ ^Context context]
       (let [rsp (handler context)]
         (when (satisfies? IHandlerResponse rsp)
           (handle-response rsp context))))))
-

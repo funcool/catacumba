@@ -112,8 +112,8 @@
                              response)
         ^MutableHeaders headersmap (.getHeaders response)]
     (loop [headers headers]
-      (when-let [[^String key vals] (first headers)]
-        (.set headersmap key vals)
+      (when-let [[key vals] (first headers)]
+        (.set headersmap (name key) vals)
         (recur (rest headers))))))
 
 (defn send!

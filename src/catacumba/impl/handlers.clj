@@ -54,7 +54,13 @@
     (let [^Response response (get-response context)]
       (.status response ^long (:status data))
       (set-response-headers! response (:headers data))
-      (send (:body data) response))))
+      (send (:body data) response)))
+
+  clojure.core.async.impl.channels.ManyToManyChannel
+  (handle-response [data ^Context context]
+    (let [^Response response (get-response context)]
+      (.status response 200)
+      (send data response))))
 
 (extend-protocol ISend
   String

@@ -65,6 +65,16 @@
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))))))
+
+  (testing "Using channel as response."
+    (let [handler (fn [ctx]
+                    (go
+                      (<! (timeout 100))
+                      "hello world"))]
+      (with-server (with-meta handler {:type :ratpack})
+        (let [response (client/get base-url)]
+          (is (= (:body response) "hello world"))
+          (is (= (:status response) 200))))))
 )
 
 (deftest routing

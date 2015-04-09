@@ -2,7 +2,8 @@
   (:refer-clojure :exclude [send])
   (:require [catacumba.utils :as utils]
             [catacumba.impl.helpers :as helpers]
-            [catacumba.impl.http :as http])
+            [catacumba.impl.http :as http]
+            [catacumba.impl.streams :as streams])
   (:import ratpack.handling.Handler
            ratpack.handling.Context
            ratpack.http.Request
@@ -59,6 +60,11 @@
   String
   (send [data ^Response response]
     (.send response data))
+
+  clojure.core.async.impl.channels.ManyToManyChannel
+  (send [data ^Response response]
+    (let [publisher (streams/chan->publisher data)]
+      (.sendStream response publisher)))
 
   InputStream
   (send [data ^Response response]

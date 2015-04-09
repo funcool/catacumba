@@ -1,5 +1,6 @@
 (ns catacumba.core-tests
-  (:require [clojure.test :refer :all]
+  (:require [clojure.core.async :refer [put! take! chan <! >! go close! go-loop onto-chan timeout]]
+            [clojure.test :refer :all]
             [clojure.java.io :as io]
             [clojure.pprint :refer [pprint]]
             [clojure.core.async :as async]
@@ -45,6 +46,23 @@
       (with-server (with-meta handler {:type :ratpack})
         (let [response (client/get base-url)]
           (is (= (get-in response [:headers "x-header"]) "foobar"))
+          (is (= (:body response) "hello world"))
+          (is (= (:status response) 200))))))
+)
+
+(deftest request-response-chunked
+  (testing "Using channel as body."
+    (let [handler (fn [ctx]
+                    (let [ch (chan)]
+                      (go
+                        (<! (timeout 100))
+                        (>! ch "hello ")
+                        (<! (timeout 100))
+                        (>! ch "world")
+                        (close! ch))
+                      (http/ok ch)))]
+      (with-server (with-meta handler {:type :ratpack})
+        (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))))))
 )

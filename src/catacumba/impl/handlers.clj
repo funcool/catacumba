@@ -1,7 +1,8 @@
 (ns catacumba.impl.handlers
   (:refer-clojure :exclude [send])
   (:require [catacumba.utils :as utils]
-            [catacumba.impl.helpers :as helpers])
+            [catacumba.impl.helpers :as helpers]
+            [catacumba.impl.http :as http])
   (:import ratpack.handling.Handler
            ratpack.handling.Context
            ratpack.http.Request
@@ -45,7 +46,14 @@
         (.status response ^long status))
       (when headers
         (set-response-headers! response headers))
-      (send body response))))
+      (send body response)))
+
+  catacumba.impl.http.Response
+  (handle-response [data ^Context context]
+    (let [^Response response (get-response context)]
+      (.status response ^long (:status data))
+      (set-response-headers! response (:headers data))
+      (send (:body data) response))))
 
 (extend-protocol ISend
   String

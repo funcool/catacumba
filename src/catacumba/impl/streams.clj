@@ -13,6 +13,11 @@
   (as-byte-buffer [s]
     (Unpooled/wrappedBuffer (.getBytes s "UTF-8"))))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Channel <-> Publisher adapter
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn- create-subscription
   [ch ^Subscriber subscriber]
   (let [demand (chan 48)]

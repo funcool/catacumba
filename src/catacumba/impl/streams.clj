@@ -18,7 +18,7 @@
 ;; Channel <-> Publisher adapter
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- create-subscription
+(defn- create-subscription-for-chan
   [ch ^Subscriber subscriber]
   (let [demand (chan 48)]
     (go-loop []
@@ -47,5 +47,39 @@
   [ch]
   (reify Publisher
     (^void subscribe [_ ^Subscriber subscriber]
-      (let [^Subscription subscription (create-subscription ch subscriber)]
+      (let [^Subscription subscription (create-subscription-for-chan ch subscriber)]
+        (.onSubscribe subscriber subscription)))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ISeq <-> Publisher adapter
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn create-subscription-for-seq
+  [s ^Subscriber subscriber]
+  (let [state (agent s)]
+    (reify Subscription
+      (^void request [_ ^long n]
+        (when-not (nil? @state)
+          (send-off state (fn [state]
+                            (loop [num (range n)
+                                   state' state]
+                              (if-let [value (first state')]
+                                (if-let [i (first num)]
+                                  (do
+                                    (.onNext subscriber (as-byte-buffer value))
+                                    (recur (rest num)
+                                           (rest state')))
+                                  state')
+                                (do
+                                  (.onComplete subscriber)
+                                  nil)))))))
+      (^void cancel [_]
+        (send-off state (fn [s] nil))))))
+
+(defn seq->publisher
+  [s]
+  (reify Publisher
+    (^void subscribe [_ ^Subscriber subscriber]
+      (let [^Subscription subscription (create-subscription-for-seq s subscriber)]
         (.onSubscribe subscriber subscription)))))

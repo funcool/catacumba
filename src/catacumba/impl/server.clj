@@ -13,7 +13,8 @@
            java.nio.file.Path))
 
 (defmulti ^:private setup-handler
-  "A polymorphic ratpack handler constructor."
+  "A polymorphic function for setup the handler
+  to the reatpack server instance builder."
   (fn [handler spec] (:type (meta handler)))
   :default :ratpack)
 
@@ -37,6 +38,9 @@
     (.handler spec ^Function (helpers/function rhandler))))
 
 (defn- bootstrap-registry
+  "A bootstrap server hook for setup initial
+  registry entries and execute a user provided
+  hook for do the same thing."
   [^RegistrySpec registryspec setup]
   (when (fn? setup)
     (setup registryspec)))

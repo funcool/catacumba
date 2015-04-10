@@ -12,3 +12,13 @@
 (defn str->path
   [^String path]
   (Paths/get path (into-array String [])))
+
+(defn assoc-conj!
+  [map key val]
+  (assoc! map key
+    (if-let [cur (get map key)]
+      (if (vector? cur)
+        (conj cur val)
+        [cur val])
+      val)))
+

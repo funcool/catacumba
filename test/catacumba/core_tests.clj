@@ -6,7 +6,8 @@
             [clojure.core.async :as async]
             [clj-http.client :as client]
             [catacumba.core :as ct]
-            [catacumba.http :as http])
+            [catacumba.http :as http]
+            [catacumba.impl.parse :as parse])
   (:import ratpack.registry.Registries))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -108,3 +109,30 @@
           (is (= (:body response) "hello bar"))
           (is (= (:status response) 200))))))
 )
+
+
+(deftest form-parsing
+  (testing "Multipart form parsing."
+    (let [p (promise)
+          handler (fn [context]
+                    (let [form (parse/parse context)]
+                      (deliver p form)
+                      "hello world"))]
+      (with-server handler
+        (let [multipart {:multipart [{:name "foo" :content "bar"}
+                                     {:name "myfile"
+                                      :content (-> (io/resource "public/test.txt")
+                                                   (io/file))
+                                      :encoding "UTF-8"
+                                      :mime-type "text/plain"}
+                                     {:name "myfile"
+                                      :content (-> (io/resource "public/test.txt")
+                                                   (io/file))
+                                      :encoding "UTF-8"
+                                      :mime-type "text/plain"}]}
+              response (client/post base-url multipart)]
+          (is (= (:status response) 200))
+          (is (= (:body response) "hello world"))
+          (let [formdata (deref p 1000 nil)]
+            (is (= (get formdata "foo") "bar"))))))))
+

@@ -112,7 +112,7 @@
 
 
 (deftest form-parsing
-  (testing "Multipart form parsing."
+  (testing "Multipart form parsing with multiple files."
     (let [p (promise)
           handler (fn [context]
                     (let [form (parse/parse context)]

@@ -25,7 +25,7 @@
 
 (defmethod setup-handler :ratpack-router
   [handler ^RatpackServerSpec spec]
-  (.handlers spec (helpers/action handler)))
+  (.handlers spec ^Action (helpers/action handler)))
 
 (defmethod setup-handler :ring
   [handler ^RatpackServerSpec spec]

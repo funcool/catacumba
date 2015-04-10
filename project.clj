@@ -12,6 +12,7 @@
                                  ;; *unchecked-math* :warn-on-boxed}
                    :dependencies [[org.clojure/clojure "1.7.0-alpha6"]
                                   [clj-http "1.1.0"]
+                                  [cc.qbits/jet "0.6.1"]
                                   [ring/ring-core "1.3.2"
                                    :exclusions [javax.servlet/servlet-api
                                                 org.clojure/clojure]]]}})

@@ -1,5 +1,5 @@
 (ns catacumba.core
-  (:require [catacumba.impl server routing context handlers]
+  (:require [catacumba.impl server routing context handlers websocket]
             [potemkin.namespaces :refer [import-vars]]))
 
 (import-vars
@@ -14,4 +14,6 @@
  [catacumba.impl.handlers
   get-request-headers
   set-response-headers!
-  send!])
+  send!]
+ [catacumba.impl.websocket
+  websocket])

@@ -1,6 +1,7 @@
 (ns catacumba.impl.server
   (:require [catacumba.utils :as utils]
             [catacumba.impl.helpers :as helpers]
+            [catacumba.impl.websocket :as websocket]
             [catacumba.impl.handlers :as handlers]
             [environ.core :refer [env]])
   (:import ratpack.server.RatpackServer
@@ -28,6 +29,11 @@
 (defmethod setup-handler :ring
   [handler ^RatpackServerSpec spec]
   (letfn [(rhandler [_] (handlers/ring-adapter handler))]
+    (.handler spec ^Function (helpers/function rhandler))))
+
+(defmethod setup-handler :websocket
+  [handler ^RatpackServerSpec spec]
+  (letfn [(rhandler [_] (websocket/websocket-adapter handler))]
     (.handler spec ^Function (helpers/function rhandler))))
 
 (defn- bootstrap-registry

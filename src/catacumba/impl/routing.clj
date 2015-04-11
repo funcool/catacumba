@@ -5,6 +5,8 @@
   (:import ratpack.handling.Context
            ratpack.handling.Chain
            ratpack.handling.Handlers
+           ratpack.error.ServerErrorHandler
+           ratpack.registry.RegistrySpec
            ratpack.func.Action
            java.util.List))
 
@@ -20,6 +22,24 @@
   [^Chain chain [_ ^String path & handlers]]
   (let [callback #(reduce attach-route % handlers)]
     (.prefix chain path ^Action (helpers/action callback))))
+
+(defmethod attach-route :all
+  [^Chain chain [_ & handlers-and-path]]
+  (let [path (first handlers-and-path)]
+    (if (string? path)
+      (.handler chain path (handlers/ratpack-adapter (second handlers-and-path)))
+      (.handler chain (handlers/ratpack-adapter path)))))
+
+(defmethod attach-route :error
+  [^Chain chain [_ error-handler]]
+  (letfn [(on-register [^RegistrySpec rspec]
+            (let [ehandler (reify ServerErrorHandler
+                             (error [_ context throwable]
+                               (let [response (error-handler context throwable)]
+                                 (when (satisfies? handlers/IHandlerResponse response)
+                                   (handlers/handle-response response context)))))]
+              (.add rspec ServerErrorHandler ehandler)))]
+    (.register chain ^Action (helpers/action on-register))))
 
 (defmethod attach-route :default
   [^Chain chain [method ^String path & handlers]]

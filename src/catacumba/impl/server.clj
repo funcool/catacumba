@@ -75,11 +75,12 @@
   - `:threads` - the number of threads (default: number of cores * 2)
   - `:debug`   - start in development mode or not (default: true)
   - `:setup`   - callback for add additional entries in ratpack registry.
-  - `:basedir` - the application base directory.
-                 Used mainly for resolve relative paths and assets; It is also can be set using
-                 the `CATACUMBA_BASEDIR` environment variable or `catacumba.basedir` system property.
+  - `:basedir` - the application base directory. Used mainly for resolve relative paths and assets.
 
-  Returns an Ratpack server instance."
+  Also, you can set all that parameters using environment variables or jvm system
+  properties. For example, you can use `CATACUMBA_BASEDIR` environ variable or
+  `catacumba.basedir` jvm system property for overwrite the `:basedir` parameter
+  value."
   ([handler] (run-server handler {}))
   ([handler options]
    (let [^Action callback (helpers/action #(configure-server % handler options))

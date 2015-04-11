@@ -97,7 +97,7 @@
           (is (= (:body response) "hello world from test.txt\n"))
           (is (= (:status response) 200))))))
 
-  (testing "Chaining handlers."
+  (testing "Chaining handlers in one route."
     (let [handler1 (fn [ctx]
                      (ct/delegate ctx {:foo "bar"}))
           handler2 (fn [ctx]
@@ -106,6 +106,20 @@
           router (ct/routes [[:get "" handler1 handler2]])]
       (with-server router
         (let [response (client/get (str base-url ""))]
+          (is (= (:body response) "hello bar"))
+          (is (= (:status response) 200))))))
+
+  (testing "Chaining handlers in more than one route."
+    (let [handler1 (fn [ctx]
+                     (ct/delegate ctx {:foo "bar"}))
+          handler2 (fn [ctx]
+                     (let [params (ct/context-params ctx)]
+                       (str "hello " (:foo params))))
+          router (ct/routes [[:prefix "foo"
+                              [:all handler1]
+                              [:get handler2]]])]
+      (with-server router
+        (let [response (client/get (str base-url "/foo"))]
           (is (= (:body response) "hello bar"))
           (is (= (:status response) 200))))))
 

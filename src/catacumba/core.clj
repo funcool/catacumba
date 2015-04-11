@@ -12,8 +12,8 @@
   delegate
   context-params]
  [catacumba.impl.handlers
-  get-request-headers
-  set-response-headers!
+  get-headers
+  set-headers!
   send!]
  [catacumba.impl.websocket
   websocket]

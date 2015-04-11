@@ -10,14 +10,11 @@
            ratpack.http.Response
            ratpack.http.Headers
            ratpack.http.MutableHeaders
+           ratpack.util.MultiValueMap
            io.netty.buffer.Unpooled
            io.netty.buffer.ByteBuf
            java.io.InputStream
            java.util.Map))
-
-(declare get-response)
-(declare set-response-headers!)
-(declare get-request-headers)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Protocol Definition
@@ -29,6 +26,18 @@
 (defprotocol IHandlerResponse
   (handle-response [_ context] "Handle the ratpack handler response."))
 
+(defprotocol IResponseGetter
+  (get-response* [_] "Get the response."))
+
+(defprotocol IRequestGetter
+  (get-request* [_] "Get the request."))
+
+(defprotocol IHeadersGetter
+  (get-headers* [_] "Get headers."))
+
+(defprotocol IHeadersSetter
+  (set-headers [_ headers] "Set the headers."))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Protocol Implementations
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -36,29 +45,29 @@
 (extend-protocol IHandlerResponse
   String
   (handle-response [data ^Context context]
-    (let [response (get-response context)]
+    (let [response (get-response* context)]
       (send data response)))
 
   clojure.lang.IPersistentMap
   (handle-response [data ^Context context]
-    (let [^Response response (get-response context)
+    (let [^Response response (get-response* context)
           {:keys [status headers body]} data]
       (when status
         (.status response ^long status))
       (when headers
-        (set-response-headers! response headers))
+        (set-headers response headers))
       (send body response)))
 
   catacumba.impl.http.Response
   (handle-response [data ^Context context]
-    (let [^Response response (get-response context)]
+    (let [^Response response (get-response* context)]
       (.status response ^long (:status data))
-      (set-response-headers! response (:headers data))
+      (set-headers response (:headers data))
       (send (:body data) response)))
 
   clojure.core.async.impl.channels.ManyToManyChannel
   (handle-response [data ^Context context]
-    (let [^Response response (get-response context)]
+    (let [^Response response (get-response* context)]
       (.status response 200)
       (send data response))))
 
@@ -83,6 +92,56 @@
             (recur (+ index readed)))))
       (.send response buf))))
 
+(extend-protocol IResponseGetter
+  Context
+  (get-response* [^Context ctx]
+    (.getResponse ctx))
+
+  Response
+  (get-response* [rsp]
+    rsp))
+
+(extend-protocol IRequestGetter
+  Context
+  (get-request* [^Context ctx]
+    (.getRequest ctx))
+
+  Request
+  (get-request* [req]
+    req))
+
+(extend-protocol IHeadersGetter
+  Context
+  (get-headers* [^Context ctx]
+    (let [^Request request (get-request* ctx)]
+      (get-headers* request)))
+
+  Request
+  (get-headers* [^Request request]
+    (let [^Headers headers (.getHeaders request)
+          ^MultiValueMap headers (.asMultiValueMap headers)]
+      (persistent!
+       (reduce (fn [acc key]
+                 (let [values (.getAll headers key)
+                       key (.toLowerCase key)]
+                   (reduce #(utils/assoc-conj! %1 key %2) acc values)))
+               (transient {})
+               (.keySet headers))))))
+
+(extend-protocol IHeadersSetter
+  Context
+  (set-headers [^Context ctx headers]
+    (let [^Response request (get-response* ctx)]
+      (set-headers request headers)))
+
+  Response
+  (set-headers [^Response response headers]
+    (let [^MutableHeaders headersmap (.getHeaders response)]
+      (loop [headers headers]
+        (when-let [[key vals] (first headers)]
+          (.set headersmap (name key) vals)
+          (recur (rest headers)))))))
+
 (defn- build-request
   [^Request request]
   (let [local-address (.getLocalAddress request)
@@ -94,7 +153,7 @@
      :query-string (.getQuery request)
      :scheme :http
      :request-method (keyword (.. request getMethod getName toLowerCase))
-     :headers (get-request-headers request)
+     :headers (get-headers* request)
      :content-type (.. request getBody getContentType getType)
      :content-length (Integer/parseInt (.. request getHeaders (get "Content-Length")))
      :character-encoding (.. request getBody getContentType (getCharset "utf-8"))
@@ -104,37 +163,33 @@
 ;; Public Api
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn get-response
-  "Get a response object from Context instance."
-  [^Context ctx]
-  (.getResponse ctx))
-
 (defn get-request
-  "Get a request object from Context instance."
-  [^Context ctx]
-  (.getRequest ctx))
+  "Helper for obtain the current request instance
+  from provided Context instance."
+  [i]
+  (get-request* i))
 
-(defn get-request-headers
-  "Get normalized request headers from Context instance."
+(defn get-response
+  "Helper for obtain the current response instance
+  from provided Context instance."
+  [i]
+  (get-response* i))
+
+(defn get-headers
+  "Get request headers.
+
+  This is a polymorphic function and accepts
+  Context instances as request."
   [request]
-  (let [^Request request (if (instance? Context request)
-                           (get-request request)
-                           request)
-        ^Headers headers (.getHeaders request)
-        ^Map headers (.asMultiValueMap headers)]
-    (into {} utils/lowercase-keys-t headers)))
+  (get-headers* request))
 
-(defn set-response-headers!
-  "Given a context instance set response headers."
+(defn set-headers!
+  "Set response headers.
+
+  This is a polymorphic function and accepts
+  Context instances as response."
   [response headers]
-  (let [^Response response (if (instance? Context response)
-                             (get-response response)
-                             response)
-        ^MutableHeaders headersmap (.getHeaders response)]
-    (loop [headers headers]
-      (when-let [[key vals] (first headers)]
-        (.set headersmap (name key) vals)
-        (recur (rest headers))))))
+  (set-headers response headers))
 
 (defn send!
   "Send data to the client."

@@ -44,15 +44,23 @@
     (.register chain ^Action (helpers/action on-register))))
 
 (defmethod attach-route :default
-  [^Chain chain [method ^String path & handlers]]
-  (let [^List handlers (mapv handlers/ratpack-adapter handlers)]
-    (condp = method
-      :get (.get chain path (Handlers/chain handlers))
-      :post (.post chain path (Handlers/chain handlers))
-      :put (.put chain path (Handlers/chain handlers))
-      :patch (.patch chain path (Handlers/chain handlers))
-      :delete (.delete chain path (Handlers/chain handlers))
-      :all (.handler chain path (Handlers/chain handlers)))))
+  [^Chain chain [method & handlers-and-path]]
+  (let [path (first handlers-and-path)]
+    (if (string? path)
+      (let [^List handlers (map handlers/ratpack-adapter (rest handlers-and-path))]
+        (condp = method
+          :get (.get chain path (Handlers/chain handlers))
+          :post (.post chain path (Handlers/chain handlers))
+          :put (.put chain path (Handlers/chain handlers))
+          :patch (.patch chain path (Handlers/chain handlers))
+          :delete (.delete chain path (Handlers/chain handlers))))
+      (let [^List handlers (map handlers/ratpack-adapter handlers-and-path)]
+        (condp = method
+          :get (.get chain (Handlers/chain handlers))
+          :post (.post chain (Handlers/chain handlers))
+          :put (.put chain (Handlers/chain handlers))
+          :patch (.patch chain (Handlers/chain handlers))
+          :delete (.delete chain (Handlers/chain handlers)))))))
 
 (defn routes
   "Is a high order function that access a routes vector

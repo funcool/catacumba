@@ -27,8 +27,10 @@
   [^Chain chain [_ & handlers-and-path]]
   (let [path (first handlers-and-path)]
     (if (string? path)
-      (.handler chain path (handlers/ratpack-adapter (second handlers-and-path)))
-      (.handler chain (handlers/ratpack-adapter path)))))
+      (let [^List handlers (map handlers/ratpack-adapter (rest handlers-and-path))]
+        (.handler chain path (Handlers/chain handlers)))
+      (let [^List handlers (map handlers/ratpack-adapter handlers-and-path)]
+        (.handler chain (Handlers/chain handlers))))))
 
 (defmethod attach-route :error
   [^Chain chain [_ error-handler]]

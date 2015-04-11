@@ -9,7 +9,7 @@
 ;; because ratpack does not allows an other way for iter over
 ;; all parameters (including files) in an uniform way.
 
-(defn parse
+(defn parse-formdata
   "Parse form encoded or multipart request data and return
   a maybe multivalue map."
   [^Context context]

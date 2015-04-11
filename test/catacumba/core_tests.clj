@@ -157,7 +157,7 @@
   (testing "Multipart form parsing with multiple files."
     (let [p (promise)
           handler (fn [context]
-                    (let [form (parse/parse context)]
+                    (let [form (ct/parse-formdata context)]
                       (deliver p form)
                       "hello world"))]
       (with-server handler

@@ -5,6 +5,7 @@
   (:import ratpack.handling.Context
            ratpack.handling.Chain
            ratpack.handling.Handlers
+           ratpack.handling.Handler
            ratpack.error.ServerErrorHandler
            ratpack.registry.RegistrySpec
            ratpack.func.Action
@@ -23,15 +24,6 @@
   (let [callback #(reduce attach-route % handlers)]
     (.prefix chain path ^Action (helpers/action callback))))
 
-(defmethod attach-route :all
-  [^Chain chain [_ & handlers-and-path]]
-  (let [path (first handlers-and-path)]
-    (if (string? path)
-      (let [^List handlers (map handlers/ratpack-adapter (rest handlers-and-path))]
-        (.handler chain path (Handlers/chain handlers)))
-      (let [^List handlers (map handlers/ratpack-adapter handlers-and-path)]
-        (.handler chain (Handlers/chain handlers))))))
-
 (defmethod attach-route :error
   [^Chain chain [_ error-handler]]
   (letfn [(on-register [^RegistrySpec rspec]
@@ -47,20 +39,24 @@
   [^Chain chain [method & handlers-and-path]]
   (let [path (first handlers-and-path)]
     (if (string? path)
-      (let [^List handlers (map handlers/ratpack-adapter (rest handlers-and-path))]
-        (condp = method
-          :get (.get chain path (Handlers/chain handlers))
-          :post (.post chain path (Handlers/chain handlers))
-          :put (.put chain path (Handlers/chain handlers))
-          :patch (.patch chain path (Handlers/chain handlers))
-          :delete (.delete chain path (Handlers/chain handlers))))
-      (let [^List handlers (map handlers/ratpack-adapter handlers-and-path)]
-        (condp = method
-          :get (.get chain (Handlers/chain handlers))
-          :post (.post chain (Handlers/chain handlers))
-          :put (.put chain (Handlers/chain handlers))
-          :patch (.patch chain (Handlers/chain handlers))
-          :delete (.delete chain (Handlers/chain handlers)))))))
+      (let [^Handler handler (-> (map handlers/ratpack-adapter (rest handlers-and-path))
+                                 (Handlers/chain))]
+        (case method
+          :all (.handler chain path handler)
+          :get (.get chain path handler)
+          :post (.post chain path handler)
+          :put (.put chain path handler)
+          :patch (.patch chain path handler)
+          :delete (.delete chain path handler)))
+      (let [^Handler handler (-> (map handlers/ratpack-adapter handlers-and-path)
+                                (Handlers/chain))]
+        (case method
+          :all (.handler chain handler)
+          :get (.get chain handler)
+          :post (.post chain handler)
+          :put (.put chain handler)
+          :patch (.patch chain handler)
+          :delete (.delete chain handler))))))
 
 (defn routes
   "Is a high order function that access a routes vector

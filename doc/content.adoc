@@ -1,0 +1,336 @@
+= Catacumba - Asynchronous web toolkit for Clojure.
+Andrey Antukh, <niwi@niwi.be>
+:toc: left
+:numbered:
+:source-highlighter: pygments
+:pygments-style: friendly
+:sectlinks:
+
+== Introduction
+
+_Catacumba_ is an asynchronous and non-blocking web tookit for Clojure build on top of
+ratpack and netty. Is highly inspired by ratpack handlers approach with a little ideas from well
+known ring.
+
+
+== Rationale
+
+I start writting this library as a research project for provide a simple an non obstructive
+(a la ring) way to build asynchronous and non-blocking web services.
+
+In clojure echosystem exists some solutions for that purpose: pedestal, aleph, and jet. 
+All them are good clojure libraries/frameworks but them does not satisfies me for different reasons:
+
+* The pedestal approach is very opinionated and too much high level and I prefer something simple
+  and lightweight.
+* Aleph, seems a great library but lacks of documentation and its generic approach (not only http)
+  not helps.
+* Jet is a asynchronous ring addapter for jetty9. It is really great library that I have used in
+  some projects, and fits very well on my idea of web toolkit but it has two drawbacks, it is build
+  as ring adapter having all the good and all the bad of ring and it is using jetty (jetty is a
+  servlet server that comes with optional async support, it isn't asynchronous from the ground up).
+
+Here a incomplete list of thins that _Catacumba_ intends to have:
+
+- an extensible way to setup different kind of handlers.
+- fully async handlers support using core.async (with backpressure).
+- builtin routing with flexible way to chain henlers.
+- builtin websocket support.
+
+
+
+=== Goals
+
+_Catacumba_ goals are:
+
+* Provide a simple and lighweight aproach for define asynchronous web services.
+* Add facilities for work in asynchronous way without much pain.
+* To be flexible and not very opinionated.
+
+_Catacumba_ goals are not:
+
+* To by a fully integrated full stack solution like immutant or pedestal.
+* Provide a opinionated way to structure your "bussines logic"
+* Provide all possible features that you might need.
+
+
+== Project Maturity
+
+Since _catacumba_ is a young project there can be some API breakage.
+
+
+== Install
+
+This section covers the _catacumba_ library installing process and its requirements.
+
+
+=== Requirements
+
+_catacumba_ is only runs with JDK8 and Clojure 1.7.
+
+
+=== Leiningen
+
+The simplest way to use _catacumba_ in a clojure project, is by including it in the dependency
+vector on your *_project.clj_* file:
+
+._on project.clj_
+[source,clojure]
+----
+[funcool/catacumba "0.1.0"]
+----
+
+
+=== Gradle
+
+If you are using gradle, this is a dependency line for gradle dsl:
+
+[source,groovy]
+----
+compile "funcool:catacumba:0.1.0"
+----
+
+
+=== Get the Code
+
+_catacumba_ is open source and can be found on link:https://github.com/funcool/catacumba[github].
+
+You can clone the public repository with this command:
+
+[source,text]
+----
+git clone https://github.com/funcool/catacumba
+----
+
+
+== Quick Start
+
+This section intends to explain how to get _Catacumba_ up and running.
+
+=== First handler
+
+The handler consists in a function that accepts a "context" as first parameter and
+returns something rederable. Let see an example:
+
+[source, clojure]
+----
+(defn my-hello-world-handler
+  [context]
+  "Hello World")
+----
+
+
+=== Run the server
+
+Now having defined the simple, hello world handler, it is time to run it. For it
+import the `run-server` function from `catacumba.core` ns and execute it with
+handler as first parameter:
+
+[source, clojure]
+----
+(require '[catacumba.core :as ct])
+
+(ct/run-server my-hello-world-handler)
+----
+
+TIP: The `run-server` function does not blocks and you can execute it in a repl without
+problems. It uses jvm not daemon threads for avoid shutdown the jvm.
+
+== Handlers
+
+The handlers is a fundamental piece of the _Catacumba_ library and this chapter intends
+to explain everything related to defult handlers.
+
+=== What is a handler?
+
+As we have viewed in "Quick Start" section, a handler mainly consists in a simple function
+that acts on the handling context.
+
+Do not worry about the context, it will be explained in below sections. The only thing that you
+shoult known about context at this time, that is the central part of the request and response
+lifetime. It stores the current state of the http request and everything related.
+
+The hello world handler has this aspect:
+
+[source, clojure]
+----
+(defn myhandler
+  [ctx]
+  "Hello World")
+----
+
+NOTE: I mention the "default" word because, _Catacumba_ comes with different types of
+handlers out of the box and allows to be extended with used defined ones.
+
+
+=== Write to response
+
+As you can observe from the previous example, no status code is provided, only the content. For
+send a complete response you can use a builtin response type or ring like hashmap:
+
+[source, clojure]
+----
+(require '[catacumba.http :as http])
+
+(defn my-handler
+  [ctx]
+  (http/ok "Hello Workd"))
+----
+
+This is a list of supported output values:
+
+- a *string*, that will result in a response with 200 status code and "text/plain" as content type.
+- a *ring style* hash map.
+- a *response* type (very similar to ring one)
+
+
+The handler's return value is implemented using clojure protocols and its behavior can be extended
+easily with user defined types.
+
+Let see an other example, using _catacumba_'s response type with additional header:
+
+[source, clojure]
+----
+(require '[catacumba.http :as http])
+
+(defn myhandler
+  [ctx]
+  (http/ok "<p>Hello Workd</p>" {:content-type "text/html"}))
+----
+
+An other core part of the _catacumba_ (like in ratpack) is the *Context*. Is the central
+part of the request/response lifetime. It also has other responsabilities but are out of
+scope of this section.
+
+In the previous examples, we have seen how the return value is handled, but behind the scenes
+the context is the responsible of interactions with the request and the response. Let see the
+same example but interacting directly with context:
+
+[source, clojure]
+----
+(def myhandler
+  [ctx]
+  (ct/set-status! ctx 200)
+  (ct/send! ctx "hello world"))
+----
+
+The return value handling is really a helper for people that comes from ring. Internally, the
+context is the main protagonist in IO operations.
+
+So, through the context you can access to headers, cookies, params and routing tokens (see the
+next section).
+
+
+=== Reading the request
+
+TBD
+
+
+=== Headers
+
+TBD
+
+
+=== Cookies
+
+TBD
+
+
+== Routing
+
+TBD
+
+=== Basic syntax
+
+TBD
+
+
+=== Handlers chaining
+
+TBD
+
+
+=== Error handling
+
+TBD
+
+
+== Context
+
+An other core part of the _catacumba_ is the *Context*. Is the central
+part of the request/response lifetime. 
+
+The context in catacumba as in ratpack has this responsabilities:
+
+* Provide direct access to the request and response objects.
+* Access to the contextual objects (called registry).
+* Flow control in handler chaining.
+* Convenience helpers for common handlers operation.
+
+
+
+== Asynchronous & Non blocking
+
+TBD
+
+
+=== Asynchronous type handlers
+
+TBD
+
+
+=== Reactive streams
+
+TBD
+
+
+=== Execute blocking operations
+
+TBD
+
+
+
+== Launching the server
+
+TBD
+
+
+== FAQ
+
+== How to Contribute?
+
+=== Philosophy
+
+Five most important rules:
+
+- Beautiful is better than ugly.
+- Explicit is better than implicit.
+- Simple is better than complex.
+- Complex is better than complicated.
+- Readability counts.
+
+All contributions to _catacumba_ should keep these important rules in mind.
+
+
+=== Procedure
+
+**catacumba** unlike Clojure and other Clojure contrib libs, does not have many
+restrictions for contributions. Just follow the following steps depending on the
+situation:
+
+**Bugfix**:
+
+- Fork the GitHub repo.
+- Fix a bug/typo on a new branch.
+- Make a pull-request to master.
+
+**New feature**:
+
+- Open new issue with the new feature proposal.
+- If it is accepted, follow the same steps as "bugfix".
+
+
+== License
+
+_catacumba_ is licensed under Apache 2.0 License. You can see the complete text
+of the license on the root of the repository on `LICENSE` file.

@@ -10,6 +10,14 @@
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]]
   :profiles {:dev {:global-vars {*warn-on-reflection* true}
                                  ;; *unchecked-math* :warn-on-boxed}
+                   :codeina {:sources ["src"]
+                             :exclude [catacumba.impl]
+                             :language :clojure
+                             :output-dir "doc/api"
+                             :src-dir-uri "http://github.com/funcool/catacumba/blob/master/"
+                             :src-linenum-anchor-prefix "L"}
+                   :plugins [[funcool/codeina "0.1.0-SNAPSHOT"
+                              :exclusions [org.clojure/clojure]]]
                    :dependencies [[org.clojure/clojure "1.7.0-alpha6"]
                                   [clj-http "1.1.0"]
                                   [cc.qbits/jet "0.6.1"]

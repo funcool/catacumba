@@ -118,6 +118,24 @@
         (let [response (client/get base-url)]
           (is (= (:body response) "no error"))
           (is (= (:status response) 200))))))
+
+  (testing "User defined error handler"
+    (let [error-handler1 (fn [ctx error] (http/ok "no error1"))
+          error-handler2 (fn [ctx error] (http/ok "no error2"))
+          handler (fn [ctx] (throw (Exception. "foobar")))
+          router (ct/routes [[:prefix "foo"
+                              [:error error-handler1]
+                              [:all handler]]
+                             [:prefix "bar"
+                              [:error error-handler2]
+                              [:all handler]]])]
+      (with-server router
+        (let [response1 (client/get (str base-url "/foo"))
+              response2 (client/get (str base-url "/bar"))]
+          (is (= (:body response1) "no error1"))
+          (is (= (:body response2) "no error2"))
+          (is (= (:status response1) 200))
+          (is (= (:status response2) 200))))))
 )
 
 

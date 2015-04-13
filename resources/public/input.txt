@@ -1,0 +1,5 @@
+BEGIN
+destination:/queue/a
+content-type:text/plain
+
+hello queue

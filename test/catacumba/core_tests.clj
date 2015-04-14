@@ -178,3 +178,18 @@
           (let [formdata (deref p 1000 nil)]
             (is (= (get formdata "foo") "bar"))))))))
 
+(deftest request-body-handling
+  (testing "Read body as text"
+    (let [p (promise)
+          handler (fn [ctx]
+                    (let [body (ct/get-body ctx)]
+                      (deliver p (slurp body)))
+                    "hello world")]
+      (with-server (with-meta handler {:type :ratpack})
+        (let [response (client/get base-url {:body "Hello world"
+                                             :content-type "application/zip"})]
+          (is (= (:body response) "hello world"))
+          (is (= (:status response) 200))
+          (let [bodydata (deref p 1000 nil)]
+            (is (= bodydata "Hello world"))
+

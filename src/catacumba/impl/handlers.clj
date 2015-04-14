@@ -1,6 +1,7 @@
 (ns catacumba.impl.handlers
   (:refer-clojure :exclude [send])
-  (:require [catacumba.utils :as utils]
+  (:require [clojure.java.io :as io]
+            [catacumba.utils :as utils]
             [catacumba.impl.helpers :as helpers]
             [catacumba.impl.http :as http]
             [catacumba.impl.streams :as streams])
@@ -9,11 +10,15 @@
            ratpack.http.Request
            ratpack.http.Response
            ratpack.http.Headers
+           ratpack.http.TypedData
            ratpack.http.MutableHeaders
            ratpack.util.MultiValueMap
            io.netty.buffer.Unpooled
            io.netty.buffer.ByteBuf
            java.io.InputStream
+           java.io.BufferedReader
+           java.io.InputStreamReader
+           java.io.BufferedInputStream
            java.util.Map))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -37,6 +42,9 @@
 
 (defprotocol IHeadersSetter
   (set-headers [_ headers] "Set the headers."))
+
+(defprotocol IStatusCodeSetter
+  (set-status [_ status] "Set the status code."))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Protocol Implementations
@@ -92,6 +100,15 @@
             (recur (+ index readed)))))
       (.send response buf))))
 
+(extend-protocol IStatusCodeSetter
+  Context
+  (set-status [^Context ctx ^long status]
+    (set-status (.getResponse ctx) status))
+
+  Response
+  (set-status [^Response response ^long status]
+    (.status response status)))
+
 (extend-protocol IResponseGetter
   Context
   (get-response* [^Context ctx]
@@ -142,6 +159,38 @@
           (.set headersmap (name key) vals)
           (recur (rest headers)))))))
 
+(extend-protocol io/IOFactory
+  TypedData
+  (make-reader [d opts]
+    (BufferedReader. (InputStreamReader. (.getInputStream d) (:encoding opts "UTF-8"))))
+  (make-writer [d opts]
+    (throw (UnsupportedOperationException. "Cannot open as Reader.")))
+  (make-input-stream [d opts]
+    (BufferedInputStream. (.getInputStream d)))
+  (make-output-stream [d opts]
+    (throw (UnsupportedOperationException. "Cannot open as Reader.")))
+
+  Context
+  (make-reader [ctx opts]
+    (io/make-reader (get-body ctx) opts))
+  (make-writer [ctx opts]
+    (io/make-writer (get-body ctx) opts))
+  (make-input-stream [ctx opts]
+    (io/make-input-stream (get-body ctx) opts))
+  (make-output-stream [ctx opts]
+    (io/make-output-stream (get-body ctx) opts))
+
+  Request
+  (make-reader [req opts]
+    (io/make-reader (get-body req) opts))
+  (make-writer [req opts]
+    (io/make-writer (get-body req) opts))
+  (make-input-stream [req opts]
+    (io/make-input-stream (get-body req) opts))
+  (make-output-stream [req opts]
+    (io/make-output-stream (get-body req) opts))
+
+
 (defn- build-request
   [^Request request]
   (let [local-address (.getLocalAddress request)
@@ -175,6 +224,15 @@
   [i]
   (get-response* i))
 
+(defn get-body
+  "Helper for obtain a object that represents a request
+  body. The returned object implements the IOFactory
+  protocol that allows use it with `clojure.java.io`
+  functions and `slurp`."
+  [^Context context]
+  (let [^Request request (get-request* context)]
+    (.getBody request)))
+
 (defn get-headers
   "Get request headers.
 
@@ -190,6 +248,11 @@
   Context instances as response."
   [response headers]
   (set-headers response headers))
+
+(defn set-status!
+  "Set response status code."
+  [response status]
+  (set-status response status))
 
 (defn send!
   "Send data to the client."

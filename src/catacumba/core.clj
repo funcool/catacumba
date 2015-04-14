@@ -12,8 +12,10 @@
   delegate
   context-params]
  [catacumba.impl.handlers
+  get-body
   get-headers
   set-headers!
+  set-status!
   send!]
  [catacumba.impl.websocket
   websocket]

@@ -18,7 +18,7 @@ known ring.
 I start writting this library as a research project for provide a simple an non obstructive
 (a la ring) way to build asynchronous and non-blocking web services.
 
-In clojure echosystem exists some solutions for that purpose: pedestal, aleph, and jet. 
+In clojure echosystem exists some solutions for that purpose: pedestal, aleph, and jet.
 All them are good clojure libraries/frameworks but them does not satisfies me for different reasons:
 
 * The pedestal approach is very opinionated and too much high level and I prefer something simple
@@ -38,7 +38,6 @@ Here a incomplete list of thins that _Catacumba_ intends to have:
 - builtin websocket support.
 
 
-
 === Goals
 
 _Catacumba_ goals are:
@@ -46,12 +45,14 @@ _Catacumba_ goals are:
 * Provide a simple and lighweight aproach for define asynchronous web services.
 * Add facilities for work in asynchronous way without much pain.
 * To be flexible and not very opinionated.
+* Provide the basic abstractions (handlers, routing, websockets, ...).
 
 _Catacumba_ goals are not:
 
 * To by a fully integrated full stack solution like immutant or pedestal.
 * Provide a opinionated way to structure your "bussines logic"
 * Provide all possible features that you might need.
+* Low level, ring based library.
 
 
 == Project Maturity
@@ -85,7 +86,7 @@ vector on your *_project.clj_* file:
 
 If you are using gradle, this is a dependency line for gradle dsl:
 
-[source,groovy]
+[source, groovy]
 ----
 compile "funcool:catacumba:0.1.0"
 ----
@@ -136,10 +137,12 @@ handler as first parameter:
 TIP: The `run-server` function does not blocks and you can execute it in a repl without
 problems. It uses jvm not daemon threads for avoid shutdown the jvm.
 
+
 == Handlers
 
 The handlers is a fundamental piece of the _Catacumba_ library and this chapter intends
 to explain everything related to defult handlers.
+
 
 === What is a handler?
 
@@ -211,27 +214,74 @@ same example but interacting directly with context:
 (def myhandler
   [ctx]
   (ct/set-status! ctx 200)
+  (ct/set-headers! ctx {:content-type "text/plain"})
   (ct/send! ctx "hello world"))
 ----
 
 The return value handling is really a helper for people that comes from ring. Internally, the
 context is the main protagonist in IO operations.
 
-So, through the context you can access to headers, cookies, params and routing tokens (see the
-next section).
-
 
 === Reading the request
 
-TBD
+As we mentioned previously, the request can be retrieved also from context instance. But in our case,
+catacumpa provides helpers functions for access to the basic parts how the request body, incoming
+headers, cookies and routing tokens.
+
+You can access to the request object using `get-request` function. But, in almost all situations you
+do not need it because the _catacumba_ api is polymorphic and you cann access to almost all basic
+properties from request using a context as parameter, removing the repeating action of extracting
+the request form context.
 
 
-=== Headers
+==== Body
 
-TBD
+_Catacumba_ offers different ways to read the incoming data from request. All depens on that really
+you needs. If you are working with standatd http form submits (with `application/x-www-form-urlencoded`
+or `multipart/form-data`), you should use the `parse-formdata` helper function:
+
+[source, clojure]
+----
+(def myhandler
+  [context]
+  (let [formdata (ct/parse-formdata context)]
+    (do-something-with-formdata formdata)
+    (http/ok "Readed for data correctly")))
+----
+
+The return value of `parse-formdata` is a clojure map with parsed key value pairs, including files
+uploaded with `multipart/form-data` content type.
+
+In other some situations we need more low level access to the body. In this case, you can obtain a
+object instance that represents a body using the `get-body` function. The return value of that function
+implements the convenient protocols from `clojure.java.io` namespace, then you can use it for create
+a apropiate reader or input stream depending of you needs. Also, for convenience, the request and
+context instances also implements that protocol for make things more easy.
+
+A good demostration of it, is using the clojure `slurp` function. It uses `clojure.java.io` abstractions
+behind the scenes and seerves as helper for read some resource as string:
+
+[source, clojure]
+----
+(def myechohandler
+  [context]
+  (let [body (slurp context)]
+    (http/ok body)))
+----
+
+If you know the behavior of slurp, it reads the content of the provided resource as string and return
+it.
 
 
-=== Cookies
+==== Headers
+
+For extract headers you should use the `get-headers` function. Like as usual, is a polymorphic function
+and you could use it over context instance without problems. The return value is a clojure map.
+
+If a header has multiple values, the value will be a vector.
+
+
+==== Cookies
 
 TBD
 

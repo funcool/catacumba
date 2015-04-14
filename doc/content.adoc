@@ -288,27 +288,82 @@ TBD
 
 == Routing
 
-TBD
+In difference to ring, _catacumba_ is a toolkit for web development and offers builtin support for
+advanced routing that allows handlers chaining, partitioning, error handling, among others.
+
+_Catacumba_ has polymorphic and extensible way to setup handlers, and routing is one of possible
+implementations. Is completelly optional and you can use any ther routing library if you want.
 
 === Basic syntax
 
-TBD
+The routes in _catacumba_ are defined using clojure data structures, using vectors and keywords. Let
+see a little example of the aspect in a complete example:
+
+[source, clojure]
+----
+(def routes
+  (ct/routes [[:prefix "api"
+               [:get "users" users-handler]]]))
+
+(ct/run-server routes)
+----
+
+The order of statemens is very important because the routing in _catacumba_ is a simple chain or in
+other words: pipeline. The handlers has the ability to delegate the request handign to the next
+handler in the pipeline. If you know the *pedestal* interceptors concept, this is maybe also
+familiar for you.
 
 
 === Handlers chaining
 
-TBD
+The chaining of handlers can be done in different ways:
+
+- *inline*: providing more that one handler for concrete http method.
+- *multiple route*: providing a "match all" handlers at the start of prefix.
+
+The inline handlers chaining has this aspect:
+
+[source, clojure]
+----
+(ct/routes [[:get "users" permission-check-handler get-users-handler]])
+----
+
+And as all the route is a chain/pipeline, you can setup "catch all" handlers at the start and use
+them as interceptors:
+
+[source, clojure]
+----
+(def routes
+  (ct/routes [[:prefix "api"
+               [:all authentication-handler]
+               [:get "users" users-handler]]]))
+----
+
+For better understanding how the handlers chain delegation works, see the *Context* chapter
+of this documentation.
 
 
 === Error handling
 
-TBD
+//^ [source, clojure]
+//^ ----
+//^ (def routes
+//^   (ct/routes [[:prefix "api"
+//^                [:error my-error-handler-for-this-prefix]
+//^                [:all authentication-handler]
+//^                [:get "users" users-handler]
+//^                [:put "users" check-permissions-handler update-users-hander]]
+//^               [:prefix "statix"
+//^                [:assets "public"]]]))
+//^ (ct/run-server routes)
+//^ ----
 
+TBD
 
 == Context
 
 An other core part of the _catacumba_ is the *Context*. Is the central
-part of the request/response lifetime. 
+part of the request/response lifetime.
 
 The context in catacumba as in ratpack has this responsabilities:
 

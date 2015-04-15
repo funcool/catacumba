@@ -446,12 +446,45 @@ In this example the second handler prints the message found in the context.
 
 == Asynchronous & Non blocking
 
-TBD
-
-
 === Asynchronous type handlers
 
-TBD
+Async handlers in _catacumba_ are handlers that returns core.async channels in body or as response
+value. 
+
+Returning channel as a body has the advantage that you have the ability of set additional
+headers and returning code. But, if you are return a channel as a response value, the default
+status code will be set for you. The behavior of two approaches is the same, resultin in a chunked
+encoded response to the client.
+
+This is the aspect of async handler returning the channel as a body:
+
+[source, clojure]
+----
+(defn my-async-handler
+  [context]
+  (let [ch (chan)]
+    (go
+      (dotimes [i 10]
+        (<! (timeout 500))
+        (>! ch (str i "\n")))
+      (close! ch))
+    (http/ok ch)))
+----
+
+And this is the aspect of async handler returning channel as response:
+
+[source, clojure]
+----
+(defn my-async-handler
+  [context]
+  (go
+    (let [result (<! (do-some-async-task))]
+      (:message result)))
+----
+
+Do not worry about how data you can send to the client, if you are using channels in a right way
+in a go block, yo will send data to the client as fast as client can consume it. This technique is
+also called backpressure, and is fully supported for chunked responses.
 
 
 === Reactive streams

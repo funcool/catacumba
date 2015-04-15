@@ -191,5 +191,5 @@
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))
           (let [bodydata (deref p 1000 nil)]
-            (is (= bodydata "Hello world"))
+            (is (= bodydata "Hello world"))))))))
 

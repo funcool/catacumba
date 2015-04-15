@@ -1,6 +1,6 @@
 (defproject funcool/catacumba "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
+  :description "Asynchronous web toolkit for Clojure build on top of Ratpack."
+  :url "http://github.com/funcool/catacumba"
   :license {:name "BSD (2-Clause)"
             :url "http://opensource.org/licenses/BSD-2-Clause"}
   :dependencies [[io.ratpack/ratpack-core "0.9.15"]

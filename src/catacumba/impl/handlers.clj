@@ -159,6 +159,8 @@
           (.set headersmap (name key) vals)
           (recur (rest headers)))))))
 
+(declare get-body)
+
 (extend-protocol io/IOFactory
   TypedData
   (make-reader [d opts]
@@ -188,7 +190,7 @@
   (make-input-stream [req opts]
     (io/make-input-stream (get-body req) opts))
   (make-output-stream [req opts]
-    (io/make-output-stream (get-body req) opts))
+    (io/make-output-stream (get-body req) opts)))
 
 
 (defn- build-request

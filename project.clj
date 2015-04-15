@@ -12,7 +12,17 @@
   :profiles {:dev {:global-vars {*warn-on-reflection* true}
                                  ;; *unchecked-math* :warn-on-boxed}
                    :codeina {:sources ["src"]
-                             :exclude [catacumba.impl]
+                             :exclude [catacumba.impl.context
+                                       catacumba.impl.helpers
+                                       catacumba.impl.parse
+                                       catacumba.impl.handlers
+                                       catacumba.impl.server
+                                       catacumba.impl.http
+                                       catacumba.impl.routing
+                                       catacumba.impl.streams
+                                       catacumba.impl.websocket
+                                       catacumba.experimental.stomp.parser
+                                       catacumba.experimental.stomp.broker]
                              :language :clojure
                              :output-dir "doc/api"
                              :src-dir-uri "http://github.com/funcool/catacumba/blob/master/"

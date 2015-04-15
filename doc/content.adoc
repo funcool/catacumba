@@ -345,25 +345,46 @@ of this documentation.
 
 === Error handling
 
-//^ [source, clojure]
-//^ ----
-//^ (def routes
-//^   (ct/routes [[:prefix "api"
-//^                [:error my-error-handler-for-this-prefix]
-//^                [:all authentication-handler]
-//^                [:get "users" users-handler]
-//^                [:put "users" check-permissions-handler update-users-hander]]
-//^               [:prefix "statix"
-//^                [:assets "public"]]]))
-//^ (ct/run-server routes)
-//^ ----
+The _catacumba_ router chain allows setup user defined error handling functions. Do it is very
+simple, just add an other route entry of `:error` type:
 
-TBD
+[source, clojure]
+----
+(def routes
+  (ct/routes [[:error my-error-handler]
+              [:get "users" users-handler]]))
+----
+
+With previous code we have set a global (for all handlers in a route chain) error handler. But
+there also possible set different error handlers for different prefixes:
+
+[source, clojure]
+----
+(def routes
+  (ct/routes [[:prefix "api"
+               [:error my-error-handler-for-this-prefix]
+               [:all authentication-handler]
+               [:get "users" users-handler]
+               [:put "users" check-permissions-handler update-users-hander]]
+              [:prefix "statix"
+               [:error my-error-handler-for-this-other-prefix]
+               [:assets "public"]]]))
+----
+
+The error handler aspect is very similar to standard http handler, the difference is that it receives
+additional parameter the throwable instance:
+
+[source, clojure]
+----
+(defn my-error-hanlder
+  [ctx error]
+  (http/internal-server-error (.getMessage error)))
+----
+
 
 == Context
 
-An other core part of the _catacumba_ is the *Context*. Is the central
-part of the request/response lifetime.
+An other core part of the _catacumba_ is the *Context*. 
 
 The context in catacumba as in ratpack has this responsabilities:
 
@@ -372,6 +393,55 @@ The context in catacumba as in ratpack has this responsabilities:
 * Flow control in handler chaining.
 * Convenience helpers for common handlers operation.
 
+
+=== Contextual objects
+
+TBD
+
+
+=== Handlers delegation
+
+In _catacumba_, the request is handled using a chain of handlers. And one concrete handler can decide
+delegate tha work to the next matching handler in the chain. Probably, you have seen the different ways of chaining handlers in the router section, in this section we will see how we can delegate the request
+handling to the next matching handler.
+
+The delegation action can be done with `delegate` multiarity function. Let see a simple example:
+
+[source, clojure]
+----
+(defn handler1
+  [context]
+  (do-something context)
+  (ct/delegate context))
+
+(defn handler2
+  [context]
+  (http/ok "hello world"))
+
+(def router
+  (ct/routes [[:get "foo" handler1 handler2]]))
+----
+
+In this example, when request arrives to handler1, it delegates it to the next possible handler. It do
+not know about it, it just delegates to the next.
+
+Additionally to the simple handlers delegation, _catacumba_ offers a simple way to pass context data
+to the next handlers, passing additional parameter to the `delegate` function:
+
+[source, clojure]
+----
+(defn handler1
+  [context]
+  (do-something context)
+  (ct/delegate context {:message "foobar"}))
+
+(defn handler2
+  [context]
+  (let [data (ct/context-params context)]
+    (http/ok (:message data "hello world"))))
+----
+
+In this example the second handler prints the message found in the context.
 
 
 == Asynchronous & Non blocking

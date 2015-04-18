@@ -3,6 +3,13 @@
   :url "http://github.com/funcool/catacumba"
   :license {:name "BSD (2-Clause)"
             :url "http://opensource.org/licenses/BSD-2-Clause"}
+
+  :source-paths ["src" "src/clojure"]
+  :java-source-paths ["src/java"]
+
+  :jar-exclusions [#"\.swp|\.swo|user.clj"]
+  :javac-options ["-target" "1.8" "-source" "1.8" "-Xlint:-options"]
+
   :dependencies [[io.ratpack/ratpack-core "0.9.15"]
                  [org.slf4j/slf4j-simple "1.7.10"]
                  [environ "1.0.0"]

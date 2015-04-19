@@ -12,29 +12,18 @@
            ratpack.func.Function
            java.nio.file.Path))
 
-(defmulti ^:private setup-handler
+(defmulti setup-handler
   "A polymorphic function for setup the handler
   to the reatpack server instance builder."
-  (fn [handler spec] (:type (meta handler)))
-  :default :ratpack)
-
-(defmethod setup-handler :ratpack
-  [handler ^RatpackServerSpec spec]
-  (letfn [(rhandler [_] (handlers/ratpack-adapter handler))]
-    (.handler spec ^Function (helpers/function rhandler))))
+  (fn [handler spec] (:type (meta handler))))
 
 (defmethod setup-handler :ratpack-router
   [handler ^RatpackServerSpec spec]
   (.handlers spec ^Action (helpers/action handler)))
 
-(defmethod setup-handler :ring
+(defmethod setup-handler :default
   [handler ^RatpackServerSpec spec]
-  (letfn [(rhandler [_] (handlers/ring-adapter handler))]
-    (.handler spec ^Function (helpers/function rhandler))))
-
-(defmethod setup-handler :websocket
-  [handler ^RatpackServerSpec spec]
-  (letfn [(rhandler [_] (websocket/websocket-adapter handler))]
+  (letfn [(rhandler [_] (handlers/adapter handler))]
     (.handler spec ^Function (helpers/function rhandler))))
 
 (defn- bootstrap-registry

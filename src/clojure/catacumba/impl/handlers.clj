@@ -296,9 +296,13 @@
   (let [response (get-response context)]
     (send data response)))
 
-(defn ratpack-adapter
-  "Adapt a function based handler into ratpack
-  compatible handler instance."
+(defmulti adapter
+  "A polymorphic function for create the
+  handler adapter."
+  (fn [handler & args] (:type (meta handler)))
+  :default :ratpack)
+
+(defmethod adapter :ratpack
   [handler]
   (reify Handler
     (^void handle [_ ^Context context]
@@ -306,8 +310,7 @@
         (when (satisfies? IHandlerResponse response)
           (handle-response response context))))))
 
-(defn ring-adapter
-  "Adapt the ratpack style handler to ring compatible handler."
+(defmethod adapter :ring
   [handler]
   (reify Handler
     (^void handle [_ ^Context context]

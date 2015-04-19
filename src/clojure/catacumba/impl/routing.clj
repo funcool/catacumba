@@ -39,7 +39,7 @@
   [^Chain chain [method & handlers-and-path]]
   (let [path (first handlers-and-path)]
     (if (string? path)
-      (let [^Handler handler (-> (map handlers/ratpack-adapter (rest handlers-and-path))
+      (let [^Handler handler (-> (map handlers/adapter (rest handlers-and-path))
                                  (Handlers/chain))]
         (case method
           :all (.handler chain path handler)
@@ -48,7 +48,7 @@
           :put (.put chain path handler)
           :patch (.patch chain path handler)
           :delete (.delete chain path handler)))
-      (let [^Handler handler (-> (map handlers/ratpack-adapter handlers-and-path)
+      (let [^Handler handler (-> (map handlers/adapter handlers-and-path)
                                 (Handlers/chain))]
         (case method
           :all (.handler chain handler)

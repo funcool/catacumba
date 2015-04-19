@@ -3,7 +3,7 @@
   (:require [clojure.core.async :refer [chan go-loop close! >! <! put!] :as async]
             [catacumba.utils :as utils]
             [catacumba.impl.helpers :as helpers]
-            [catacumba.impl.streams :as streams])
+            [catacumba.impl.handlers :as handlers])
   (:import ratpack.handling.Handler
            ratpack.handling.Context
            ratpack.func.Action
@@ -61,10 +61,7 @@
     (->> (WebSocketSession. in out ctrl context handler)
          (WebSockets/websocket context))))
 
-
-(defn websocket-adapter
-  "Adapt a function based handler into ratpack
-  compatible handler instance."
+(defmethod handlers/adapter :websocket
   [handler]
   (reify Handler
     (^void handle [_ ^Context context]

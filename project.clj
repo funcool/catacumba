@@ -1,4 +1,4 @@
-(defproject funcool/catacumba "0.1.0-SNAPSHOT"
+(defproject funcool/catacumba "0.1.0-alpha1"
   :description "Asynchronous web toolkit for Clojure build on top of Ratpack."
   :url "http://github.com/funcool/catacumba"
   :license {:name "BSD (2-Clause)"
@@ -10,9 +10,11 @@
   :jar-exclusions [#"\.swp|\.swo|user.clj"]
   :javac-options ["-target" "1.8" "-source" "1.8" "-Xlint:-options"]
 
-  :dependencies [[io.ratpack/ratpack-core "0.9.15"]
+  :dependencies [[org.clojure/clojure "1.7.0-beta1"]
+                 [io.ratpack/ratpack-core "0.9.15"]
                  [org.slf4j/slf4j-simple "1.7.10"]
-                 [funcool/futura "0.1.0-SNAPSHOT"]
+                 [funcool/futura "0.1.0-SNAPSHOT"
+                  :exclusions [org.reactivestreams/reactive-streams]]
                  [environ "1.0.0"]
                  [potemkin "0.3.12"]
                  [funcool/cuerdas "0.4.0"]
@@ -29,6 +31,7 @@
                                        catacumba.impl.routing
                                        catacumba.impl.streams
                                        catacumba.impl.websocket
+                                       catacumba.experimental.stomp
                                        catacumba.experimental.stomp.parser
                                        catacumba.experimental.stomp.broker]
                              :language :clojure
@@ -37,8 +40,7 @@
                              :src-linenum-anchor-prefix "L"}
                    :plugins [[funcool/codeina "0.1.0-SNAPSHOT"
                               :exclusions [org.clojure/clojure]]]
-                   :dependencies [[org.clojure/clojure "1.7.0-alpha6"]
-                                  [clj-http "1.1.0"]
+                   :dependencies [[clj-http "1.1.0"]
                                   [cc.qbits/jet "0.6.1"]
                                   [ring/ring-core "1.3.2"
                                    :exclusions [javax.servlet/servlet-api

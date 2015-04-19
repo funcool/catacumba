@@ -81,7 +81,7 @@ vector on your *_project.clj_* file:
 ._on project.clj_
 [source,clojure]
 ----
-[funcool/catacumba "0.1.0-SNAPSHOT"]
+[funcool/catacumba "0.1.0-alpha1"]
 ----
 
 
@@ -91,7 +91,7 @@ If you are using gradle, this is a dependency line for gradle dsl:
 
 [source, groovy]
 ----
-compile "funcool:catacumba:0.1.0-SNAPSHOT"
+compile "funcool:catacumba:0.1.0-alpha1"
 ----
 
 
@@ -472,8 +472,8 @@ stream abstraction has huge amount of advantages. There three most important:
 
 === Channels
 
-The `core.async` channels is one of the supported abstractions that is supported by _catacumba_ out
-of the box. It consists in a handler that returns a body as a channel or response as a channel.
+The `core.async` channels is one of the supported abstractions that comes with _catacumba_ out
+of the box. It consist in a handler that returns a body as a channel or response as a channel.
 
 This is the aspect of async handler returning the channel as a body:
 

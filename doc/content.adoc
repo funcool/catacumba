@@ -180,7 +180,7 @@ send a complete response you can use a builtin response type or ring like hashma
 
 (defn my-handler
   [ctx]
-  (http/ok "Hello Workd"))
+  (http/ok "Hello World"))
 ----
 
 This is a list of supported output values:
@@ -201,7 +201,7 @@ Let see an other example, using _catacumba_'s response type with additional head
 
 (defn myhandler
   [ctx]
-  (http/ok "<p>Hello Workd</p>" {:content-type "text/html"}))
+  (http/ok "<p>Hello World</p>" {:content-type "text/html"}))
 ----
 
 An other core part of the _catacumba_ (like in ratpack) is the *Context*. Is the central

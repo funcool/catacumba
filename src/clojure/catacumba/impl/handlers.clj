@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [send])
   (:require [clojure.java.io :as io]
             [futura.stream :as stream]
+            [futura.promise :as p]
             [catacumba.utils :as utils]
             [catacumba.impl.helpers :as helpers]
             [catacumba.impl.http :as http])
@@ -13,6 +14,8 @@
            ratpack.http.TypedData
            ratpack.http.MutableHeaders
            ratpack.util.MultiValueMap
+           org.reactivestreams.Publisher
+           java.util.concurrent.CompletableFuture
            io.netty.buffer.Unpooled
            io.netty.buffer.ByteBuf
            java.io.InputStream
@@ -77,7 +80,23 @@
   (handle-response [data ^Context context]
     (let [^Response response (get-response* context)]
       (.status response 200)
-      (send data response))))
+      (send data response)))
+
+  Publisher
+  (handle-response [data ^Context context]
+    (let [^Response response (get-response* context)]
+      (.status response 200)
+      (send data response)))
+
+  futura.promise.Promise
+  (handle-response [data ^Context context]
+    (let [^Response response (get-response* context)]
+      (.status response 200)
+      (send data response)))
+
+  CompletableFuture
+  (handle-response [data ^Context context]
+    (handle-response (p/promise data) context)))
 
 (extend-protocol ISend
   String
@@ -86,8 +105,22 @@
 
   clojure.core.async.impl.channels.ManyToManyChannel
   (send [data ^Response response]
-    (->> (stream/publisher data)
-         (stream/publisher (map helpers/bytebuffer))
+    (-> (stream/publisher data)
+        (send response)))
+
+  futura.promise.Promise
+  (send [data ^Response response]
+    (-> (stream/publisher data)
+        (send response)))
+
+  CompletableFuture
+  (send [data ^Response response]
+    (-> (stream/publisher data)
+        (send response)))
+
+  Publisher
+  (send [data ^Response response]
+    (->> (stream/publisher (map helpers/bytebuffer) data)
          (.sendStream response)))
 
   InputStream

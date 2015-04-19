@@ -5,6 +5,10 @@
             [clojure.pprint :refer [pprint]]
             [clojure.core.async :as async]
             [clj-http.client :as client]
+            [futura.promise :as p]
+            [futura.stream :as stream]
+            [cats.core :as m]
+            [cuerdas.core :as str]
             [catacumba.core :as ct]
             [catacumba.http :as http]
             [catacumba.impl.parse :as parse])
@@ -68,14 +72,34 @@
           (is (= (:status response) 200))))))
 
   (testing "Using channel as response."
-    (let [handler (fn [ctx]
-                    (go
-                      (<! (timeout 100))
-                      "hello world"))]
+    (letfn [(handler [ctx]
+              (go
+                (<! (timeout 100))
+                "hello world"))]
       (with-server (with-meta handler {:type :ratpack})
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))))))
+
+  (testing "Using promise as response."
+    (letfn [(handler [ctx]
+              (m/mlet [x (p/promise (fn [resolve]
+                                      (async/thread (resolve "hello"))))]
+                (str x " world")))]
+      (with-server (with-meta handler {:type :ratpack})
+        (let [response (client/get base-url)]
+          (is (= (:body response) "hello world"))
+          (is (= (:status response) 200))))))
+
+  (testing "Using publisher as body"
+    (letfn [(handler [ctx]
+              (let [p (stream/publisher ["hello" " " "world"])
+                    p (stream/publisher (map str/upper) p)]
+                (http/accepted p)))]
+      (with-server (with-meta handler {:type :ratpack})
+        (let [response (client/get base-url)]
+          (is (= (:body response) "HELLO WORLD"))
+          (is (= (:status response) 202))))))
 )
 
 (deftest routing

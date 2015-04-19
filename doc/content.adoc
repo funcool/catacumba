@@ -35,7 +35,7 @@ Here a incomplete list of things that _Catacumba_ intends to have:
 - a flexible and extensible way to setup different kind of handlers.
 - build almost everything up on abstractions for easy extensibility.
 - support for async handlers (with promise, future, core.async, manifold, reactive-streams, ...)
-- builtin routing with flexible way to chain henlers.
+- builtin routing with flexible way to chain handlers.
 - builtin websocket support.
 - backpressure support out of the box.
 

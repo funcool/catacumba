@@ -1,7 +1,6 @@
 (ns catacumba.impl.websocket
   "Websocket handler adapter implementation."
   (:require [clojure.core.async :refer [chan go-loop close! >! <! put!] :as async]
-            [futura.atomic :as atomic]
             [catacumba.utils :as utils]
             [catacumba.impl.helpers :as helpers]
             [catacumba.impl.streams :as streams])
@@ -21,7 +20,7 @@
   (let [ch (async/chan)
         callback (fn [_] (async/close! ch))
         task (fn []
-               (-> (.send ws (streams/as-byte-buffer data))
+               (-> (.send ws (helpers/bytebuffer data))
                    (.then (helpers/action callback))))]
     (.submit executor ^Runnable task)
     ch))

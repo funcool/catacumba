@@ -1,6 +1,7 @@
 (ns catacumba.impl.helpers
   (:import ratpack.func.Action
-           ratpack.func.Function))
+           ratpack.func.Function
+           io.netty.buffer.Unpooled))
 
 (defn action
   "Coerce a plain clojure function into
@@ -18,3 +19,11 @@
     (apply [_ x]
       (callable x))))
 
+
+(defprotocol IByteBuffer
+  (bytebuffer [_] "Coerce to byte buffer."))
+
+(extend-protocol IByteBuffer
+  String
+  (bytebuffer [s]
+    (Unpooled/wrappedBuffer (.getBytes s "UTF-8"))))

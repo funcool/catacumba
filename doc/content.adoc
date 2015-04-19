@@ -30,12 +30,14 @@ All them are good clojure libraries/frameworks but them does not satisfies me fo
   as ring adapter having all the good and all the bad of ring and it is using jetty (jetty is a
   servlet server that comes with optional async support, it isn't asynchronous from the ground up).
 
-Here a incomplete list of thins that _Catacumba_ intends to have:
+Here a incomplete list of things that _Catacumba_ intends to have:
 
-- an extensible way to setup different kind of handlers.
-- fully async handlers support using core.async (with backpressure).
+- a flexible and extensible way to setup different kind of handlers.
+- build amost everything up on abstractions for easy extensibility.
+- support for async handlers (with promise, future, core.async, manifold, reactive-streams, ...)
 - builtin routing with flexible way to chain henlers.
 - builtin websocket support.
+- backpressure support out of the box.
 
 
 === Goals
@@ -67,7 +69,8 @@ This section covers the _catacumba_ library installing process and its requireme
 
 === Requirements
 
-_catacumba_ is only runs with JDK8 and Clojure 1.7.
+_Catacumba_ is only runs with *JDK8* and *Clojure 1.7+* (due to extensive use of transducers
+and jdk8 concurrency primitives).
 
 
 === Leiningen
@@ -78,7 +81,7 @@ vector on your *_project.clj_* file:
 ._on project.clj_
 [source,clojure]
 ----
-[funcool/catacumba "0.1.0"]
+[funcool/catacumba "0.1.0-SNAPSHOT"]
 ----
 
 
@@ -88,7 +91,7 @@ If you are using gradle, this is a dependency line for gradle dsl:
 
 [source, groovy]
 ----
-compile "funcool:catacumba:0.1.0"
+compile "funcool:catacumba:0.1.0-SNAPSHOT"
 ----
 
 
@@ -444,17 +447,33 @@ to the next handlers, passing additional parameter to the `delegate` function:
 In this example the second handler prints the message found in the context.
 
 
-== Asynchronous & Non blocking
+== Asynchronous Handlers
 
-=== Asynchronous type handlers
+_Catacumba_ has support for multiple abstractions for asynchronous (stream or not) abstractions and
+addopts a flexible and extensible way for make easy for the user adapt it to hes needs and hes
+abstractions.
 
-Async handlers in _catacumba_ are handlers that returns core.async channels in body or as response
-value.
+The main abstraction are defined in the link:http://ffff.com[futura library], that provides basic
+building blocks for promise like abstractions and stream abstraction.
 
-Returning channel as a body has the advantage that you have the ability of set additional
-headers and returning code. But, if you are return a channel as a response value, the default
-status code will be set for you. The behavior of two approaches is the same, resultin in a chunked
-encoded response to the client.
+The link:http://ffff.com[futura library] instead of reinvent the wheel, is build up on existing
+implementations such as:
+
+* _JDK8 CompletableFuture_ for *promise* abstraction.
+* _Reactive Streams_ for the *stream* abstraction.
+
+Using the link:http://www.reactive-streams.org/[reactive streams] instead of reinvent yet another
+stream abstraction has huge amount of advantages. There three most important:
+
+* Interoprability with all libraries that has support for reactive streams
+* Well and strongly defined behavior of the abstraction.
+* Comes with support for *backpressure* in its core (that is mandatory in asynchronous environments).
+
+
+=== Channels
+
+The `core.async` channels is one of the supported abstractions that is supported by _catacumba_ out
+of the box. It consists in a handler that returns a body as a channel or response as a channel.
 
 This is the aspect of async handler returning the channel as a body:
 
@@ -471,6 +490,11 @@ This is the aspect of async handler returning the channel as a body:
     (http/ok ch)))
 ----
 
+Returning channel as a body has the advantage that you have the ability of set additional
+headers and returning code. But, if you are return a channel as a response value, the default
+status code will be set for you. The behavior of two approaches is the same, resultin in a chunked
+encoded response to the client.
+
 And this is the aspect of async handler returning channel as response:
 
 [source, clojure]
@@ -486,21 +510,108 @@ Do not worry about how data you can send to the client, if you are using channel
 in a go block, yo will send data to the client as fast as client can consume it. This technique is
 also called backpressure, and is fully supported for chunked responses.
 
+NOTE: Behind the scenes it adapts the channel into link:http://www.reactive-streams.org/[Reactive Streams] `Publisher`.
 
-=== Reactive streams
+
+=== Promises
+
+Promises is an other abstraction supported out of the box in _catacumba_. It comes from the
+link:http://fff[futura library] and is build on top of JDK8 _CompletableFuture_.
+
+Sometimes, yo do not need send a chunked stream to the clien, but your "bussines logic" is defined
+with asynchronous friendly api using promises (or something similar). In this case, with _catacumba_
+you can return a promise as a body or as a response and the data will be sent to the client when
+the promise is successfully resolved.
+
+[source, clojure]
+----
+(require '[futura.promise :as p])
+
+(defn my-async-handler
+  [context]
+  (let [promise (p/promise "hello world")]
+    (http/ok promise {:content-type "text/plain"})))
+----
+
+Thanks to the *future* library internals, we can use it with link:http://fff[cats] `mlet` macro,
+that allows us structure pure async code in a synchronous way:
+
+[source, clojure]
+----
+(require '[futura.promise :as p])
+(require '[cats.core :as m])
+
+(defn my-async-handler
+  [context]
+  (m/mlet [a (something-that-return-promise context)
+           b (do-something-with a)]
+    (do-other-thing-with b)))
+----
+
+The result of `mlet` macro expression will be a *promise* with the eventually available result
+from `(do-other-thing-with b)` expression.
+
+
+=== Futures
+
+As previously explained promises are build on top of *CompletableFutures* of JDK8, _catacumba_ also
+supports the raw usage of them:
+
+[source, clojure]
+----
+(defn my-async-handler
+  [context]
+  (-> (something-that-returns-completable-future context)
+      (http/ok {:content-type "text/plain"})))
+----
+
+
+=== Manifold
+
+The link:https://github.com/ztellman/manifold[maniforld] library offers different kind of deferred and
+stream abstractions for clojure.
+
+I'm not very fan of it due to the lacks of good and easy readable documentation and its very complex
+implementation. But is one of the most mature libraries in clojure ecosystem.
+
+WARNING: support for manifold is not stil not implemented.
+
+
+=== Reactive Streams
+
+This is the core of all abstractions, and support for it comes out of the box from *ratpack*. All
+other abstractions that we have seen are always coerced to *Publisher* instance before send it to the
+client.
+
+Here nothing new to explain, if you have a function that return some kind of publisher, you can return
+it as response or send it as body like as usual.
+
+The adaptations and coerciones are done thanks to the link:http://ffff[futura library] that has more
+adaptations supported out of the box that which are comming with _catacumba_.
+
+Let see an example:
+
+[source, clojure]
+----
+(require '[futura.stream :as stream])
+(require '[cuerdas.core :as str])
+
+(defn my-async-handler
+  [context]
+  (let [pub (->> (stream/publisher ["hello" " " "world"])
+                 (stream/publisher (map str/upper)))]
+    (http/ok pub)))
+
+;; It will return a chunked response to the client with "HELLO WORLD" string.
+----
+
+Reactive streams implementation in link:http://ffff[futura library] comes with support for different
+kind of coercions and with clojure 1.7 *transducers*.
+
+
+== Websockets
 
 TBD
-
-
-=== Websockets
-
-TBD
-
-
-=== Execute blocking operations
-
-TBD
-
 
 
 == Launching the server

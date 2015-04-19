@@ -453,11 +453,11 @@ _Catacumba_ has support for multiple abstractions for asynchronous (stream or no
 addopts a flexible and extensible way for make easy for the user adapt it to hes needs and hes
 abstractions.
 
-The main abstraction are defined in the link:http://ffff.com[futura library], that provides basic
-building blocks for promise like abstractions and stream abstraction.
+The main abstraction are defined in the link:https://github.com/funcool/futura[futura library], 
+that provides basic building blocks for promise like abstractions and stream abstraction.
 
-The link:http://ffff.com[futura library] instead of reinvent the wheel, is build up on existing
-implementations such as:
+The link:https://github.com/funcool/futura[futura library] instead of reinvent the wheel, is build 
+up on existing implementations such as:
 
 * _JDK8 CompletableFuture_ for *promise* abstraction.
 * _Reactive Streams_ for the *stream* abstraction.
@@ -516,7 +516,7 @@ NOTE: Behind the scenes it adapts the channel into link:http://www.reactive-stre
 === Promises
 
 Promises is an other abstraction supported out of the box in _catacumba_. It comes from the
-link:http://fff[futura library] and is build on top of JDK8 _CompletableFuture_.
+link:https://github.com/funcool/futura[futura library] and is build on top of JDK8 _CompletableFuture_.
 
 Sometimes, yo do not need send a chunked stream to the clien, but your "bussines logic" is defined
 with asynchronous friendly api using promises (or something similar). In this case, with _catacumba_
@@ -533,8 +533,9 @@ the promise is successfully resolved.
     (http/ok promise {:content-type "text/plain"})))
 ----
 
-Thanks to the *future* library internals, we can use it with link:http://fff[cats] `mlet` macro,
-that allows us structure pure async code in a synchronous way:
+Thanks to the *future* library internals, we can use it with 
+link:https://github.com/funcool/cats[cats] `mlet` macro, that allows us structure pure async 
+code in a synchronous way:
 
 [source, clojure]
 ----
@@ -586,8 +587,9 @@ client.
 Here nothing new to explain, if you have a function that return some kind of publisher, you can return
 it as response or send it as body like as usual.
 
-The adaptations and coerciones are done thanks to the link:http://ffff[futura library] that has more
-adaptations supported out of the box that which are comming with _catacumba_.
+The adaptations and coerciones are done thanks to the
+link:https://github.com/funcool/futura[futura library] that has more adaptations supported out of the
+box that which are comming with _catacumba_.
 
 Let see an example:
 
@@ -605,8 +607,8 @@ Let see an example:
 ;; It will return a chunked response to the client with "HELLO WORLD" string.
 ----
 
-Reactive streams implementation in link:http://ffff[futura library] comes with support for different
-kind of coercions and with clojure 1.7 *transducers*.
+Reactive streams implementation in link:https://github.com/funcool/futura[futura library] comes with
+support for different kind of coercions and with clojure 1.7 *transducers*.
 
 
 == Websockets

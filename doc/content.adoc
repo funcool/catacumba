@@ -23,8 +23,8 @@ All them are good clojure libraries/frameworks but them does not satisfies me fo
 
 * The pedestal approach is very opinionated and too much high level and I prefer something simple
   and lightweight.
-* Aleph, seems a great library but lacks of documentation and its generic approach (not only http)
-  not helps.
+* Aleph, seems a great library but lacks of good user friendly documentation and its generic approach
+  (not only http) not helps much.
 * Jet is a asynchronous ring addapter for jetty9. It is really great library that I have used in
   some projects, and fits very well on my idea of web toolkit but it has two drawbacks, it is build
   as ring adapter having all the good and all the bad of ring and it is using jetty (jetty is a

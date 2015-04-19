@@ -569,7 +569,7 @@ supports the raw usage of them:
 
 === Manifold
 
-The link:https://github.com/ztellman/manifold[maniforld] library offers different kind of deferred and
+The link:https://github.com/ztellman/manifold[manifold] library offers different kind of deferred and
 stream abstractions for clojure.
 
 I'm not very fan of it due to the lacks of good and easy readable documentation and its very complex

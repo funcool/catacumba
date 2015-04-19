@@ -10,42 +10,68 @@
             [catacumba.core-tests :refer [with-server]]))
 
 
-(deftest experiments
-  (testing "Start websocket from the standard handler"
-    (letfn [(websocket [{:keys [in out]}]
-              (go
-                (let [received (<! in)]
-                  (>! out "PONG")
-                  (close! out))))
-            (handler [context]
-              (ct/websocket context websocket))]
-      (with-server (with-meta handler {:type :ratpack})
-        (let [p (promise)]
-          (ws/connect! "ws://localhost:5050/"
-                       (fn [{:keys [in out]}]
-                         (go
-                           (>! out "PING")
-                           (when (= "PONG" (<! in))
-                             (close! out)
-                             (deliver p true)))))
-          (is (deref p 1000 false))))))
+(deftest websocket-handshake-standard-handler
+  (letfn [(websocket [{:keys [in out]}]
+            (go
+              (let [received (<! in)]
+                (>! out "PONG")
+                (close! out))))
+          (handler [context]
+            (ct/websocket context websocket))]
+    (with-server (with-meta handler {:type :ratpack})
+      (let [p (promise)]
+        (ws/connect! "ws://localhost:5050/"
+                     (fn [{:keys [in out]}]
+                       (go
+                         (>! out "PING")
+                         (when (= "PONG" (<! in))
+                           (close! out)
+                           (deliver p true)))))
+        (is (deref p 1000 false))))))
 
-  (testing "Start websocket from the standard handler"
+(deftest websocket-handshake-websocket-handler
+  (letfn [(handler [{:keys [in out]}]
+            (go
+              (let [received (<! in)]
+                (>! out "PONG")
+                (close! out))))]
+    (with-server (with-meta handler {:type :websocket})
+      (let [p (promise)]
+        (ws/connect! "ws://localhost:5050/"
+                     (fn [{:keys [in out]}]
+                       (go
+                         (>! out "PING")
+                         (when (= "PONG" (<! in))
+                           (close! out)
+                           (deliver p true)))))
+        (is (deref p 1000 false)))))
+)
+
+(deftest websockets-backpressure
+  (let [p1 (promise)
+        p2 (promise)
+        p3 (promise)]
     (letfn [(handler [{:keys [in out]}]
               (go
                 (let [received (<! in)]
-                  (>! out "PONG")
-                  (close! out))))]
+                  (deliver p1 received))
+                (let [received (<! in)]
+                  (deliver p2 received))
+                (let [received (<! in)]
+                  (deliver p3 received))
+                (>! out "PONG")
+                (close! out)))]
       (with-server (with-meta handler {:type :websocket})
-        (let [p (promise)]
+        (let [p4 (promise)]
           (ws/connect! "ws://localhost:5050/"
                        (fn [{:keys [in out]}]
                          (go
-                           (>! out "PING")
+                           (>! out "foo")
+                           (<! (timeout 100))
+                           (>! out "bar")
+                           (<! (timeout 100))
+                           (>! out "baz")
                            (when (= "PONG" (<! in))
                              (close! out)
-                             (deliver p true)))))
-          (is (deref p 1000 false))))))
-)
-
-
+                             (deliver p4 true)))))
+          (is (deref p4 2000 false)))))))

@@ -16,12 +16,15 @@
 
 package catacumba.websocket;
 
+import ratpack.func.Action;
+
+
 public interface WebSocketHandler<T> {
 
   T onOpen(WebSocket webSocket) throws Exception;
 
   void onClose(WebSocketClose<T> close) throws Exception;
 
-  void onMessage(WebSocketMessage<T> frame) throws Exception;
+  void onMessage(WebSocketMessage<T> frame, Action<Void> ack) throws Exception;
 
 }

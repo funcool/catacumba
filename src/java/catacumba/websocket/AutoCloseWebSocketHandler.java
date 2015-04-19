@@ -16,6 +16,9 @@
 
 package catacumba.websocket;
 
+import ratpack.func.Action;
+
+
 public abstract class AutoCloseWebSocketHandler<T extends AutoCloseable> implements WebSocketHandler<T> {
 
   @Override
@@ -27,8 +30,7 @@ public abstract class AutoCloseWebSocketHandler<T extends AutoCloseable> impleme
   }
 
   @Override
-  public void onMessage(WebSocketMessage<T> frame) throws Exception {
-    // do nothing
+  public void onMessage(WebSocketMessage<T> frame, Action<Void> ack) throws Exception {
+    ack.execute(null);
   }
-
 }

@@ -24,11 +24,13 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.websocketx.*;
+import ratpack.func.Action;
 import ratpack.handling.Context;
 import ratpack.handling.direct.DirectChannelAccess;
 import ratpack.http.Request;
 import ratpack.server.PublicAddress;
 import catacumba.websocket.WebSocket;
+import catacumba.websocket.WebSocketMessage;
 import catacumba.websocket.WebSocketHandler;
 
 import java.net.URI;
@@ -115,8 +117,17 @@ public class WebSocketEngine {
                 return;
               }
               if (frame instanceof TextWebSocketFrame) {
-                TextWebSocketFrame textWebSocketFrame = (TextWebSocketFrame) frame;
-                handler.onMessage(new DefaultWebSocketMessage<>(webSocket, textWebSocketFrame.text(), openResult));
+                channel.config().setAutoRead(false);
+                final Action<Void> callback = new Action<Void>() {
+                    public void execute(Void input) {
+                      // channel.read();
+                      channel.config().setAutoRead(true);
+                    }
+                  };
+
+                final TextWebSocketFrame textWebSocketFrame = (TextWebSocketFrame) frame;
+                final WebSocketMessage message = new DefaultWebSocketMessage<>(webSocket, textWebSocketFrame.text(), openResult);
+                handler.onMessage(message, callback);
               }
             }
           }

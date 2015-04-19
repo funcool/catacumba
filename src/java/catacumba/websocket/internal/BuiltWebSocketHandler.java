@@ -52,11 +52,14 @@ public class BuiltWebSocketHandler<T> implements WebSocketHandler<T> {
   }
 
   @Override
-  public void onMessage(WebSocketMessage<T> frame) {
+  public void onMessage(WebSocketMessage<T> frame, Action<Void> ack) throws Exception {
     try {
       this.message.execute(frame);
     } catch (Exception e) {
       throw uncheck(e);
+    } finally {
+      // Auto ACK
+      ack.execute(null);
     }
   }
 }

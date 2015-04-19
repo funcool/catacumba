@@ -45,8 +45,9 @@
                 :ws ws :session this
                 :context context})))
 
-  (^void onMessage [_ ^WebSocketMessage msg]
-    (put! in (.getText msg)))
+  (^void onMessage [_ ^WebSocketMessage msg ^Action callback]
+    (put! in (.getText msg) (fn [_]
+                              (.execute callback nil))))
 
   (^void onClose [this ^WebSocketClose event]
     (put! ctrl [:close event])

@@ -44,7 +44,7 @@ Here a incomplete list of things that _Catacumba_ intends to have:
 
 _Catacumba_ goals are:
 
-* Provide a simple and lighweight aproach for define asynchronous web services.
+* Provide a simple and lightweight aproach for define asynchronous web services.
 * Add facilities for work in asynchronous way without much pain.
 * To be flexible and not very opinionated.
 * Provide the basic abstractions (handlers, routing, websockets, ...).

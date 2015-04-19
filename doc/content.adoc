@@ -741,7 +741,7 @@ java -Dcatacumba.port=8000 -Dcatacumba.debug=false -jar yourjarhere.jar
 TBD
 
 
-== How to Contribute?
+== Developers Guide
 
 === Philosophy
 
@@ -756,25 +756,23 @@ Five most important rules:
 All contributions to _catacumba_ should keep these important rules in mind.
 
 
-=== Procedure
+=== Contributing
 
 **catacumba** unlike Clojure and other Clojure contrib libs, does not have many
-restrictions for contributions. Just follow the following steps depending on the
-situation:
-
-**Bugfix**:
-
-- Fork the GitHub repo.
-- Fix a bug/typo on a new branch.
-- Make a pull-request to master.
-
-**New feature**:
-
-- Open new issue with the new feature proposal.
-- If it is accepted, follow the same steps as "bugfix".
+restrictions for contributions. Just open a issue or pull request.
 
 
-== License
+=== Run tests
+
+For run tests just execute this:
+
+[source, text]
+----
+lein test
+----
+
+
+=== License
 
 _catacumba_ is licensed under BSD (2-Clause) license:
 

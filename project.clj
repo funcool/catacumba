@@ -12,6 +12,7 @@
 
   :dependencies [[io.ratpack/ratpack-core "0.9.15"]
                  [org.slf4j/slf4j-simple "1.7.10"]
+                 [funcool/futura "0.1.0-SNAPSHOT"]
                  [environ "1.0.0"]
                  [potemkin "0.3.12"]
                  [funcool/cuerdas "0.4.0"]

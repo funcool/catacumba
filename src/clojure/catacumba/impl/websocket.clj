@@ -1,19 +1,32 @@
 (ns catacumba.impl.websocket
   "Websocket handler adapter implementation."
-  (:refer-clojure :exclude [send])
-  (:require [clojure.core.async :refer [chan go-loop close! >! <! put!]]
+  (:require [clojure.core.async :refer [chan go-loop close! >! <! put!] :as async]
+            [futura.atomic :as atomic]
             [catacumba.utils :as utils]
             [catacumba.impl.helpers :as helpers]
             [catacumba.impl.streams :as streams])
   (:import ratpack.handling.Handler
            ratpack.handling.Context
-           ratpack.websocket.WebSocketClose
-           ratpack.websocket.WebSocketHandler
-           ratpack.websocket.WebSocketMessage
-           ratpack.websocket.WebSockets
-           ratpack.websocket.WebSocket))
+           ratpack.func.Action
+           ratpack.exec.ExecController
+           java.util.concurrent.ExecutorService
+           catacumba.websocket.WebSocketClose
+           catacumba.websocket.WebSocketHandler
+           catacumba.websocket.WebSocketMessage
+           catacumba.websocket.WebSockets
+           catacumba.websocket.WebSocket))
 
-(deftype WebSocketSession [in out ctrl context handler ws]
+(defn send!
+  [^ExecutorService executor ^WebSocket ws data]
+  (let [ch (async/chan)
+        callback (fn [_] (async/close! ch))
+        task (fn []
+               (-> (.send ws (streams/as-byte-buffer data))
+                   (.then (helpers/action callback))))]
+    (.submit executor ^Runnable task)
+    ch))
+
+(deftype WebSocketSession [in out ctrl context handler]
   java.io.Closeable
   (close [_]
     (close! in)
@@ -21,16 +34,17 @@
     (close! ctrl))
 
   WebSocketHandler
-  (onOpen [this ^WebSocket ws']
-    (vreset! ws ws')
-    (go-loop []
-      (if-let [value (<! out)]
-        (do
-          (.send ws' (streams/as-byte-buffer value))
-          (recur))
-        (.close ws')))
-    (handler {:in in :out out :ctrl ctrl
-              :ws this :context context}))
+  (onOpen [this ^WebSocket ws]
+    (let [executor (.. context getController getExecutor)]
+      (go-loop []
+        (if-let [value (<! out)]
+          (do
+            (<! (send! executor ws value))
+            (recur))
+          (.close ws)))
+      (handler {:in in :out out :ctrl ctrl
+                :ws ws :session this
+                :context context})))
 
   (^void onMessage [_ ^WebSocketMessage msg]
     (put! in (.getText msg)))
@@ -44,7 +58,7 @@
   (let [in (chan 256)
         out (chan)
         ctrl (chan)]
-    (->> (WebSocketSession. in out ctrl context handler (volatile! nil))
+    (->> (WebSocketSession. in out ctrl context handler)
          (WebSockets/websocket context))))
 
 

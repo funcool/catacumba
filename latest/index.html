@@ -519,23 +519,31 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_error_handling">7.3. Error handling</a></li>
 </ul>
 </li>
-<li><a href="#_context">8. Context</a></li>
-<li><a href="#_asynchronous_non_blocking">9. Asynchronous &amp; Non blocking</a>
+<li><a href="#_context">8. Context</a>
 <ul class="sectlevel2">
-<li><a href="#_asynchronous_type_handlers">9.1. Asynchronous type handlers</a></li>
-<li><a href="#_reactive_streams">9.2. Reactive streams</a></li>
-<li><a href="#_execute_blocking_operations">9.3. Execute blocking operations</a></li>
+<li><a href="#_contextual_objects">8.1. Contextual objects</a></li>
+<li><a href="#_handlers_delegation">8.2. Handlers delegation</a></li>
 </ul>
 </li>
-<li><a href="#_launching_the_server">10. Launching the server</a></li>
-<li><a href="#_faq">11. FAQ</a></li>
-<li><a href="#_how_to_contribute">12. How to Contribute?</a>
+<li><a href="#_asynchronous_handlers">9. Asynchronous Handlers</a>
 <ul class="sectlevel2">
-<li><a href="#_philosophy">12.1. Philosophy</a></li>
-<li><a href="#_procedure">12.2. Procedure</a></li>
+<li><a href="#_channels">9.1. Channels</a></li>
+<li><a href="#_promises">9.2. Promises</a></li>
+<li><a href="#_futures">9.3. Futures</a></li>
+<li><a href="#_manifold">9.4. Manifold</a></li>
+<li><a href="#_reactive_streams">9.5. Reactive Streams</a></li>
 </ul>
 </li>
-<li><a href="#_license">13. License</a></li>
+<li><a href="#_websockets">10. Websockets</a></li>
+<li><a href="#_launching_the_server">11. Launching the server</a></li>
+<li><a href="#_faq">12. FAQ</a></li>
+<li><a href="#_how_to_contribute">13. How to Contribute?</a>
+<ul class="sectlevel2">
+<li><a href="#_philosophy">13.1. Philosophy</a></li>
+<li><a href="#_procedure">13.2. Procedure</a></li>
+</ul>
+</li>
+<li><a href="#_license">14. License</a></li>
 </ul>
 </div>
 </div>
@@ -580,21 +588,27 @@ servlet server that comes with optional async support, it isn&#8217;t asynchrono
 </ul>
 </div>
 <div class="paragraph">
-<p>Here a incomplete list of thins that <em>Catacumba</em> intends to have:</p>
+<p>Here a incomplete list of things that <em>Catacumba</em> intends to have:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>an extensible way to setup different kind of handlers.</p>
+<p>a flexible and extensible way to setup different kind of handlers.</p>
 </li>
 <li>
-<p>fully async handlers support using core.async (with backpressure).</p>
+<p>build amost everything up on abstractions for easy extensibility.</p>
+</li>
+<li>
+<p>support for async handlers (with promise, future, core.async, manifold, reactive-streams, &#8230;&#8203;)</p>
 </li>
 <li>
 <p>builtin routing with flexible way to chain henlers.</p>
 </li>
 <li>
 <p>builtin websocket support.</p>
+</li>
+<li>
+<p>backpressure support out of the box.</p>
 </li>
 </ul>
 </div>
@@ -658,7 +672,8 @@ servlet server that comes with optional async support, it isn&#8217;t asynchrono
 <div class="sect2">
 <h3 id="_requirements"><a class="link" href="#_requirements">4.1. Requirements</a></h3>
 <div class="paragraph">
-<p><em>catacumba</em> is only runs with JDK8 and Clojure 1.7.</p>
+<p><em>Catacumba</em> is only runs with <strong>JDK8</strong> and <strong>Clojure 1.7+</strong> (due to extensive use of transducers
+and jdk8 concurrency primitives).</p>
 </div>
 </div>
 <div class="sect2">
@@ -670,7 +685,7 @@ vector on your <strong><em>project.clj</em></strong> file:</p>
 <div class="listingblock">
 <div class="title"><em>on project.clj</em></div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">funcool/catacumba</span> <span class="tok-s">&quot;0.1.0&quot;</span><span class="tok-p">]</span></code></pre>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">funcool/catacumba</span> <span class="tok-s">&quot;0.1.0-SNAPSHOT&quot;</span><span class="tok-p">]</span></code></pre>
 </div>
 </div>
 </div>
@@ -681,7 +696,7 @@ vector on your <strong><em>project.clj</em></strong> file:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="groovy"><span class="tok-n">compile</span> <span class="tok-s2">&quot;funcool:catacumba:0.1.0&quot;</span></code></pre>
+<pre class="pygments highlight"><code data-lang="groovy"><span class="tok-n">compile</span> <span class="tok-s2">&quot;funcool:catacumba:0.1.0-SNAPSHOT&quot;</span></code></pre>
 </div>
 </div>
 </div>
@@ -1016,7 +1031,43 @@ of this documentation.</p>
 <div class="sect2">
 <h3 id="_error_handling"><a class="link" href="#_error_handling">7.3. Error handling</a></h3>
 <div class="paragraph">
-<p>TBD</p>
+<p>The <em>catacumba</em> router chain allows setup user defined error handling functions. Do it is very
+simple, just add an other route entry of <code>:error</code> type:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">routes</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/routes</span> <span class="tok-p">[[</span><span class="tok-ss">:error</span> <span class="tok-nv">my-error-handler</span><span class="tok-p">]</span>
+              <span class="tok-p">[</span><span class="tok-ss">:get</span> <span class="tok-s">&quot;users&quot;</span> <span class="tok-nv">users-handler</span><span class="tok-p">]]))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>With previous code we have set a global (for all handlers in a route chain) error handler. But
+there also possible set different error handlers for different prefixes:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">routes</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/routes</span> <span class="tok-p">[[</span><span class="tok-ss">:prefix</span> <span class="tok-s">&quot;api&quot;</span>
+               <span class="tok-p">[</span><span class="tok-ss">:error</span> <span class="tok-nv">my-error-handler-for-this-prefix</span><span class="tok-p">]</span>
+               <span class="tok-p">[</span><span class="tok-ss">:all</span> <span class="tok-nv">authentication-handler</span><span class="tok-p">]</span>
+               <span class="tok-p">[</span><span class="tok-ss">:get</span> <span class="tok-s">&quot;users&quot;</span> <span class="tok-nv">users-handler</span><span class="tok-p">]</span>
+               <span class="tok-p">[</span><span class="tok-ss">:put</span> <span class="tok-s">&quot;users&quot;</span> <span class="tok-nv">check-permissions-handler</span> <span class="tok-nv">update-users-hander</span><span class="tok-p">]]</span>
+              <span class="tok-p">[</span><span class="tok-ss">:prefix</span> <span class="tok-s">&quot;statix&quot;</span>
+               <span class="tok-p">[</span><span class="tok-ss">:error</span> <span class="tok-nv">my-error-handler-for-this-other-prefix</span><span class="tok-p">]</span>
+               <span class="tok-p">[</span><span class="tok-ss">:assets</span> <span class="tok-s">&quot;public&quot;</span><span class="tok-p">]]]))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The error handler aspect is very similar to standard http handler, the difference is that it receives
+additional parameter the throwable instance:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">my-error-hanlder</span>
+  <span class="tok-p">[</span><span class="tok-nv">ctx</span> <span class="tok-nv">error</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-nf">http/internal-server-error</span> <span class="tok-p">(</span><span class="tok-nf">.getMessage</span> <span class="tok-nv">error</span><span class="tok-p">)))</span></code></pre>
+</div>
 </div>
 </div>
 </div>
@@ -1025,8 +1076,7 @@ of this documentation.</p>
 <h2 id="_context"><a class="link" href="#_context">8. Context</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>An other core part of the <em>catacumba</em> is the <strong>Context</strong>. Is the central
-part of the request/response lifetime.</p>
+<p>An other core part of the <em>catacumba</em> is the <strong>Context</strong>.</p>
 </div>
 <div class="paragraph">
 <p>The context in catacumba as in ratpack has this responsabilities:</p>
@@ -1047,36 +1097,295 @@ part of the request/response lifetime.</p>
 </li>
 </ul>
 </div>
+<div class="sect2">
+<h3 id="_contextual_objects"><a class="link" href="#_contextual_objects">8.1. Contextual objects</a></h3>
+<div class="paragraph">
+<p>TBD</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_handlers_delegation"><a class="link" href="#_handlers_delegation">8.2. Handlers delegation</a></h3>
+<div class="paragraph">
+<p>In <em>catacumba</em>, the request is handled using a chain of handlers. And one concrete handler can decide
+delegate tha work to the next matching handler in the chain. Probably, you have seen the different ways of chaining handlers in the router section, in this section we will see how we can delegate the request
+handling to the next matching handler.</p>
+</div>
+<div class="paragraph">
+<p>The delegation action can be done with <code>delegate</code> multiarity function. Let see a simple example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler1</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-nf">do-something</span> <span class="tok-nv">context</span><span class="tok-p">)</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/delegate</span> <span class="tok-nv">context</span><span class="tok-p">))</span>
+
+<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler2</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-s">&quot;hello world&quot;</span><span class="tok-p">))</span>
+
+<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">router</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/routes</span> <span class="tok-p">[[</span><span class="tok-ss">:get</span> <span class="tok-s">&quot;foo&quot;</span> <span class="tok-nv">handler1</span> <span class="tok-nv">handler2</span><span class="tok-p">]]))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this example, when request arrives to handler1, it delegates it to the next possible handler. It do
+not know about it, it just delegates to the next.</p>
+</div>
+<div class="paragraph">
+<p>Additionally to the simple handlers delegation, <em>catacumba</em> offers a simple way to pass context data
+to the next handlers, passing additional parameter to the <code>delegate</code> function:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler1</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-nf">do-something</span> <span class="tok-nv">context</span><span class="tok-p">)</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/delegate</span> <span class="tok-nv">context</span> <span class="tok-p">{</span><span class="tok-ss">:message</span> <span class="tok-s">&quot;foobar&quot;</span><span class="tok-p">}))</span>
+
+<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler2</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">data</span> <span class="tok-p">(</span><span class="tok-nf">ct/context-params</span> <span class="tok-nv">context</span><span class="tok-p">)]</span>
+    <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-p">(</span><span class="tok-ss">:message</span> <span class="tok-nv">data</span> <span class="tok-s">&quot;hello world&quot;</span><span class="tok-p">))))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this example the second handler prints the message found in the context.</p>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_asynchronous_non_blocking"><a class="link" href="#_asynchronous_non_blocking">9. Asynchronous &amp; Non blocking</a></h2>
+<h2 id="_asynchronous_handlers"><a class="link" href="#_asynchronous_handlers">9. Asynchronous Handlers</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>Catacumba</em> has support for multiple abstractions for asynchronous (stream or not) abstractions and
+addopts a flexible and extensible way for make easy for the user adapt it to hes needs and hes
+abstractions.</p>
+</div>
+<div class="paragraph">
+<p>The main abstraction are defined in the <a href="http://ffff.com">futura library</a>, that provides basic
+building blocks for promise like abstractions and stream abstraction.</p>
+</div>
+<div class="paragraph">
+<p>The <a href="http://ffff.com">futura library</a> instead of reinvent the wheel, is build up on existing
+implementations such as:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><em>JDK8 CompletableFuture</em> for <strong>promise</strong> abstraction.</p>
+</li>
+<li>
+<p><em>Reactive Streams</em> for the <strong>stream</strong> abstraction.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Using the <a href="http://www.reactive-streams.org/">reactive streams</a> instead of reinvent yet another
+stream abstraction has huge amount of advantages. There three most important:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Interoprability with all libraries that has support for reactive streams</p>
+</li>
+<li>
+<p>Well and strongly defined behavior of the abstraction.</p>
+</li>
+<li>
+<p>Comes with support for <strong>backpressure</strong> in its core (that is mandatory in asynchronous environments).</p>
+</li>
+</ul>
+</div>
+<div class="sect2">
+<h3 id="_channels"><a class="link" href="#_channels">9.1. Channels</a></h3>
+<div class="paragraph">
+<p>The <code>core.async</code> channels is one of the supported abstractions that is supported by <em>catacumba</em> out
+of the box. It consists in a handler that returns a body as a channel or response as a channel.</p>
+</div>
+<div class="paragraph">
+<p>This is the aspect of async handler returning the channel as a body:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">my-async-handler</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">ch</span> <span class="tok-p">(</span><span class="tok-nf">chan</span><span class="tok-p">)]</span>
+    <span class="tok-p">(</span><span class="tok-nf">go</span>
+      <span class="tok-p">(</span><span class="tok-nb">dotimes </span><span class="tok-p">[</span><span class="tok-nv">i</span> <span class="tok-mi">10</span><span class="tok-p">]</span>
+        <span class="tok-p">(</span><span class="tok-nf">&lt;!</span> <span class="tok-p">(</span><span class="tok-nf">timeout</span> <span class="tok-mi">500</span><span class="tok-p">))</span>
+        <span class="tok-p">(</span><span class="tok-nf">&gt;!</span> <span class="tok-nv">ch</span> <span class="tok-p">(</span><span class="tok-nb">str </span><span class="tok-nv">i</span> <span class="tok-s">&quot;\n&quot;</span><span class="tok-p">)))</span>
+      <span class="tok-p">(</span><span class="tok-nf">close!</span> <span class="tok-nv">ch</span><span class="tok-p">))</span>
+    <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-nv">ch</span><span class="tok-p">)))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Returning channel as a body has the advantage that you have the ability of set additional
+headers and returning code. But, if you are return a channel as a response value, the default
+status code will be set for you. The behavior of two approaches is the same, resultin in a chunked
+encoded response to the client.</p>
+</div>
+<div class="paragraph">
+<p>And this is the aspect of async handler returning channel as response:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">my-async-handler</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-nf">go</span>
+    <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">result</span> <span class="tok-p">(</span><span class="tok-nf">&lt;!</span> <span class="tok-p">(</span><span class="tok-nf">do-some-async-task</span><span class="tok-p">))]</span>
+      <span class="tok-p">(</span><span class="tok-ss">:message</span> <span class="tok-nv">result</span><span class="tok-p">)))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Do not worry about how data you can send to the client, if you are using channels in a right way
+in a go block, yo will send data to the client as fast as client can consume it. This technique is
+also called backpressure, and is fully supported for chunked responses.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Behind the scenes it adapts the channel into <a href="http://www.reactive-streams.org/">Reactive Streams</a> <code>Publisher</code>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_promises"><a class="link" href="#_promises">9.2. Promises</a></h3>
+<div class="paragraph">
+<p>Promises is an other abstraction supported out of the box in <em>catacumba</em>. It comes from the
+<a href="http://fff">futura library</a> and is build on top of JDK8 <em>CompletableFuture</em>.</p>
+</div>
+<div class="paragraph">
+<p>Sometimes, yo do not need send a chunked stream to the clien, but your "bussines logic" is defined
+with asynchronous friendly api using promises (or something similar). In this case, with <em>catacumba</em>
+you can return a promise as a body or as a response and the data will be sent to the client when
+the promise is successfully resolved.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">futura.promise</span> <span class="tok-ss">:as</span> <span class="tok-nv">p</span><span class="tok-p">])</span>
+
+<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">my-async-handler</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">promise</span> <span class="tok-p">(</span><span class="tok-nf">p/promise</span> <span class="tok-s">&quot;hello world&quot;</span><span class="tok-p">)]</span>
+    <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-nv">promise</span> <span class="tok-p">{</span><span class="tok-ss">:content-type</span> <span class="tok-s">&quot;text/plain&quot;</span><span class="tok-p">})))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Thanks to the <strong>future</strong> library internals, we can use it with <a href="http://fff">cats</a> <code>mlet</code> macro,
+that allows us structure pure async code in a synchronous way:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">futura.promise</span> <span class="tok-ss">:as</span> <span class="tok-nv">p</span><span class="tok-p">])</span>
+<span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">cats.core</span> <span class="tok-ss">:as</span> <span class="tok-nv">m</span><span class="tok-p">])</span>
+
+<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">my-async-handler</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-nf">m/mlet</span> <span class="tok-p">[</span><span class="tok-nv">a</span> <span class="tok-p">(</span><span class="tok-nf">something-that-return-promise</span> <span class="tok-nv">context</span><span class="tok-p">)</span>
+           <span class="tok-nv">b</span> <span class="tok-p">(</span><span class="tok-nf">do-something-with</span> <span class="tok-nv">a</span><span class="tok-p">)]</span>
+    <span class="tok-p">(</span><span class="tok-nf">do-other-thing-with</span> <span class="tok-nv">b</span><span class="tok-p">)))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The result of <code>mlet</code> macro expression will be a <strong>promise</strong> with the eventually available result
+from <code>(do-other-thing-with b)</code> expression.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_futures"><a class="link" href="#_futures">9.3. Futures</a></h3>
+<div class="paragraph">
+<p>As previously explained promises are build on top of <strong>CompletableFutures</strong> of JDK8, <em>catacumba</em> also
+supports the raw usage of them:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">my-async-handler</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-nb">-&gt; </span><span class="tok-p">(</span><span class="tok-nf">something-that-returns-completable-future</span> <span class="tok-nv">context</span><span class="tok-p">)</span>
+      <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-p">{</span><span class="tok-ss">:content-type</span> <span class="tok-s">&quot;text/plain&quot;</span><span class="tok-p">})))</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_manifold"><a class="link" href="#_manifold">9.4. Manifold</a></h3>
+<div class="paragraph">
+<p>The <a href="https://github.com/ztellman/manifold">maniforld</a> library offers different kind of deferred and
+stream abstractions for clojure.</p>
+</div>
+<div class="paragraph">
+<p>I&#8217;m not very fan of it due to the lacks of good and easy readable documentation and its very complex
+implementation. But is one of the most mature libraries in clojure ecosystem.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Warning</div>
+</td>
+<td class="content">
+support for manifold is not stil not implemented.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_reactive_streams"><a class="link" href="#_reactive_streams">9.5. Reactive Streams</a></h3>
+<div class="paragraph">
+<p>This is the core of all abstractions, and support for it comes out of the box from <strong>ratpack</strong>. All
+other abstractions that we have seen are always coerced to <strong>Publisher</strong> instance before send it to the
+client.</p>
+</div>
+<div class="paragraph">
+<p>Here nothing new to explain, if you have a function that return some kind of publisher, you can return
+it as response or send it as body like as usual.</p>
+</div>
+<div class="paragraph">
+<p>The adaptations and coerciones are done thanks to the <a href="http://ffff">futura library</a> that has more
+adaptations supported out of the box that which are comming with <em>catacumba</em>.</p>
+</div>
+<div class="paragraph">
+<p>Let see an example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">futura.stream</span> <span class="tok-ss">:as</span> <span class="tok-nv">stream</span><span class="tok-p">])</span>
+<span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">cuerdas.core</span> <span class="tok-ss">:as</span> <span class="tok-nv">str</span><span class="tok-p">])</span>
+
+<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">my-async-handler</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">pub</span> <span class="tok-p">(</span><span class="tok-nf">-&gt;&gt;</span> <span class="tok-p">(</span><span class="tok-nf">stream/publisher</span> <span class="tok-p">[</span><span class="tok-s">&quot;hello&quot;</span> <span class="tok-s">&quot; &quot;</span> <span class="tok-s">&quot;world&quot;</span><span class="tok-p">])</span>
+                 <span class="tok-p">(</span><span class="tok-nf">stream/publisher</span> <span class="tok-p">(</span><span class="tok-nb">map </span><span class="tok-nv">str/upper</span><span class="tok-p">)))]</span>
+    <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-nv">pub</span><span class="tok-p">)))</span>
+
+<span class="tok-c1">;; It will return a chunked response to the client with &quot;HELLO WORLD&quot; string.</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Reactive streams implementation in <a href="http://ffff">futura library</a> comes with support for different
+kind of coercions and with clojure 1.7 <strong>transducers</strong>.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_websockets"><a class="link" href="#_websockets">10. Websockets</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>TBD</p>
 </div>
-<div class="sect2">
-<h3 id="_asynchronous_type_handlers"><a class="link" href="#_asynchronous_type_handlers">9.1. Asynchronous type handlers</a></h3>
-<div class="paragraph">
-<p>TBD</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_reactive_streams"><a class="link" href="#_reactive_streams">9.2. Reactive streams</a></h3>
-<div class="paragraph">
-<p>TBD</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_execute_blocking_operations"><a class="link" href="#_execute_blocking_operations">9.3. Execute blocking operations</a></h3>
-<div class="paragraph">
-<p>TBD</p>
-</div>
-</div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_launching_the_server"><a class="link" href="#_launching_the_server">10. Launching the server</a></h2>
+<h2 id="_launching_the_server"><a class="link" href="#_launching_the_server">11. Launching the server</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>TBD</p>
@@ -1084,16 +1393,16 @@ part of the request/response lifetime.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_faq"><a class="link" href="#_faq">11. FAQ</a></h2>
+<h2 id="_faq"><a class="link" href="#_faq">12. FAQ</a></h2>
 <div class="sectionbody">
 
 </div>
 </div>
 <div class="sect1">
-<h2 id="_how_to_contribute"><a class="link" href="#_how_to_contribute">12. How to Contribute?</a></h2>
+<h2 id="_how_to_contribute"><a class="link" href="#_how_to_contribute">13. How to Contribute?</a></h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_philosophy"><a class="link" href="#_philosophy">12.1. Philosophy</a></h3>
+<h3 id="_philosophy"><a class="link" href="#_philosophy">13.1. Philosophy</a></h3>
 <div class="paragraph">
 <p>Five most important rules:</p>
 </div>
@@ -1121,7 +1430,7 @@ part of the request/response lifetime.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_procedure"><a class="link" href="#_procedure">12.2. Procedure</a></h3>
+<h3 id="_procedure"><a class="link" href="#_procedure">13.2. Procedure</a></h3>
 <div class="paragraph">
 <p><strong>catacumba</strong> unlike Clojure and other Clojure contrib libs, does not have many
 restrictions for contributions. Just follow the following steps depending on the
@@ -1160,18 +1469,45 @@ situation:</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_license"><a class="link" href="#_license">13. License</a></h2>
+<h2 id="_license"><a class="link" href="#_license">14. License</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><em>catacumba</em> is licensed under Apache 2.0 License. You can see the complete text
-of the license on the root of the repository on <code>LICENSE</code> file.</p>
+<p><em>catacumba</em> is licensed under BSD (2-Clause) license:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Copyright (c) 2015, Andrey Antukh &lt;niwi@niwi.be&gt;
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
+</div>
 </div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-04-15 09:53:29 CEST
+Last updated 2015-04-19 13:57:24 CEST
 </div>
 </div>
 </body>

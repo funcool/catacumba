@@ -535,15 +535,16 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </ul>
 </li>
 <li><a href="#_websockets">10. Websockets</a></li>
-<li><a href="#_launching_the_server">11. Launching the server</a></li>
-<li><a href="#_faq">12. FAQ</a></li>
-<li><a href="#_how_to_contribute">13. How to Contribute?</a>
+<li><a href="#_ring">11. Ring</a></li>
+<li><a href="#_launching_the_server">12. Launching the server</a></li>
+<li><a href="#_faq">13. FAQ</a></li>
+<li><a href="#_how_to_contribute">14. How to Contribute?</a>
 <ul class="sectlevel2">
-<li><a href="#_philosophy">13.1. Philosophy</a></li>
-<li><a href="#_procedure">13.2. Procedure</a></li>
+<li><a href="#_philosophy">14.1. Philosophy</a></li>
+<li><a href="#_procedure">14.2. Procedure</a></li>
 </ul>
 </li>
-<li><a href="#_license">14. License</a></li>
+<li><a href="#_license">15. License</a></li>
 </ul>
 </div>
 </div>
@@ -596,7 +597,7 @@ servlet server that comes with optional async support, it isn&#8217;t asynchrono
 <p>a flexible and extensible way to setup different kind of handlers.</p>
 </li>
 <li>
-<p>build amost everything up on abstractions for easy extensibility.</p>
+<p>build almost everything up on abstractions for easy extensibility.</p>
 </li>
 <li>
 <p>support for async handlers (with promise, future, core.async, manifold, reactive-streams, &#8230;&#8203;)</p>
@@ -801,7 +802,7 @@ lifetime. It stores the current state of the http request and everything related
 <div class="title">Note</div>
 </td>
 <td class="content">
-I mention the "default" word because, <em>Catacumba</em> comes with different types of
+I mention the "default" word because, <em>catacumba</em> comes with different types of
 handlers out of the box and allows to be extended with used defined ones.
 </td>
 </tr>
@@ -1164,12 +1165,12 @@ addopts a flexible and extensible way for make easy for the user adapt it to hes
 abstractions.</p>
 </div>
 <div class="paragraph">
-<p>The main abstraction are defined in the <a href="http://ffff.com">futura library</a>, that provides basic
-building blocks for promise like abstractions and stream abstraction.</p>
+<p>The main abstraction are defined in the <a href="https://github.com/funcool/futura">futura library</a>,
+that provides basic building blocks for promise like abstractions and stream abstraction.</p>
 </div>
 <div class="paragraph">
-<p>The <a href="http://ffff.com">futura library</a> instead of reinvent the wheel, is build up on existing
-implementations such as:</p>
+<p>The <a href="https://github.com/funcool/futura">futura library</a> instead of reinvent the wheel, is build
+up on existing implementations such as:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1260,7 +1261,7 @@ Behind the scenes it adapts the channel into <a href="http://www.reactive-stream
 <h3 id="_promises"><a class="link" href="#_promises">9.2. Promises</a></h3>
 <div class="paragraph">
 <p>Promises is an other abstraction supported out of the box in <em>catacumba</em>. It comes from the
-<a href="http://fff">futura library</a> and is build on top of JDK8 <em>CompletableFuture</em>.</p>
+<a href="https://github.com/funcool/futura">futura library</a> and is build on top of JDK8 <em>CompletableFuture</em>.</p>
 </div>
 <div class="paragraph">
 <p>Sometimes, yo do not need send a chunked stream to the clien, but your "bussines logic" is defined
@@ -1279,8 +1280,9 @@ the promise is successfully resolved.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Thanks to the <strong>future</strong> library internals, we can use it with <a href="http://fff">cats</a> <code>mlet</code> macro,
-that allows us structure pure async code in a synchronous way:</p>
+<p>Thanks to the <strong>future</strong> library internals, we can use it with
+<a href="https://github.com/funcool/cats">cats</a> <code>mlet</code> macro, that allows us structure pure async
+code in a synchronous way:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1349,8 +1351,9 @@ client.</p>
 it as response or send it as body like as usual.</p>
 </div>
 <div class="paragraph">
-<p>The adaptations and coerciones are done thanks to the <a href="http://ffff">futura library</a> that has more
-adaptations supported out of the box that which are comming with <em>catacumba</em>.</p>
+<p>The adaptations and coerciones are done thanks to the
+<a href="https://github.com/funcool/futura">futura library</a> that has more adaptations supported out of the
+box that which are comming with <em>catacumba</em>.</p>
 </div>
 <div class="paragraph">
 <p>Let see an example:</p>
@@ -1370,8 +1373,8 @@ adaptations supported out of the box that which are comming with <em>catacumba</
 </div>
 </div>
 <div class="paragraph">
-<p>Reactive streams implementation in <a href="http://ffff">futura library</a> comes with support for different
-kind of coercions and with clojure 1.7 <strong>transducers</strong>.</p>
+<p>Reactive streams implementation in <a href="https://github.com/funcool/futura">futura library</a> comes with
+support for different kind of coercions and with clojure 1.7 <strong>transducers</strong>.</p>
 </div>
 </div>
 </div>
@@ -1380,12 +1383,188 @@ kind of coercions and with clojure 1.7 <strong>transducers</strong>.</p>
 <h2 id="_websockets"><a class="link" href="#_websockets">10. Websockets</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>TBD</p>
+<p>One of the main goals of <em>catacumba</em> is come with builtin, full featured and backpressure aware
+websockets support.</p>
+</div>
+<div class="paragraph">
+<p>You can start a websocket connection in any <em>catacumba</em> handler or route handler using <code>websocket</code>
+function. It not need special handlers for treat websockets. Let see an example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">my-websocket-echo-handler</span>
+  <span class="tok-p">[{</span><span class="tok-ss">:keys</span> <span class="tok-p">[</span><span class="tok-nv">in</span> <span class="tok-nv">out</span><span class="tok-p">]}]</span>
+  <span class="tok-p">(</span><span class="tok-nf">go-loop</span> <span class="tok-p">[]</span>
+    <span class="tok-p">(</span><span class="tok-nb">if-let </span><span class="tok-p">[</span><span class="tok-nv">received</span> <span class="tok-p">(</span><span class="tok-nf">&lt;!</span> <span class="tok-nv">in</span><span class="tok-p">)]</span>
+      <span class="tok-p">(</span><span class="tok-nf">do</span>
+        <span class="tok-p">(</span><span class="tok-nf">&gt;!</span> <span class="tok-nv">out</span> <span class="tok-nv">received</span><span class="tok-p">)</span>
+        <span class="tok-p">(</span><span class="tok-nf">recur</span><span class="tok-p">))</span>
+      <span class="tok-p">(</span><span class="tok-nf">close!</span> <span class="tok-nv">out</span><span class="tok-p">))))</span>
+
+<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">my-handler</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/websocket</span> <span class="tok-nv">context</span> <span class="tok-nv">my-websocket-echo-handler</span><span class="tok-p">))</span>
+
+<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">route</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/routes</span> <span class="tok-p">[[</span><span class="tok-ss">:prefix</span> <span class="tok-s">&quot;events&quot;</span>
+               <span class="tok-p">[</span><span class="tok-ss">:all</span> <span class="tok-nv">my-handler</span><span class="tok-p">]]]))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>It is very simple, you can use a plain handlers or handlers attached in a route chain with the ability
+to start websocket connection in any place.</p>
+</div>
+<div class="paragraph">
+<p>Additionally, <em>catacumba</em> offers a a way to setup websocket handler directly, without additional step
+on standard handler:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">echo-handler</span>
+  <span class="tok-s">&quot;This is my echo handler that serves as</span>
+<span class="tok-s">  a websocket handler example.&quot;</span>
+  <span class="tok-p">{</span><span class="tok-ss">:type</span> <span class="tok-ss">:websocket</span><span class="tok-p">}</span>
+  <span class="tok-p">[{</span><span class="tok-ss">:keys</span> <span class="tok-p">[</span><span class="tok-nv">in</span> <span class="tok-nv">out</span><span class="tok-p">]}]</span>
+  <span class="tok-p">(</span><span class="tok-nf">go-loop</span> <span class="tok-p">[]</span>
+    <span class="tok-p">(</span><span class="tok-nb">if-let </span><span class="tok-p">[</span><span class="tok-nv">received</span> <span class="tok-p">(</span><span class="tok-nf">&lt;!</span> <span class="tok-nv">in</span><span class="tok-p">)]</span>
+      <span class="tok-p">(</span><span class="tok-nf">do</span>
+        <span class="tok-p">(</span><span class="tok-nf">&gt;!</span> <span class="tok-nv">out</span> <span class="tok-nv">received</span><span class="tok-p">)</span>
+        <span class="tok-p">(</span><span class="tok-nf">recur</span><span class="tok-p">))</span>
+      <span class="tok-p">(</span><span class="tok-nf">close!</span> <span class="tok-nv">out</span><span class="tok-p">))))</span>
+
+<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">route</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/routes</span> <span class="tok-p">[[</span><span class="tok-ss">:prefix</span> <span class="tok-s">&quot;events&quot;</span>
+               <span class="tok-p">[</span><span class="tok-ss">:all</span> <span class="tok-nv">echo-handler</span><span class="tok-p">]]]))</span></code></pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">
+The handlers adaptation is driven by its metadata and is defined using clojure multimethods. It allows you define own adapters for websockets or any other handlers if the builtin does not satisfies you.
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_launching_the_server"><a class="link" href="#_launching_the_server">11. Launching the server</a></h2>
+<h2 id="_ring"><a class="link" href="#_ring">11. Ring</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Although ring support is not first citizen in <em>catacumba</em>, the current design of it allows create an
+handler adapter that follows the ring specification. This is a great example of extensibility of
+<em>catacumba</em>.</p>
+</div>
+<div class="paragraph">
+<p>Let see how it can be done:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">myringhandler</span>
+  <span class="tok-s">&quot;My example ring handler.&quot;</span>
+  <span class="tok-p">{</span><span class="tok-ss">:type</span> <span class="tok-ss">:ring</span><span class="tok-p">}</span>
+  <span class="tok-p">[</span><span class="tok-nv">request</span><span class="tok-p">]</span>
+  <span class="tok-p">{</span><span class="tok-ss">:status</span> <span class="tok-mi">200</span>
+   <span class="tok-ss">:body</span> <span class="tok-s">&quot;hello world&quot;</span><span class="tok-p">})</span>
+
+<span class="tok-c1">;; As standalone handler</span>
+<span class="tok-p">(</span><span class="tok-nf">ct/run-server</span> <span class="tok-nv">myringhandler</span><span class="tok-p">)</span>
+
+<span class="tok-c1">;; Or in a _catacumba_ routing chain</span>
+<span class="tok-p">(</span><span class="tok-nb">-&gt; </span><span class="tok-p">(</span><span class="tok-nf">ct/routes</span> <span class="tok-p">[[</span><span class="tok-ss">:get</span> <span class="tok-nv">myringhandler</span><span class="tok-p">]])</span>
+    <span class="tok-p">(</span><span class="tok-nf">ct/run-server</span><span class="tok-p">))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Ring handlers can be set as standalone handlers (mainly for use them as compojure and all related
+middlewares) or in a <em>catacumba</em>'s routing chain.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_launching_the_server"><a class="link" href="#_launching_the_server">12. Launching the server</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>As you can see in the quick start section, the main entry point for start the server is
+the <code>run-server</code> function that receives a handler and a map with options.</p>
+</div>
+<div class="paragraph">
+<p>At this moment, it has a very little subset of options that netty and ratpack offers but is good
+start point.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 1. Supported options</caption>
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-center valign-top">Keyword</th>
+<th class="tableblock halign-center valign-top">Default</th>
+<th class="tableblock halign-center valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:port</code></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>5050</code></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">The port to listen on.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:threads</code></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">(num of cores * 2)</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">The number of threads for handler requests.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:debug</code></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>true</code></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Start in development mode.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:setup</code></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">nil</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">A callback for configuration step (low level ratpack access).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:basedir</code></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">nil</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">The application base directory, used mainly for resolve relative paths and assets.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>All supported options of this function, can be overwritten on jvm startup, using environment variables
+or system properties. This allows customize the server out of source code and exists for convenience
+for make easy customizations in deployments.</p>
+</div>
+<div class="paragraph">
+<p>For example, you can change the default port on jvm startup using <code>CATACUMBA_PORT</code> environment variable
+or <code>catacumba.port</code> system property:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example using enviroment variables</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span class="tok-nb">export </span><span class="tok-nv">CATACUMBA_PORT</span><span class="tok-o">=</span>8000
+<span class="tok-nb">export </span><span class="tok-nv">CATACUMBA_BASEDIR</span><span class="tok-o">=</span><span class="tok-sb">`</span><span class="tok-nb">pwd</span><span class="tok-sb">`</span>
+java -jar yourjarhere.jar</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Example using enviroment variables</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash">java -Dcatacumba.port<span class="tok-o">=</span><span class="tok-m">8000</span> -Dcatacumba.debug<span class="tok-o">=</span><span class="tok-nb">false</span> -jar yourjarhere.jar</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_faq"><a class="link" href="#_faq">13. FAQ</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>TBD</p>
@@ -1393,16 +1572,10 @@ kind of coercions and with clojure 1.7 <strong>transducers</strong>.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_faq"><a class="link" href="#_faq">12. FAQ</a></h2>
-<div class="sectionbody">
-
-</div>
-</div>
-<div class="sect1">
-<h2 id="_how_to_contribute"><a class="link" href="#_how_to_contribute">13. How to Contribute?</a></h2>
+<h2 id="_how_to_contribute"><a class="link" href="#_how_to_contribute">14. How to Contribute?</a></h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_philosophy"><a class="link" href="#_philosophy">13.1. Philosophy</a></h3>
+<h3 id="_philosophy"><a class="link" href="#_philosophy">14.1. Philosophy</a></h3>
 <div class="paragraph">
 <p>Five most important rules:</p>
 </div>
@@ -1430,7 +1603,7 @@ kind of coercions and with clojure 1.7 <strong>transducers</strong>.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_procedure"><a class="link" href="#_procedure">13.2. Procedure</a></h3>
+<h3 id="_procedure"><a class="link" href="#_procedure">14.2. Procedure</a></h3>
 <div class="paragraph">
 <p><strong>catacumba</strong> unlike Clojure and other Clojure contrib libs, does not have many
 restrictions for contributions. Just follow the following steps depending on the
@@ -1469,7 +1642,7 @@ situation:</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_license"><a class="link" href="#_license">14. License</a></h2>
+<h2 id="_license"><a class="link" href="#_license">15. License</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p><em>catacumba</em> is licensed under BSD (2-Clause) license:</p>
@@ -1507,7 +1680,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-04-19 13:57:24 CEST
+Last updated 2015-04-19 16:45:27 CEST
 </div>
 </div>
 </body>

@@ -8,7 +8,7 @@ Andrey Antukh, <niwi@niwi.be>
 
 == Introduction
 
-_Catacumba_ is an asynchronous and non-blocking web toolkit for Clojure build on top of
+_Catacumba_ is an asynchronous and non-blocking web toolkit for Clojure built on top of
 ratpack and netty. Is highly inspired by ratpack handlers approach with a little ideas from the
 well known ring.
 

@@ -33,7 +33,7 @@ All them are good clojure libraries/frameworks but them does not satisfies me fo
 Here a incomplete list of things that _Catacumba_ intends to have:
 
 - a flexible and extensible way to setup different kind of handlers.
-- build amost everything up on abstractions for easy extensibility.
+- build almost everything up on abstractions for easy extensibility.
 - support for async handlers (with promise, future, core.async, manifold, reactive-streams, ...)
 - builtin routing with flexible way to chain henlers.
 - builtin websocket support.
@@ -165,7 +165,7 @@ The hello world handler has this aspect:
   "Hello World")
 ----
 
-NOTE: I mention the "default" word because, _Catacumba_ comes with different types of
+NOTE: I mention the "default" word because, _catacumba_ comes with different types of
 handlers out of the box and allows to be extended with used defined ones.
 
 
@@ -665,6 +665,34 @@ on standard handler:
 ----
 
 TIP: The handlers adaptation is driven by its metadata and is defined using clojure multimethods. It allows you define own adapters for websockets or any other handlers if the builtin does not satisfies you.
+
+== Ring
+
+Although ring support is not first citizen in _catacumba_, the current design of it allows create an
+handler adapter that follows the ring specification. This is a great example of extensibility of
+_catacumba_.
+
+Let see how it can be done:
+
+[source, clojure]
+----
+(defn myringhandler
+  "My example ring handler."
+  {:type :ring}
+  [request]
+  {:status 200
+   :body "hello world"})
+
+;; As standalone handler
+(ct/run-server myringhandler)
+
+;; Or in a _catacumba_ routing chain
+(-> (ct/routes [[:get myringhandler]])
+    (ct/run-server))
+----
+
+Ring handlers can be set as standalone handlers (mainly for use them as compojure and all related
+middlewares) or in a _catacumba_'s routing chain.
 
 
 == Launching the server

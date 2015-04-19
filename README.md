@@ -2,7 +2,7 @@
 
 The asynchronous web toolkit for clojure build on top of Ratpack
 
-WARNING: catacumba is stil in design phase.
+[![Clojars Project](http://clojars.org/funcool/catacumba/latest-version.svg)](http://clojars.org/funcool/catacumba)
 
 See the [documentation](https://funcool.github.io/catacumba/latest/) or
 [api reference](https://funcool.github.io/catacumba/latest/api/) for more detailed

@@ -8,8 +8,7 @@
  [catacumba.impl.routing
   routes]
  [catacumba.impl.context
-  delegate
-  context-params]
+  delegate]
  [catacumba.impl.handlers
   get-body
   get-headers

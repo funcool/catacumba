@@ -10,7 +10,7 @@
   :jar-exclusions [#"\.swp|\.swo|user.clj"]
   :javac-options ["-target" "1.8" "-source" "1.8" "-Xlint:-options"]
 
-  :dependencies [[org.clojure/clojure "1.7.0-beta1"]
+  :dependencies [[org.clojure/clojure "1.7.0-beta2"]
                  [io.ratpack/ratpack-core "0.9.15"]
                  [org.slf4j/slf4j-simple "1.7.10"]
                  [funcool/futura "0.1.0-SNAPSHOT"

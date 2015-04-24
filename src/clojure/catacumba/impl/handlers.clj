@@ -161,7 +161,7 @@
     (let [^Headers headers (.getHeaders request)
           ^MultiValueMap headers (.asMultiValueMap headers)]
       (persistent!
-       (reduce (fn [acc key]
+       (reduce (fn [acc ^String key]
                  (let [values (.getAll headers key)
                        key (.toLowerCase key)]
                    (reduce #(utils/assoc-conj! %1 key %2) acc values)))
@@ -184,7 +184,8 @@
 (extend-protocol io/IOFactory
   TypedData
   (make-reader [d opts]
-    (BufferedReader. (InputStreamReader. (.getInputStream d) (:encoding opts "UTF-8"))))
+    (BufferedReader. (InputStreamReader. ^InputStream (.getInputStream d)
+                                         ^String (:encoding opts "UTF-8"))))
   (make-writer [d opts]
     (throw (UnsupportedOperationException. "Cannot open as Reader.")))
   (make-input-stream [d opts]

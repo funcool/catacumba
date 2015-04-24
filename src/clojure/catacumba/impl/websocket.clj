@@ -10,6 +10,7 @@
            ratpack.func.Action
            ratpack.exec.ExecController
            java.util.concurrent.ExecutorService
+           io.netty.buffer.ByteBuf
            catacumba.impl.context.DefaultContext
            catacumba.websocket.WebSocketClose
            catacumba.websocket.WebSocketHandler
@@ -24,8 +25,9 @@
   (let [ch (async/chan)
         callback (fn [_] (async/close! ch))]
     (.submit executor ^Runnable (fn []
-                                  (-> (.send ws (helpers/bytebuffer data))
-                                      (.then (helpers/action callback)))))
+                                  (let [^ByteBuf data (helpers/bytebuffer data)]
+                                    (-> (.send ws data)
+                                        (.then (helpers/action callback))))))
     ch))
 
 (deftype WebSocketSession [in out ctrl context handler]
@@ -63,7 +65,7 @@
         out (chan)
         ctrl (chan)]
     (->> (WebSocketSession. in out ctrl context handler)
-         (WebSockets/websocket (:catacumba/context context)))))
+         (WebSockets/websocket ^Context (:catacumba/context context)))))
 
 (defmethod handlers/adapter :websocket
   [handler]

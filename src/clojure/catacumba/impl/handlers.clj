@@ -4,6 +4,7 @@
             [futura.stream :as stream]
             [futura.promise :as p]
             [catacumba.utils :as utils]
+            [catacumba.impl.context :as ctx]
             [catacumba.impl.helpers :as helpers]
             [catacumba.impl.http :as http])
   (:import ratpack.handling.Handler
@@ -14,6 +15,7 @@
            ratpack.http.TypedData
            ratpack.http.MutableHeaders
            ratpack.util.MultiValueMap
+           catacumba.impl.context.DefaultContext
            org.reactivestreams.Publisher
            java.util.concurrent.CompletableFuture
            io.netty.buffer.Unpooled
@@ -34,20 +36,15 @@
 (defprotocol IHandlerResponse
   (handle-response [_ context] "Handle the ratpack handler response."))
 
-(defprotocol IResponseGetter
-  (get-response* [_] "Get the response."))
+(defprotocol IHeaders
+  (get-headers* [_] "Get headers.")
+  (set-headers* [_ headers] "Set the headers."))
 
-(defprotocol IRequestGetter
-  (get-request* [_] "Get the request."))
+(defprotocol IResponse
+  (set-status* [_ status] "Set the status code."))
 
-(defprotocol IHeadersGetter
-  (get-headers* [_] "Get headers."))
-
-(defprotocol IHeadersSetter
-  (set-headers [_ headers] "Set the headers."))
-
-(defprotocol IStatusCodeSetter
-  (set-status [_ status] "Set the status code."))
+(defprotocol IRequest
+  (get-body* [_] "Get the body."))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Protocol Implementations
@@ -55,47 +52,47 @@
 
 (extend-protocol IHandlerResponse
   String
-  (handle-response [data ^Context context]
-    (let [response (get-response* context)]
+  (handle-response [data ^DefaultContext context]
+    (let [response (:response context)]
       (send data response)))
 
   clojure.lang.IPersistentMap
-  (handle-response [data ^Context context]
-    (let [^Response response (get-response* context)
+  (handle-response [data ^DefaultContext context]
+    (let [^Response response (:response context)
           {:keys [status headers body]} data]
       (when status
         (.status response ^long status))
       (when headers
-        (set-headers response headers))
+        (set-headers* response headers))
       (send body response)))
 
   catacumba.impl.http.Response
-  (handle-response [data ^Context context]
-    (let [^Response response (get-response* context)]
+  (handle-response [data ^DefaultContext context]
+    (let [^Response response (:response context)]
       (.status response ^long (:status data))
-      (set-headers response (:headers data))
+      (set-headers* response (:headers data))
       (send (:body data) response)))
 
   clojure.core.async.impl.channels.ManyToManyChannel
-  (handle-response [data ^Context context]
-    (let [^Response response (get-response* context)]
+  (handle-response [data ^DefaultContext context]
+    (let [^Response response (:response context)]
       (.status response 200)
       (send data response)))
 
   Publisher
-  (handle-response [data ^Context context]
-    (let [^Response response (get-response* context)]
+  (handle-response [data ^DefaultContext context]
+    (let [^Response response (:response context)]
       (.status response 200)
       (send data response)))
 
   futura.promise.Promise
-  (handle-response [data ^Context context]
-    (let [^Response response (get-response* context)]
+  (handle-response [data ^DefaultContext context]
+    (let [^Response response (:response context)]
       (.status response 200)
       (send data response)))
 
   CompletableFuture
-  (handle-response [data ^Context context]
+  (handle-response [data ^DefaultContext context]
     (handle-response (p/promise data) context)))
 
 (extend-protocol ISend
@@ -134,38 +131,30 @@
             (recur (+ index readed)))))
       (.send response buf))))
 
-(extend-protocol IStatusCodeSetter
-  Context
-  (set-status [^Context ctx ^long status]
-    (set-status (.getResponse ctx) status))
+(extend-protocol IResponse
+  DefaultContext
+  (set-status* [^DefaultContext ctx ^long status]
+    (set-status* (:response ctx) status))
 
   Response
-  (set-status [^Response response ^long status]
+  (set-status* [^Response response ^long status]
     (.status response status)))
 
-(extend-protocol IResponseGetter
-  Context
-  (get-response* [^Context ctx]
-    (.getResponse ctx))
-
-  Response
-  (get-response* [rsp]
-    rsp))
-
-(extend-protocol IRequestGetter
-  Context
-  (get-request* [^Context ctx]
-    (.getRequest ctx))
+(extend-protocol IRequest
+  DefaultContext
+  (get-body* [^DefaultContext context]
+    (get-body* ^Request (:request context)))
 
   Request
-  (get-request* [req]
-    req))
+  (get-body* [^Request request]
+    (.getBody request)))
 
-(extend-protocol IHeadersGetter
-  Context
-  (get-headers* [^Context ctx]
-    (let [^Request request (get-request* ctx)]
-      (get-headers* request)))
+(extend-protocol IHeaders
+  DefaultContext
+  (get-headers* [^DefaultContext ctx]
+    (get-headers* ^Request (:request ctx)))
+  (set-headers* [^DefaultContext ctx headers]
+    (set-headers* ^Response (:response ctx) headers))
 
   Request
   (get-headers* [^Request request]
@@ -177,23 +166,20 @@
                        key (.toLowerCase key)]
                    (reduce #(utils/assoc-conj! %1 key %2) acc values)))
                (transient {})
-               (.keySet headers))))))
-
-(extend-protocol IHeadersSetter
-  Context
-  (set-headers [^Context ctx headers]
-    (let [^Response request (get-response* ctx)]
-      (set-headers request headers)))
+               (.keySet headers)))))
+  (set-headers* [_ _]
+    (throw (UnsupportedOperationException.)))
 
   Response
-  (set-headers [^Response response headers]
+  (get-headers* [_]
+    (throw (UnsupportedOperationException.)))
+
+  (set-headers* [^Response response headers]
     (let [^MutableHeaders headersmap (.getHeaders response)]
       (loop [headers headers]
         (when-let [[key vals] (first headers)]
           (.set headersmap (name key) vals)
           (recur (rest headers)))))))
-
-(declare get-body)
 
 (extend-protocol io/IOFactory
   TypedData
@@ -208,24 +194,23 @@
 
   Context
   (make-reader [ctx opts]
-    (io/make-reader (get-body ctx) opts))
+    (io/make-reader (get-body* ctx) opts))
   (make-writer [ctx opts]
-    (io/make-writer (get-body ctx) opts))
+    (io/make-writer (get-body* ctx) opts))
   (make-input-stream [ctx opts]
-    (io/make-input-stream (get-body ctx) opts))
+    (io/make-input-stream (get-body* ctx) opts))
   (make-output-stream [ctx opts]
-    (io/make-output-stream (get-body ctx) opts))
+    (io/make-output-stream (get-body* ctx) opts))
 
   Request
   (make-reader [req opts]
-    (io/make-reader (get-body req) opts))
+    (io/make-reader (get-body* req) opts))
   (make-writer [req opts]
-    (io/make-writer (get-body req) opts))
+    (io/make-writer (get-body* req) opts))
   (make-input-stream [req opts]
-    (io/make-input-stream (get-body req) opts))
+    (io/make-input-stream (get-body* req) opts))
   (make-output-stream [req opts]
-    (io/make-output-stream (get-body req) opts)))
-
+    (io/make-output-stream (get-body* req) opts)))
 
 (defn- build-request
   [^Request request]
@@ -248,26 +233,13 @@
 ;; Public Api
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn get-request
-  "Helper for obtain the current request instance
-  from provided Context instance."
-  [i]
-  (get-request* i))
-
-(defn get-response
-  "Helper for obtain the current response instance
-  from provided Context instance."
-  [i]
-  (get-response* i))
-
 (defn get-body
   "Helper for obtain a object that represents a request
   body. The returned object implements the IOFactory
   protocol that allows use it with `clojure.java.io`
   functions and `slurp`."
-  [^Context context]
-  (let [^Request request (get-request* context)]
-    (.getBody request)))
+  [context]
+  (get-body* context))
 
 (defn get-headers
   "Get request headers.
@@ -283,18 +255,24 @@
   This is a polymorphic function and accepts
   Context instances as response."
   [response headers]
-  (set-headers response headers))
+  (set-headers* response headers))
 
 (defn set-status!
   "Set response status code."
   [response status]
-  (set-status response status))
+  (set-status* response status))
 
-(defn send!
+(defmulti send!
   "Send data to the client."
-  [^Context context data]
-  (let [response (get-response context)]
-    (send data response)))
+  (fn [response data] (class response)))
+
+(defmethod send! DefaultContext
+  [^DefaultContext context data]
+  (send data (:response context)))
+
+(defmethod send! Response
+  [^Response response data]
+  (send data response))
 
 (defmulti adapter
   "A polymorphic function for create the
@@ -305,16 +283,22 @@
 (defmethod adapter :ratpack
   [handler]
   (reify Handler
-    (^void handle [_ ^Context context]
-      (let [response (handler context)]
+    (^void handle [_ ^Context ctx]
+      (let [context (ctx/context ctx)
+            context-params (ctx/context-params context)
+            route-params (ctx/route-params context)
+            response (-> (merge context context-params)
+                         (assoc :route-params route-params)
+                         (handler))]
         (when (satisfies? IHandlerResponse response)
           (handle-response response context))))))
 
 (defmethod adapter :ring
   [handler]
   (reify Handler
-    (^void handle [_ ^Context context]
-      (let [request (build-request (get-request context))
+    (^void handle [_ ^Context ctx]
+      (let [context (ctx/context ctx)
+            request (build-request (:request context))
             response (handler request)]
         (when (satisfies? IHandlerResponse response)
           (handle-response response context))))))

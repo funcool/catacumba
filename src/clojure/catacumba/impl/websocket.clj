@@ -2,6 +2,7 @@
   "Websocket handler adapter implementation."
   (:require [clojure.core.async :refer [chan go-loop close! >! <! put!] :as async]
             [catacumba.utils :as utils]
+            [catacumba.impl.context :as ctx]
             [catacumba.impl.helpers :as helpers]
             [catacumba.impl.handlers :as handlers])
   (:import ratpack.handling.Handler
@@ -9,20 +10,22 @@
            ratpack.func.Action
            ratpack.exec.ExecController
            java.util.concurrent.ExecutorService
+           catacumba.impl.context.DefaultContext
            catacumba.websocket.WebSocketClose
            catacumba.websocket.WebSocketHandler
            catacumba.websocket.WebSocketMessage
            catacumba.websocket.WebSockets
            catacumba.websocket.WebSocket))
 
-(defn send!
+(defn- send!
+  "Helper function for send data from the netty/ratpack
+  eventloop threadpool instead from the core.async."
   [^ExecutorService executor ^WebSocket ws data]
   (let [ch (async/chan)
-        callback (fn [_] (async/close! ch))
-        task (fn []
-               (-> (.send ws (helpers/bytebuffer data))
-                   (.then (helpers/action callback))))]
-    (.submit executor ^Runnable task)
+        callback (fn [_] (async/close! ch))]
+    (.submit executor ^Runnable (fn []
+                                  (-> (.send ws (helpers/bytebuffer data))
+                                      (.then (helpers/action callback)))))
     ch))
 
 (deftype WebSocketSession [in out ctrl context handler]
@@ -34,7 +37,8 @@
 
   WebSocketHandler
   (onOpen [this ^WebSocket ws]
-    (let [executor (.. context getController getExecutor)]
+    (let [^Context ctx (:catacumba/context context)
+          executor (.. ctx getController getExecutor)]
       (go-loop []
         (if-let [value (<! out)]
           (do
@@ -54,15 +58,16 @@
     (.close this)))
 
 (defn websocket
-  [^Context context handler]
+  [^DefaultContext context handler]
   (let [in (chan 256)
         out (chan)
         ctrl (chan)]
     (->> (WebSocketSession. in out ctrl context handler)
-         (WebSockets/websocket context))))
+         (WebSockets/websocket (:catacumba/context context)))))
 
 (defmethod handlers/adapter :websocket
   [handler]
   (reify Handler
-    (^void handle [_ ^Context context]
-      (websocket context handler))))
+    (^void handle [_ ^Context ctx]
+      (let [context (ctx/context ctx)]
+        (websocket context handler)))))

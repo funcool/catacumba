@@ -105,7 +105,7 @@
 (deftest routing
   (testing "Routing with parameter."
     (let [handler (fn [ctx]
-                    (let [params (ct/route-params ctx)]
+                    (let [params (:route-params ctx)]
                       (str "hello " (:name params))))
           handler (ct/routes [[:get ":name" handler]])]
       (with-server handler
@@ -125,8 +125,7 @@
     (let [handler1 (fn [ctx]
                      (ct/delegate ctx {:foo "bar"}))
           handler2 (fn [ctx]
-                     (let [params (ct/context-params ctx)]
-                       (str "hello " (:foo params))))
+                     (str "hello " (:foo ctx)))
           router (ct/routes [[:get "" handler1 handler2]])]
       (with-server router
         (let [response (client/get (str base-url ""))]
@@ -137,8 +136,7 @@
     (let [handler1 (fn [ctx]
                      (ct/delegate ctx {:foo "bar"}))
           handler2 (fn [ctx]
-                     (let [params (ct/context-params ctx)]
-                       (str "hello " (:foo params))))
+                     (str "hello " (:foo ctx)))
           router (ct/routes [[:prefix "foo"
                               [:all handler1]
                               [:get handler2]]])]

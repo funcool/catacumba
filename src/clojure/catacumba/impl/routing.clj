@@ -1,7 +1,7 @@
 (ns catacumba.impl.routing
   (:require [catacumba.impl.handlers :as handlers]
-            [catacumba.impl.helpers :as helpers]
-            [catacumba.utils :as utils])
+            [catacumba.impl.context :as ctx]
+            [catacumba.impl.helpers :as helpers])
   (:import ratpack.handling.Context
            ratpack.handling.Chain
            ratpack.handling.Handlers
@@ -28,8 +28,9 @@
   [^Chain chain [_ error-handler]]
   (letfn [(on-register [^RegistrySpec rspec]
             (let [ehandler (reify ServerErrorHandler
-                             (error [_ context throwable]
-                               (let [response (error-handler context throwable)]
+                             (error [_ ctx throwable]
+                               (let [context (ctx/context ctx)
+                                     response (error-handler context throwable)]
                                  (when (satisfies? handlers/IHandlerResponse response)
                                    (handlers/handle-response response context)))))]
               (.add rspec ServerErrorHandler ehandler)))]
@@ -65,9 +66,3 @@
   (with-meta
     (fn [chain] (reduce attach-route chain routes))
     {:type :ratpack-router}))
-
-(defn route-params
-  "Return a hash-map with parameters extracted from
-  routing patterns."
-  [^Context context]
-  (into {} utils/keywordice-keys-t (.getPathTokens context)))

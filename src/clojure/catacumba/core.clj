@@ -6,8 +6,7 @@
  [catacumba.impl.server
   run-server]
  [catacumba.impl.routing
-  routes
-  route-params]
+  routes]
  [catacumba.impl.context
   delegate
   context-params]

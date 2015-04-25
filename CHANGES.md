@@ -16,6 +16,8 @@ Date: unreleased
 - Add "context as request" helper chain handler.
 - Add security related chain helpers (x-frame-options, strict-transport-security
   and the content-security-policy).
+- Add support for manifold deferreds as body and response.
+- Add support for manifold streams as body and response.
 
 
 ## Version 0.1.0-alpha1 ##

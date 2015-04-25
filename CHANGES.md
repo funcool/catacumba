@@ -14,6 +14,8 @@ Date: unreleased
 - Add support for Server-Sent Events.
 - Add CORS support with chain handler.
 - Add "context as request" helper chain handler.
+- Add security related chain helpers (x-frame-options, strict-transport-security
+  and the content-security-policy).
 
 
 ## Version 0.1.0-alpha1 ##

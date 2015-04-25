@@ -305,6 +305,7 @@ advanced routing that allows handlers chaining, partitioning, error handling, am
 _Catacumba_ has polymorphic and extensible way to setup handlers, and routing is one of possible
 implementations. Is completelly optional and you can use any ther routing library if you want.
 
+
 ==== Basic syntax
 
 The routes in _catacumba_ are defined using clojure data structures, using vectors and keywords. Let
@@ -323,6 +324,10 @@ The order of statemens is very important because the routing in _catacumba_ is a
 other words: pipeline. The handlers has the ability to delegate the request handign to the next
 handler in the pipeline. If you know the *pedestal* interceptors concept, this is maybe also
 familiar for you.
+
+Additionally to `:get` route type that you have seen in previous example, it there others that already
+supported in _catacumba_'s routing: `:all` (matches all routes, often used for add chain handlers),
+`:post`, `:put`, `:patch` and `:delete`.
 
 
 ==== Handlers chaining

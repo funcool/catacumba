@@ -6,6 +6,7 @@
            ratpack.handling.Context
            ratpack.http.Request
            ratpack.http.Response
+           ratpack.server.PublicAddress
            ratpack.registry.Registry
            ratpack.registry.Registries))
 
@@ -60,6 +61,24 @@
         (:payload cdata))
       (catch ratpack.registry.NotInRegistryException e
         {}))))
+
+(defn public-address
+  "Get the current public address as URI instance.
+
+  The default implementation uses a variety of strategies to
+  attempt to provide the desired result most of the time.
+  Information used includes:
+
+  - Configured public address URI (optional)
+  - X-Forwarded-Host header (if included in request)
+  - X-Forwarded-Proto or X-Forwarded-Ssl headers (if included in request)
+  - Absolute request URI (if included in request)
+  - Host header (if included in request)
+  - Service's bind address and scheme (http vs. https)"
+  [^DefaultContext context]
+  (let [^Context ctx (:catacumba/context context)
+        ^PublicAddress addr (.get ctx PublicAddress)]
+    (.getAddress addr ctx)))
 
 (defn route-params
   "Return a hash-map with parameters extracted from

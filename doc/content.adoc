@@ -397,8 +397,8 @@ additional parameter the throwable instance:
   (http/internal-server-error (.getMessage error)))
 ----
 
-==== Routing params
 
+==== Routing params
 
 The _catacumba_'s routing also allows capture url parameters using special symbols. For example,
 the path string "foo/:val" will match paths such as "foo/bar", "foo/123".  The matched parameters

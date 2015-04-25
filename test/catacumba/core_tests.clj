@@ -35,6 +35,19 @@
 ;; Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(deftest public-address
+  (let [p (promise)
+        handler (fn [ctx]
+                  (deliver p (ct/public-address ctx))
+                  "hello world")]
+    (with-server (with-meta handler {:type :ratpack})
+      (let [response (client/get base-url)]
+        (is (= (:body response) "hello world"))
+        (is (= (:status response) 200))
+        (let [uri (deref p 1000 nil)]
+          (is uri)
+          (is (= (str uri) "http://localhost:5050")))))))
+
 (deftest request-response
   (testing "Using send! with context"
     (let [handler (fn [ctx] (ct/send! ctx "hello world"))]
@@ -244,4 +257,5 @@
           (is (= (:status response) 200))
           (let [bodydata (deref p 1000 nil)]
             (is (= bodydata "Hello world"))))))))
+
 

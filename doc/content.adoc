@@ -392,6 +392,40 @@ additional parameter the throwable instance:
   (http/internal-server-error (.getMessage error)))
 ----
 
+==== Routing params
+
+
+The _catacumba_'s routing also allows capture url parameters using special symbols. For example,
+the path string "foo/:val" will match paths such as "foo/bar", "foo/123".  The matched parameters
+are automatically populated to the context under the `:route-params` keys.
+
+[source, clojure]
+----
+(def article-detail
+  [context]
+  (let [id (get-in context [:route-params :id])]
+    (http/ok (str "You have requested article with id=" id))))
+
+(def app
+  (ct/routes [[:get "articles/:id" article-detail]]))
+----
+
+Additionally to the basic token for represent the url parameter, _catacumba_ also allows use of
+regular expressions for delimit the input or mark a url token optional.
+
+See the following table for all supported url tokens:
+
+.Supported url matching tokens
+[options="header", cols="2,3,3,2"]
+|===========================================================================
+| Path Type | Syntax | Route example | Matching url example
+| Literal | `foo` | `[:get "foo" handler]` | `/foo`
+| Mandatory | `:«token-name»` | `[:get "foo/:param" handler]` | `/foo/bar`
+| Optional | `:«token-name»?` | `[:get "foo/:param?" handler]` | `/foo` and `/foo/bar`
+| Mandatory & Regex | `:«token-name»:«regex»` | `[:get "foo/:id:\d+" handler]` | `/foo/2`
+| Optional & Regex | `:«token-name»?:«regex»` | `[:get "foo/:id?:\d+" handler]` | `/foo/2` and `/foo`
+|===========================================================================
+
 
 === Context
 

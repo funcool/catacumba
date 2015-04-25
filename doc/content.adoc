@@ -685,7 +685,73 @@ TIP: The handlers adaptation is driven by its metadata and is defined using cloj
 
 === Server-Sent Events
 
-TBD
+WebSockets are cool because they allow bi-directional comunication, but in some circumstances we only
+need something unidirectional, for notify the client about some changes or any other events. For this
+purtpose exists link:https://developer.mozilla.org/en-US/docs/Server-sent_events[Server-Sent Events]
+and _catacumba_ also has support for it.
+
+The *sse* handlers are very similar to websocket ones, with the principal difference that it does not
+gives the ability to receive data:
+
+[source, clojure]
+----
+(defn time-notification
+  "Handler that notifies each second
+  the current server time to the client."
+  {:type :sse}
+  [context out]
+  (go-loop []
+    (when-let [_ (>! out (str (java.time.Instant/now)))]
+      (<! (timeout 1000))
+      (recur))))
+
+(def route
+  (ct/routes [[:prefix "events"
+               [:all time-notification]]]))
+
+----
+
+Like with websocket handlers, you can start the sse in any place, such as standard _catacumba_ handler:
+
+[source, clojure]
+----
+(defn time-notification
+  "Handler that notifies each second
+  the current server time to the client."
+  [context]
+  (ct/sse context
+          (fn [_ out]
+            (go-loop []
+              (when-let [_ (>! out (str (java.time.Instant/now)))]
+                (<! (timeout 1000))
+                (recur))))))
+
+(def route
+  (ct/routes [[:prefix "events"
+               [:all time-notification]]]))
+
+----
+
+You operate with all posible options that sse exposes with the ability to send data, send the event
+name or specify the `id`:
+
+[source, clojure]
+----
+;; Send data
+(>! out "data as string")
+(>! out {:data "data as string"})
+
+;; Send data with event name
+(>! out {:data "data as string" :event "foobar"})
+
+;; Set id
+(>! out {:id "2"})
+----
+
+NOTE: As you can observe, the _catacumba_'s sse support uses core.async channels, but if you are not
+happy with core.async and want use some thing different (such as manifold streams), you may want know
+that everything in _catacumba_ is implemented using abstractions and implement your own sse type
+of handler that uses manifold streams is very very easy.
 
 
 === STOMP messaging

@@ -8,8 +8,10 @@ Date: unreleased
 - Improved context data forwarding, now the data is attached directy to the context.
 - Simplified access to request and response, because now are simple keys in the context type.
 - Simplified internal abstraction for get/set headers.
-- Simplified access to the route params, now are attached directly to the context under the `:route-params` key.
+- Simplified access to the route params, now are attached directly to the context under
+  the `:route-params` key.
 - Update to clojure 1.7 beta 2.
+- Add support for Server-Sent Events.
 
 ## Version 0.1.0-alpha1 ##
 

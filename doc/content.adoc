@@ -828,6 +828,20 @@ java -jar yourjarhere.jar
 java -Dcatacumba.port=8000 -Dcatacumba.debug=false -jar yourjarhere.jar
 ----
 
+== Examples
+
+
+=== Debugging with prone
+
+link:https://github.com/magnars/prone[Prone] is really awesome middleware for ring that allows show
+a beautiful and human readable stack traces when a exception is raised in our application. It is not
+directly compatible with _catacumba_ but is relativelly easy adapt it.
+
+You can see the example code here: https://github.com/funcool/catacumba/tree/master/examples/debugging
+
+NOTE: Obviously, if you are using the ring type of hanlder, you can use prone as is, without any
+additional adaptation. This example shows how it can be used with default hanlder type.
+
 
 == FAQ
 

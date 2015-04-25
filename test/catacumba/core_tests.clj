@@ -9,6 +9,8 @@
             [futura.stream :as stream]
             [cats.core :as m]
             [cuerdas.core :as str]
+            [manifold.stream :as ms]
+            [manifold.deferred :as md]
             [catacumba.core :as ct]
             [catacumba.http :as http]
             [catacumba.impl.parse :as parse])
@@ -22,7 +24,10 @@
   `(let [server# (ct/run-server ~handler)]
      (try
        ~@body
-       (finally (.stop server#)))))
+       (finally
+         (.stop server#)
+         (Thread/sleep 200)))))
+
 
 (def base-url "http://localhost:5050")
 
@@ -99,6 +104,31 @@
       (with-server (with-meta handler {:type :ratpack})
         (let [response (client/get base-url)]
           (is (= (:body response) "HELLO WORLD"))
+          (is (= (:status response) 202))))))
+
+  (testing "Using manifold deferred as body."
+    (letfn [(handler [ctx]
+              (let [d (md/deferred)]
+                (async/thread
+                  (md/success! d "hello world"))
+                (http/accepted d)))]
+      (with-server (with-meta handler {:type :ratpack})
+        (let [response (client/get base-url)]
+          (is (= (:body response) "hello world"))
+          (is (= (:status response) 202))))))
+
+  (testing "Using manifold stream as body."
+    (letfn [(handler [ctx]
+              (let [d (ms/stream 3)]
+                (async/thread
+                  @(ms/put! d "hello")
+                  @(ms/put! d " ")
+                  @(ms/put! d "world")
+                  (ms/close! d))
+                (http/accepted d)))]
+      (with-server (with-meta handler {:type :ratpack})
+        (let [response (client/get base-url)]
+          (is (= (:body response) "hello world"))
           (is (= (:status response) 202))))))
 )
 

@@ -3,6 +3,8 @@
   (:require [clojure.java.io :as io]
             [futura.stream :as stream]
             [futura.promise :as p]
+            [manifold.stream :as ms]
+            [manifold.deferred :as md]
             [catacumba.utils :as utils]
             [catacumba.impl.context :as ctx]
             [catacumba.impl.helpers :as helpers]
@@ -79,6 +81,12 @@
       (.status response 200)
       (send data response)))
 
+  manifold.stream.default.Stream
+  (handle-response [data ^DefaultContext context]
+    (let [^Response response (:response context)]
+      (.status response 200)
+      (send data response)))
+
   Publisher
   (handle-response [data ^DefaultContext context]
     (let [^Response response (:response context)]
@@ -105,7 +113,17 @@
     (-> (stream/publisher data)
         (send response)))
 
+  manifold.stream.default.Stream
+  (send [data ^Response response]
+    (-> (stream/publisher data)
+        (send response)))
+
   futura.promise.Promise
+  (send [data ^Response response]
+    (-> (stream/publisher data)
+        (send response)))
+
+  manifold.deferred.IDeferred
   (send [data ^Response response]
     (-> (stream/publisher data)
         (send response)))

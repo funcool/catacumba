@@ -111,6 +111,7 @@ git clone https://github.com/funcool/catacumba
 
 This section intends to explain how to get _Catacumba_ up and running.
 
+
 === First handler
 
 The handler consists in a function that accepts a "context" as first parameter and
@@ -122,6 +123,11 @@ returns something rederable. Let see an example:
   [context]
   "Hello World")
 ----
+
+The handler maybe looks very familiar if you are previously have used ring, the main difference
+is that it receives some kind of context object instead of request. And may return a string directly.
+
+All of related concepts and full introduction on how the hanlders works are explained in below sections.
 
 
 === Run the server
@@ -141,13 +147,15 @@ TIP: The `run-server` function does not blocks and you can execute it in a repl 
 problems. It uses jvm not daemon threads for avoid shutdown the jvm.
 
 
-== Handlers
+== User Guide
+
+=== Handlers
 
 The handlers is a fundamental piece of the _Catacumba_ library and this chapter intends
 to explain everything related to defult handlers.
 
 
-=== What is a handler?
+==== What is a handler?
 
 As we have viewed in "Quick Start" section, a handler mainly consists in a simple function
 that acts on the handling context.
@@ -169,7 +177,7 @@ NOTE: I mention the "default" word because, _catacumba_ comes with different typ
 handlers out of the box and allows to be extended with used defined ones.
 
 
-=== Write to response
+==== Write to response
 
 As you can observe from the previous example, no status code is provided, only the content. For
 send a complete response you can use a builtin response type or ring like hashmap:
@@ -225,7 +233,7 @@ The return value handling is really a helper for people that comes from ring. In
 context is the main protagonist in IO operations.
 
 
-=== Reading the request
+==== Reading the request
 
 As we mentioned previously, the request can be retrieved also from context instance. But in our case,
 catacumpa provides helpers functions for access to the basic parts how the request body, incoming
@@ -237,7 +245,7 @@ properties from request using a context as parameter, removing the repeating act
 the request form context.
 
 
-==== Body
+===== Body
 
 _Catacumba_ offers different ways to read the incoming data from request. All depens on that really
 you needs. If you are working with standatd http form submits (with `application/x-www-form-urlencoded`
@@ -276,20 +284,26 @@ If you know the behavior of slurp, it reads the content of the provided resource
 it.
 
 
-==== Headers
+===== Headers
 
 For extract headers you should use the `get-headers` function. Like as usual, is a polymorphic function
 and you could use it over context instance without problems. The return value is a clojure map.
 
 If a header has multiple values, the value will be a vector.
 
+[source, clojure]
+----
+(ct/get-headers context)
+;; => {:content-type ...}
+----
 
-==== Cookies
+
+===== Cookies
 
 TBD
 
 
-== Routing
+=== Routing
 
 In difference to ring, _catacumba_ is a toolkit for web development and offers builtin support for
 advanced routing that allows handlers chaining, partitioning, error handling, among others.
@@ -297,7 +311,7 @@ advanced routing that allows handlers chaining, partitioning, error handling, am
 _Catacumba_ has polymorphic and extensible way to setup handlers, and routing is one of possible
 implementations. Is completelly optional and you can use any ther routing library if you want.
 
-=== Basic syntax
+==== Basic syntax
 
 The routes in _catacumba_ are defined using clojure data structures, using vectors and keywords. Let
 see a little example of the aspect in a complete example:
@@ -317,7 +331,7 @@ handler in the pipeline. If you know the *pedestal* interceptors concept, this i
 familiar for you.
 
 
-=== Handlers chaining
+==== Handlers chaining
 
 The chaining of handlers can be done in different ways:
 
@@ -346,7 +360,7 @@ For better understanding how the handlers chain delegation works, see the *Conte
 of this documentation.
 
 
-=== Error handling
+==== Error handling
 
 The _catacumba_ router chain allows setup user defined error handling functions. Do it is very
 simple, just add an other route entry of `:error` type:
@@ -385,7 +399,7 @@ additional parameter the throwable instance:
 ----
 
 
-== Context
+=== Context
 
 An other core part of the _catacumba_ is the *Context*. 
 
@@ -397,12 +411,12 @@ The context in catacumba as in ratpack has this responsabilities:
 * Convenience helpers for common handlers operation.
 
 
-=== Contextual objects
+==== Contextual objects
 
 TBD
 
 
-=== Handlers delegation
+==== Handlers delegation
 
 In _catacumba_, the request is handled using a chain of handlers. And one concrete handler can decide
 delegate tha work to the next matching handler in the chain. Probably, you have seen the different ways of chaining handlers in the router section, in this section we will see how we can delegate the request
@@ -447,7 +461,7 @@ to the next handlers, passing additional parameter to the `delegate` function:
 In this example the second handler prints the message found in the context.
 
 
-== Asynchronous Handlers
+=== Asynchronous Handlers
 
 _Catacumba_ has support for multiple abstractions for asynchronous (stream or not) abstractions and
 addopts a flexible and extensible way for make easy for the user adapt it to hes needs and hes
@@ -470,7 +484,7 @@ stream abstraction has huge amount of advantages. There three most important:
 * Comes with support for *backpressure* in its core (that is mandatory in asynchronous environments).
 
 
-=== Channels
+==== Channels
 
 The `core.async` channels is one of the supported abstractions that comes with _catacumba_ out
 of the box. It consist in a handler that returns a body as a channel or response as a channel.
@@ -513,7 +527,7 @@ also called backpressure, and is fully supported for chunked responses.
 NOTE: Behind the scenes it adapts the channel into link:http://www.reactive-streams.org/[Reactive Streams] `Publisher`.
 
 
-=== Promises
+==== Promises
 
 Promises is an other abstraction supported out of the box in _catacumba_. It comes from the
 link:https://github.com/funcool/futura[futura library] and is build on top of JDK8 _CompletableFuture_.
@@ -553,7 +567,7 @@ The result of `mlet` macro expression will be a *promise* with the eventually av
 from `(do-other-thing-with b)` expression.
 
 
-=== Futures
+==== Futures
 
 As previously explained promises are build on top of *CompletableFutures* of JDK8, _catacumba_ also
 supports the raw usage of them:
@@ -567,7 +581,7 @@ supports the raw usage of them:
 ----
 
 
-=== Manifold
+==== Manifold
 
 The link:https://github.com/ztellman/manifold[manifold] library offers different kind of deferred and
 stream abstractions for clojure.
@@ -578,7 +592,7 @@ implementation. But is one of the most mature libraries in clojure ecosystem.
 WARNING: support for manifold is not stil not implemented.
 
 
-=== Reactive Streams
+==== Reactive Streams
 
 This is the core of all abstractions, and support for it comes out of the box from *ratpack*. All
 other abstractions that we have seen are always coerced to *Publisher* instance before send it to the
@@ -610,8 +624,10 @@ Let see an example:
 Reactive streams implementation in link:https://github.com/funcool/futura[futura library] comes with
 support for different kind of coercions and with clojure 1.7 *transducers*.
 
+== Other topics
 
-== Websockets
+
+=== Websockets
 
 One of the main goals of _catacumba_ is come with builtin, full featured and backpressure aware
 websockets support.
@@ -666,7 +682,18 @@ on standard handler:
 
 TIP: The handlers adaptation is driven by its metadata and is defined using clojure multimethods. It allows you define own adapters for websockets or any other handlers if the builtin does not satisfies you.
 
-== Ring
+
+=== Server-Sent Events
+
+TBD
+
+
+=== STOMP messaging
+
+TBD
+
+
+=== Ring compatibility
 
 Although ring support is not first citizen in _catacumba_, the current design of it allows create an
 handler adapter that follows the ring specification. This is a great example of extensibility of
@@ -695,7 +722,7 @@ Ring handlers can be set as standalone handlers (mainly for use them as compojur
 middlewares) or in a _catacumba_'s routing chain.
 
 
-== Launching the server
+=== Launching the server
 
 As you can see in the quick start section, the main entry point for start the server is
 the `run-server` function that receives a handler and a map with options.

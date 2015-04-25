@@ -808,6 +808,8 @@ Let see how it can be done:
 Ring handlers can be set as standalone handlers (mainly for use them as compojure and all related
 middlewares) or in a _catacumba_'s routing chain.
 
+== Builtin Handlers
+
 === Cross-Origin Resource Sharing
 
 Is a mechanism that allows restricted resources (e.g. fonts, JavaScript, etc.) on a web page to be
@@ -833,6 +835,31 @@ _Catacumba_ has builtin support for CORS, let see how you can use it:
 ----
 
 The `:origin` key can be a set of possible origins or directlly `"*"` for allow all origins.
+
+
+=== Context as Request
+
+By default, the _catacumba_'s context allows you direct access to the request and response, that are
+instances of classes defined in Ratpack. That classes allows you access to all related properties
+such as headers, the request body, the request method, etc.
+
+But _catacumba_ at this moment offers a very limited set of helper functions for interacting with that
+data: get/set headers and read the body (explained in previous sections).
+
+For compensate this, _catacumba_ comes with special chain handler that populates the context with
+basic request properties such as, headers, path and method: `basic-request` and let see how you can use
+it on your application:
+
+[source, clojure]
+----
+(require '[catacumba.handlers :refer [basic-request]])
+
+(def app
+  (ct/routes [[:prefix "api/v1"
+               [:all basic-request]
+               [:get "foo" some-handler]
+               [:post "foo" some-save-handler]]]))
+----
 
 
 == Advanced topics

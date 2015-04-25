@@ -12,7 +12,8 @@ Date: unreleased
   the `:route-params` key.
 - Update to clojure 1.7 beta 2.
 - Add support for Server-Sent Events.
-- Add CORS support.
+- Add CORS support with chain handler.
+- Add "context as request" helper chain handler.
 
 
 ## Version 0.1.0-alpha1 ##

@@ -64,4 +64,16 @@
 ;; Basic request in context
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; TBD
+(deftest basic-request-handler
+  (testing "Simple cors request"
+    (let [p (promise)
+          handler (fn [ctx] (deliver p ctx) "hello world")
+          handler (ct/routes [[:all cth/basic-request]
+                              [:all handler]])]
+      (with-server handler
+        (let [response (client/get (str base-url "/foo"))
+              ctx (deref p 1000 {})]
+          (is (= (:body response) "hello world"))
+          (is (= (:status response) 200))
+          (is (= (:method ctx) :get))
+          (is (= (:path ctx) "/foo")))))))

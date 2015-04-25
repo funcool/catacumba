@@ -23,31 +23,25 @@ All them are good clojure libraries/frameworks but them does not satisfies me fo
 
 * The pedestal approach is very opinionated and too much high level and I prefer something simple
   and lightweight.
-* Aleph, seems a great library but lacks of good user friendly documentation and its generic approach
-  (not only http) not helps much.
+* Aleph, seems a great library but lacks of good, readable, user friendly documentation a
+  nd its generic approach (not only http) not helps much. If you want read more about differences with
+  aleph, see <<difference-with-aleph,this>> faq entry.
 * Jet is a asynchronous ring addapter for jetty9. It is really great library that I have used in
   some projects, and fits very well on my idea of web toolkit but it has two drawbacks, it is build
   as ring adapter having all the good and all the bad of ring and it is using jetty (jetty is a
   servlet server that comes with optional async support, it isn't asynchronous from the ground up).
 
-Here a incomplete list of things that _Catacumba_ intends to have:
-
-- a flexible and extensible way to setup different kind of handlers.
-- build almost everything up on abstractions for easy extensibility.
-- support for async handlers (with promise, future, core.async, manifold, reactive-streams, ...)
-- builtin routing with flexible way to chain handlers.
-- builtin websocket support.
-- backpressure support out of the box.
-
-
 === Goals
 
-_Catacumba_ goals are:
+Here a incomplete list of things that _Catacumba_ goals:
 
-* Provide a simple and lightweight approach for define asynchronous web services.
-* Add facilities for work in asynchronous way without much pain.
+* Have a flexible and extensible way to setup different kind of handlers
+* Provide a simple and lightweight approach for define asynchronous web services with support for
+  different abstractions, such as promise, future, core.async, manifold, reactive-streams, ...
+* Build almost everything up on abstractions for simple and easy extensibility.
+* Provide a builtin, data based routing.
 * To be flexible and not very opinionated.
-* Provide the basic abstractions (handlers, routing, websockets, ...).
+* Have backpressure support out of the box.
 
 _Catacumba_ goals are not:
 
@@ -828,6 +822,7 @@ java -jar yourjarhere.jar
 java -Dcatacumba.port=8000 -Dcatacumba.debug=false -jar yourjarhere.jar
 ----
 
+
 == Examples
 
 
@@ -845,7 +840,23 @@ additional adaptation. This example shows how it can be used with default hanlde
 
 == FAQ
 
-TBD
+
+[[difference-with-aleph]]
+=== What is the difference with aleph
+
+First of all, Aleph is one of the most robus libraries in clojure ecosystem for build asynchronous
+servers. Here a incomplete list of differences and why I wrote _catacumba_ instead of use _aleph_
+directly in my applications:
+
+- Aleph with manifold offers good abstractions for creating async servers but them are to much
+  low level and only provides the basic building blocks. _Catacumba_ intends to be a toolkit highly
+  focused in web development providing a good collection of facilities for that.
+- I wrote _catacumba_ for have something different to ring and _Aleph_ uses ring abstraction for
+  handle web requests.
+- Aleph has a good path to have an easily readable  and user friendly documentation.
+- Aleph is build on manifold streams and _catacumba_ uses reactive-streams abstractions.
+
+_Catacumba_ does not intend to be a replacement for it, it simply has different focus.
 
 
 == Developers Guide

@@ -213,7 +213,7 @@
   (make-output-stream [req opts]
     (io/make-output-stream (get-body* req) opts)))
 
-(defn- build-request
+(defn build-request
   [^Request request]
   (let [local-address (.getLocalAddress request)
         remote-address (.getRemoteAddress request)]

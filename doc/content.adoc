@@ -618,8 +618,6 @@ Let see an example:
 Reactive streams implementation in link:https://github.com/funcool/futura[futura library] comes with
 support for different kind of coercions and with clojure 1.7 *transducers*.
 
-== Other topics
-
 
 === Websockets
 
@@ -748,11 +746,6 @@ that everything in _catacumba_ is implemented using abstractions and implement y
 of handler that uses manifold streams is very very easy.
 
 
-=== STOMP messaging
-
-TBD
-
-
 === Ring compatibility
 
 Although ring support is not first citizen in _catacumba_, the current design of it allows create an
@@ -780,6 +773,39 @@ Let see how it can be done:
 
 Ring handlers can be set as standalone handlers (mainly for use them as compojure and all related
 middlewares) or in a _catacumba_'s routing chain.
+
+=== Cross-Origin Resource Sharing
+
+Is a mechanism that allows restricted resources (e.g. fonts, JavaScript, etc.) on a web page to be
+requested from another domain outside the domain from which the resource originated.
+
+Is often used for protect api resources to be accessed out of the domain of your web applications.
+
+_Catacumba_ has builtin support for CORS, let see how you can use it:
+
+[source, clojure]
+----
+(require '[catacumba.handlers :refer [cors]])
+
+(def cors-conf {:origin #{"http://website.com"}                       ;; mandatory
+                :max-age 3600                                         ;; optional
+                :allow-headers ["X-Requested-With", "Content-Type"]}) ;; optional
+
+(def app
+  (ct/routes [[:prefix "api/v1"
+               [:all (cors cors-conf)]
+               [:get "foo" some-handler]
+               [:post "foo" some-save-handler]]]))
+----
+
+The `:origin` key can be a set of possible origins or directlly `"*"` for allow all origins.
+
+
+== Advanced topics
+
+=== Modular components
+
+TBD
 
 
 === Launching the server

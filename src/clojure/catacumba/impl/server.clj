@@ -43,7 +43,7 @@
         debug (or (:catacumba-debug env) debug)
         config (if (string? basedir)
                  (ServerConfig/baseDir ^Path (utils/str->path basedir))
-                 (ServerConfig/findBaseDirProps "catacumba.properties"))]
+                 (ServerConfig/findBaseDir "catacumba.properties"))]
     (.port config port)
     (.threads config threads)
     (.development config (boolean debug))

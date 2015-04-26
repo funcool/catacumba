@@ -12,6 +12,9 @@
            ratpack.sse.internal.DefaultEvent
            ratpack.sse.ServerSentEvents
            ratpack.func.Action
+           org.reactivestreams.Publisher
+           org.reactivestreams.Subscriber
+           org.reactivestreams.Subscription
            catacumba.impl.context.DefaultContext))
 
 
@@ -38,12 +41,21 @@
     (when id (.id event' id))
     event'))
 
+(defn- channel->publisher
+  "Create a publisher with core.async channel as source."
+  [source]
+  (reify Publisher
+    (^void subscribe [_ ^Subscriber subscriber]
+      (let [subscription (stream/chan->subscription subscriber source true)]
+        (.onSubscribe subscriber subscription)))))
+
 (defn sse
   [^DefaultContext context handler]
   (let [out (async/chan 1 (map event))
-        pub (stream/publisher out)
-        ^ServerSentEvents sse' (ServerSentEvents/serverSentEvents pub (helpers/action transform-event))
-        ^Context ctx (:catacumba/context context)]
+        pub (channel->publisher out)
+        tfm (helpers/action transform-event)
+        sse' (ServerSentEvents/serverSentEvents pub tfm)
+        ctx (:catacumba/context context)]
     (async/thread
       (handler context out))
     (.render ctx sse')))
@@ -52,7 +64,11 @@
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]
-      (let [context (ctx/context ctx)]
+      (let [context (ctx/context ctx)
+            context-params (ctx/context-params context)
+            route-params (ctx/route-params context)
+            context (-> (merge context context-params)
+                        (assoc :route-params route-params))]
         (sse context handler)))))
 
 

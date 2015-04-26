@@ -10,13 +10,17 @@
   :jar-exclusions [#"\.swp|\.swo|user.clj"]
   :javac-options ["-target" "1.8" "-source" "1.8" "-Xlint:-options"]
 
+  :mirrors {"central" {:name "central"
+                       :url "http://oss.jfrog.org/artifactory/repo"}}
+
   :dependencies [[org.clojure/clojure "1.7.0-beta2"]
-                 [io.ratpack/ratpack-core "0.9.15"]
+                 [io.ratpack/ratpack-core "0.9.16-SNAPSHOT"]
                  [org.slf4j/slf4j-simple "1.7.10"]
-                 [funcool/futura "0.1.0-alpha1"
+                 [com.stuartsierra/component "0.2.3"]
+                 [funcool/futura "0.1.0-SNAPSHOT"
                   :exclusions [org.reactivestreams/reactive-streams]]
                  [environ "1.0.0"]
-                 [potemkin "0.3.12"]
+                 [potemkin "0.3.12" :exclusions [riddley]]
                  [funcool/cuerdas "0.4.0"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]]
   :profiles {:dev {:global-vars {*warn-on-reflection* true}

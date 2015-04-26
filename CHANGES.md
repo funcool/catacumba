@@ -10,14 +10,15 @@ Date: unreleased
 - Simplified internal abstraction for get/set headers.
 - Simplified access to the route params, now are attached directly to the context under
   the `:route-params` key.
-- Update to clojure 1.7 beta 2.
 - Add support for Server-Sent Events.
-- Add CORS support with chain handler.
+- Add CORS support with as chain handler.
 - Add "context as request" helper chain handler.
-- Add security related chain helpers (x-frame-options, strict-transport-security
-  and the content-security-policy).
+- Add security related chain helpers (x-frame-options, strict-transport-security,
+  the content-security-policy and x-content-type-options).
 - Add support for manifold deferreds as body and response.
 - Add support for manifold streams as body and response.
+- Update to clojure 1.7 beta 2.
+- Update futura library to 0.1.0-alpha1
 
 
 ## Version 0.1.0-alpha1 ##

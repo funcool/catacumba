@@ -946,6 +946,31 @@ Usage example:
 You can read more about that headers here: https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security
 
 
+=== Content Type Options
+
+This is a security related chain handler that adds the `X-Content-Type-Options` header to the
+response.It prevents resources with invalid media types being loaded as stylesheets or scripts.
+
+This chain handler does not have any additional parameter. Let see an example on how you
+can use it:
+
+[source, clojure]
+----
+(require '[catacumba.handlers :as handlers])
+
+(def app
+  (ct/routes [[:prefix "web"
+               [:all handlers/content-type-options-headers]
+               [:get your-handler]]]))
+----
+
+
+More information:
+
+* http://msdn.microsoft.com/en-us/library/ie/gg622941(v=vs.85).aspx
+* https://www.owasp.org/index.php/List_of_useful_HTTP_headers
+
+
 == Advanced topics
 
 === Modular components

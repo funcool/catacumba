@@ -75,3 +75,17 @@
      (fn [context]
        (ct/set-headers! context {"Content-Security-Policy" (str/join "; " value)})
        (ct/delegate context)))))
+
+(defn content-type-options-headers
+  "A chain handler that adds the `X-Content-Type-Options` header to
+  the response. It prevent resources with invalid media types being
+  loaded as stylesheets or scripts.
+
+  This does not have any option.
+
+  More information:
+  http://msdn.microsoft.com/en-us/library/ie/gg622941(v=vs.85).aspx
+  https://www.owasp.org/index.php/List_of_useful_HTTP_headers"
+  [context]
+  (ct/set-headers! {"X-Content-Type-Options" "nosniff"})
+  (ct/delegate context))

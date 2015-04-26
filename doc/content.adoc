@@ -620,7 +620,15 @@ The link:https://github.com/ztellman/manifold[manifold] library offers different
 stream abstractions for clojure and you can use both them as response or body of the response for send
 asynchronously data to the client.
 
-TBD: examples
+[source, clojure]
+----
+(require '[manifold.deferred :as d])
+
+(defn my-async-handler
+  [context]
+  (let [result (d/future (Thread/sleep 1000) "hello world")]
+    (http/ok result {"content-type" "text/plain"})))
+----
 
 
 ==== Reactive Streams

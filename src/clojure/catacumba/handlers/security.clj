@@ -42,13 +42,27 @@
        (ct/delegate context)))))
 
 (defn csp-headers
-  "A chain handler that adds Content-Security-Policy header
-  to the response.
+  "A chain handler that adds Content-Security-Policy header to the response.
 
   Content Security Policy (CSP) is an added layer of security that helps to
   detect and mitigate certain types of attacks, including Cross Site Scripting
   (XSS) and data injection attacks. These attacks are used for everything from
-  data theft to site defacement or distribution of malware."
+  data theft to site defacement or distribution of malware.
+
+  Example:
+
+      (def cspconf {:default-src \"'self' *.trusted.com\"
+                    :img-src \"*\"
+                    :frame-ancestors \"'none'\"
+                    :reflected-xss \"filter\"})
+
+      (def app
+        (ct/routes [[:prefix \"web\"
+                     [:all (csp-headers cspconf)]
+                     [:get your-handler]]]))
+
+  You can read more about that here:
+  https://developer.mozilla.org/en-US/docs/Web/Security/CSP"
   ([] (csp-headers {}))
   ([options]
    (let [options' (select-keys options :default-src :frame-ancestors :frame-src

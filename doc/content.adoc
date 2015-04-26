@@ -434,7 +434,7 @@ See the following table for all supported url tokens:
 
 === Context
 
-An other core part of the _catacumba_ is the *Context*. 
+An other core part of the _catacumba_ is the *Context*.
 
 The context in catacumba as in ratpack has this responsabilities:
 
@@ -500,10 +500,10 @@ _Catacumba_ has support for multiple abstractions for asynchronous (stream or no
 addopts a flexible and extensible way for make easy for the user adapt it to hes needs and hes
 abstractions.
 
-The main abstraction are defined in the link:https://github.com/funcool/futura[futura library], 
+The main abstraction are defined in the link:https://github.com/funcool/futura[futura library],
 that provides basic building blocks for promise like abstractions and stream abstraction.
 
-The link:https://github.com/funcool/futura[futura library] instead of reinvent the wheel, is build 
+The link:https://github.com/funcool/futura[futura library] instead of reinvent the wheel, is build
 up on existing implementations such as:
 
 * _JDK8 CompletableFuture_ for *promise* abstraction.
@@ -580,8 +580,8 @@ the promise is successfully resolved.
     (http/ok promise {:content-type "text/plain"})))
 ----
 
-Thanks to the *future* library internals, we can use it with 
-link:https://github.com/funcool/cats[cats] `mlet` macro, that allows us structure pure async 
+Thanks to the *future* library internals, we can use it with
+link:https://github.com/funcool/cats[cats] `mlet` macro, that allows us structure pure async
 code in a synchronous way:
 
 [source, clojure]
@@ -865,6 +865,85 @@ it on your application:
                [:get "foo" some-handler]
                [:post "foo" some-save-handler]]]))
 ----
+
+
+=== Content Security Policy
+
+Is a security related chain handler that appropiatelly set the `Content-Security-Policy` headers.
+
+Content Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain
+types of attacks, including Cross Site Scripting (XSS) and data injection attacks. These attacks are
+used for everything from data theft to site defacement or distribution of malware.
+
+Here a simple example on how to use it:
+
+[source, clojure]
+----
+(def cspconf {:default-src "'self' *.trusted.com"
+              :img-src "*"
+              :frame-ancestors "'none'"
+              :reflected-xss "filter"})
+
+(def app
+  (ct/routes [[:prefix "web"
+               [:all (csp-headers cspconf)]
+               [:get your-handler]]])
+----
+
+You can read more about that here: https://developer.mozilla.org/en-US/docs/Web/Security/CSP. The
+complete list of directives can be found here: https://developer.mozilla.org/en-US/docs/Web/Security/CSP/CSP_policy_directives
+
+This handler supports the following directives: `:default-src`, `:frame-ancestors`, `:frame-src`,
+`:child-src`, `:connect-src`, `:font-src`, `:form-action`, `:img-src`, `:media-src`,  `:object-src`,
+and `:reflected-xss`.
+
+
+=== Frame Options
+
+This is a security related chain handler that adds `X-Frame-Options` header to the response.
+
+The X-Frame-Options HTTP response header can be used to indicate whether or not a browser should
+be allowed to render a page in a `<frame>`, `<iframe>` or `<object>` . Sites can use this to avoid
+clickjacking attacks, by ensuring that their content is not embedded into other sites.
+
+Example:
+
+[source, clojure]
+----
+(require '[catacumba.handlers :as handlers])
+
+(def app
+  (ct/routes [[:prefix "web"
+               [:all (handlers/frame-options-headers {:policy :deny})]
+               [:get your-handler]]]))
+----
+
+The possible values for the `:policy` key are: `:deny` and `:sameorigin`.
+
+WARNING: The frame-ancestors directive from the CSP Level 2 specification
+officially replaces this non-standard header.
+
+
+=== Strict Transport Security
+
+This is a security related chain handler that adds the `Strict-Transport-Security` to the response.
+
+HTTP Strict Transport Security (often abbreviated as HSTS) is a security feature that lets a web
+site tell browsers that it should only be communicated with using HTTPS, instead of using HTTP.
+
+Usage example:
+
+[source, clojure]
+----
+(require '[catacumba.handlers :as handlers])
+
+(def app
+  (ct/routes [[:prefix "web"
+               [:all (handlers/hsts-headers {:max-age 31536000 :subdomains true })]
+               [:get your-handler]]]))
+----
+
+You can read more about that headers here: https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security
 
 
 == Advanced topics

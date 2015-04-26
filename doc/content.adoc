@@ -617,12 +617,10 @@ supports the raw usage of them:
 ==== Manifold
 
 The link:https://github.com/ztellman/manifold[manifold] library offers different kind of deferred and
-stream abstractions for clojure.
+stream abstractions for clojure and you can use both them as response or body of the response for send
+asynchronously data to the client.
 
-I'm not very fan of it due to the lacks of good and easy readable documentation and its very complex
-implementation. But is one of the most mature libraries in clojure ecosystem.
-
-WARNING: support for manifold is not stil not implemented.
+TBD: examples
 
 
 ==== Reactive Streams

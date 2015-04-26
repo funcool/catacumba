@@ -294,6 +294,10 @@ If a header has multiple values, the value will be a vector.
 
 ===== Cookies
 
+At this moment _catacumba_ not implements helpers for intercat with cookies, but it is already
+supported by underlying platform (ratpack/netty), so you can access to cookies from request and
+response to set cookies using java interop.
+
 TBD
 
 

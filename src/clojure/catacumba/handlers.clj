@@ -10,5 +10,6 @@
  [catacumba.handlers.security
   csp-headers
   frame-options-headers
-  hsts-headers])
+  hsts-headers
+  content-type-options-headers])
 

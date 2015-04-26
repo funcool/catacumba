@@ -13,7 +13,7 @@
   :dependencies [[org.clojure/clojure "1.7.0-beta2"]
                  [io.ratpack/ratpack-core "0.9.15"]
                  [org.slf4j/slf4j-simple "1.7.10"]
-                 [funcool/futura "0.1.0-SNAPSHOT"
+                 [funcool/futura "0.1.0-alpha1"
                   :exclusions [org.reactivestreams/reactive-streams]]
                  [environ "1.0.0"]
                  [potemkin "0.3.12"]

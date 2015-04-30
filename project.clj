@@ -35,6 +35,7 @@
                                        catacumba.impl.routing
                                        catacumba.impl.streams
                                        catacumba.impl.websocket
+                                       catacumba.impl.sse
                                        catacumba.experimental.stomp
                                        catacumba.experimental.stomp.parser
                                        catacumba.experimental.stomp.broker]

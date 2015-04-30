@@ -37,16 +37,26 @@
 
 (deftest public-address
   (let [p (promise)
-        handler (fn [ctx]
-                  (deliver p (ct/public-address ctx))
+        handler (fn [context]
+                  (deliver p (ct/public-address context))
                   "hello world")]
     (with-server (with-meta handler {:type :ratpack})
-      (let [response (client/get base-url)]
-        (is (= (:body response) "hello world"))
-        (is (= (:status response) 200))
-        (let [uri (deref p 1000 nil)]
-          (is uri)
-          (is (= (str uri) "http://localhost:5050")))))))
+      (let [response (client/get base-url)
+            uri (deref p 1000 nil)]
+        (is (= (str uri) "http://localhost:5050")))))
+)
+
+(deftest cookies
+  (testing "Setting new cookie."
+    (letfn [(handler [context]
+              (ct/set-cookies! context {:foo {:value "bar" :secure true :http-only true}})
+              "hello world")]
+      (with-server (with-meta handler {:type :ratpack})
+        (let [response (client/get base-url)]
+          (is (contains? response :cookies))
+          (is (= (get-in response [:cookies :path]) "/"))
+          (is (= (get-in response [:cookies :value]) "bar"))
+          (is (= (get-in response [:cookies :secure]) true)))))))
 
 (deftest request-response
   (testing "Using send! with context"

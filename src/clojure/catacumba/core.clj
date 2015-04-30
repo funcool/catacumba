@@ -11,6 +11,8 @@
   delegate
   public-address]
  [catacumba.impl.handlers
+  set-cookies!
+  get-cookies
   get-body
   get-headers
   set-headers!

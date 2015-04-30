@@ -22,6 +22,7 @@
            java.util.concurrent.CompletableFuture
            io.netty.buffer.Unpooled
            io.netty.buffer.ByteBuf
+           io.netty.handler.codec.http.Cookie
            java.io.InputStream
            java.io.BufferedReader
            java.io.InputStreamReader
@@ -41,6 +42,10 @@
 (defprotocol IHeaders
   (get-headers* [_] "Get headers.")
   (set-headers* [_ headers] "Set the headers."))
+
+(defprotocol ICookies
+  (get-cookies* [_] "Get cookies.")
+  (set-cookies* [_ cookies] "Set cookies."))
 
 (defprotocol IResponse
   (set-status* [_ status] "Set the status code."))
@@ -199,6 +204,58 @@
           (.set headersmap (name key) vals)
           (recur (rest headers)))))))
 
+
+(defn- cookie->map
+  [^Cookie cookie]
+  {:path (.getPath cookie)
+   :domain (.getDomain cookie)
+   :http-only (.isHttpOnly cookie)
+   :secure (.isSecure cookie)
+   :max-age (.getMaxAge cookie)
+   :version (.getVersion cookie)
+   :discard (.isDiscard cookie)})
+
+(extend-protocol ICookies
+  DefaultContext
+  (get-cookies* [^DefaultContext ctx]
+    (get-cookies* ^Request (:request ctx)))
+  (set-cookies* [^DefaultContext ctx cookies]
+    (set-cookies* ^Response (:response ctx) cookies))
+
+  Request
+  (get-cookies* [^Request request]
+    (persistent!
+     (reduce (fn [acc ^Cookie cookie]
+               (let [name (keyword (.getname cookie))]
+                 (assoc acc name (cookie->map cookie))))
+             (transient {})
+             (into [] (.getCookies request)))))
+
+  (set-cookies* [_ _]
+    (throw (UnsupportedOperationException.)))
+
+  Response
+  (get-cookies* [_]
+    (throw (UnsupportedOperationException.)))
+
+  (set-cookies* [response cookies]
+    (loop [cookies (into [] cookies)]
+      (when-let [[cookiename cookiedata] (first cookies)]
+        (let [^Cookie cookie (.cookie response (name cookiename) "")]
+          (reduce (fn [_ [k v]]
+                    (case k
+                      :path (.setPath cookie v)
+                      :domain (.setDomain cookie v)
+                      :secure (.setSecure cookie v)
+                      :http-only (.setHttpOnly cookie v)
+                      :max-age (.setMaxAge cookie v)
+                      :discard (.setDiscard cookie v)
+                      :value (.setValue cookie v)
+                      :version (.setVersion cookie v)))
+                  nil
+                  (into [] (merge {:discard false} cookiedata)))
+          (recur (rest cookies)))))))
+
 (extend-protocol io/IOFactory
   TypedData
   (make-reader [d opts]
@@ -280,6 +337,37 @@
   "Set response status code."
   [response status]
   (set-status* response status))
+
+(defn get-cookies
+  "Get the incoming cookies.
+
+  This is a polymorphic function and accepts
+  Context instances as request."
+  [request]
+  (get-cookies* request))
+
+(defn set-cookies!
+  "Set the outgoing cookies.
+
+      (set-cookies! ctx {:cookiename {:value \"value\"}})
+
+  As well as setting the value of the cookie,
+  you can also set additional attributes:
+
+  - `:domain` - restrict the cookie to a specific domain
+  - `:path` - restrict the cookie to a specific path
+  - `:secure` - restrict the cookie to HTTPS URLs if true
+  - `:http-only` - restrict the cookie to HTTP if true
+                   (not accessible via e.g. JavaScript)
+  - `:max-age` - the number of seconds until the cookie expires
+
+  As you can observe is almost identical hash map structure
+  as used in the ring especification.
+
+  This is a polymorphic function and accepts
+  Context instances as response."
+  [response cookies]
+  (set-cookies* response cookies))
 
 (defmulti send!
   "Send data to the client."

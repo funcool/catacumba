@@ -17,7 +17,7 @@
                  [io.ratpack/ratpack-core "0.9.16-SNAPSHOT"]
                  [org.slf4j/slf4j-simple "1.7.10"]
                  [com.stuartsierra/component "0.2.3"]
-                 [funcool/futura "0.1.0-SNAPSHOT"
+                 [funcool/futura "0.1.0-alpha2"
                   :exclusions [org.reactivestreams/reactive-streams]]
                  [environ "1.0.0"]
                  [potemkin "0.3.12" :exclusions [riddley]]

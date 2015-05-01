@@ -2,6 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [clojure.core.async :as async]
             [clojure.java.io :as io]
+            [cheshire.core :as json]
             [catacumba.core :as ct]
             [catacumba.http :as http]
             [catacumba.components :as ctcomp])
@@ -42,28 +43,6 @@
   (map->EventBus {}))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Fake Messager
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defrecord Messager [stoped eventbus]
-  component/Lifecycle
-  (start [component]
-    (vreset! stoped false)
-    (async/go-loop []
-      (when-not @stoped
-        (async/<! (send-message eventbus (str (java.time.Instant/now))))
-        (async/<! (async/timeout 1000))
-        (recur)))
-    component)
-
-  (stop [component]
-    (vreset! stoped true)))
-
-(defn messager
-  []
-  (->Messager (volatile! nil) nil))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Web Application
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -71,6 +50,20 @@
   [context]
   (let [content (slurp (io/resource "index.html"))]
     (http/ok content {:content-type "text/html"})))
+
+(defn post-message
+  "A simple handler for receive messages via post."
+  [context]
+  (let [bus (get-in context [::app :eventbus])
+        params (ct/parse-formdata context)
+        message (get params "message")
+        author (get params "author")]
+    (if (> (count message) 0)
+      (do
+        (send-message bus (json/generate-string {:author author
+                                                 :message message}))
+        (http/ok "Everything ok"))
+      (http/bad-request "Wrong parameters"))))
 
 (defn events-page
   "A server-sent envents endpoint for send
@@ -84,7 +77,9 @@
   (start [this]
     (let [routes [[:all (ctcomp/extra-data {::app this})]
                   [:get index-page]
-                  [:get "events" (with-meta events-page {:type :sse})]]]
+                  [:method "events"
+                   [:get (with-meta events-page {:type :sse})]
+                   [:post post-message]]]]
       (ctcomp/assoc-routes! server ::web routes)))
 
   (stop [this]
@@ -108,12 +103,10 @@
   (-> (component/system-map
        :catacumba (ctcomp/catacumba-server {:port 5050})
        :eventbus (eventbus)
-       :messager (messager)
        :app (webapp))
       (component/system-using
        {:app {:server :catacumba
-              :eventbus :eventbus}
-        :messager {:eventbus :eventbus}})))
+              :eventbus :eventbus}})))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Entry Point

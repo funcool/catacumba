@@ -1,1 +1,124 @@
-<b>hhhh</b>
+<!DOCTYPE html>
+<html>
+  <header>
+    <meta charset="urf-8" />
+    <title>Server-Sent Events chat example</title>
+    <style>
+     .username input {
+       border: 1px solid #e1e1e1;
+       padding: 5px;
+     }
+
+     .chatarea {
+       margin-top: 10px;
+       padding: 5px;
+       font-family: monospace;
+       border: 1px solid #e1e1e1;
+       height: 200px;
+       overflow: auto;
+     }
+
+     .chat-entry .title {
+       opacity: 0.5;
+     }
+
+     .input {
+       margin-top: 10px;
+     }
+
+     .input input[type=text] {
+       width: 600px;
+     }
+
+     .input input {
+       padding: 5px;
+     }
+    </style>
+  </header>
+  <body>
+    <section class="chat-container">
+      <div class="username">
+        <input type="text" id="username" placeholder="Type here your username..." />
+      </div>
+      <div class="chatarea">
+        <div class="chat-entry">
+          <span class="title">2015-05-01T20:22:20.988+0200 (Anonymous):</span>
+          <span class="text">hello world</span>
+        </div>
+        <div class="chat-entry">
+          <span class="title">2015-05-01T20:22:20.988+0200 (Anonymous):</span>
+          <span class="text">hello world</span>
+        </div>
+        <div class="chat-entry">
+          <span class="title">2015-05-01T20:22:20.988+0200 (Anonymous):</span>
+          <span class="text">hello world</span>
+        </div>
+        <div class="chat-entry">
+          <span class="title">2015-05-01T20:22:20.988+0200 (Anonymous):</span>
+          <span class="text">hello world</span>
+        </div>
+      </div>
+      <div class="input">
+        <input type="text" placeholder="Write a message..."/>
+        <input type="button" value="Send"/>
+      </div>
+    </section>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.2/moment.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/3.7.0/lodash.min.js"></script>
+    <script src="//code.jquery.com/jquery-2.1.3.min.js"></script>
+    <script type="application/javascript">
+     (function() {
+       var chatarea = $(".chatarea");
+       var dom = $(".chat-container");
+
+       function buildChatEntry(author, message) {
+         if (author === undefined || author.length == 0) {
+           author = "Anonymous";
+         }
+
+         var time = moment().format("YYYY-MM-DDTHH:mm:ss.SSSZZ");
+         var chatEntry = $("<div />", {class: "chat-entry"});
+         var chatTitle = $("<span />", {class: "title"});
+         chatTitle.html(time + " (" + author + "): ");
+         var chatText = $("<span />", {class: "text"});
+         chatText.html(message);
+
+         chatEntry.append(chatTitle);
+         chatEntry.append(chatText);
+         return chatEntry;
+       }
+
+       function addMessage(data) {
+         var entry = buildChatEntry(data.author, data.message);
+         chatarea.append(entry);
+         chatarea.scrollTop(999999999999999);
+       }
+
+       function sendMessage(author, message) {
+         var data = {author: author, message: message};
+         return $.post("/events/", data);
+       }
+
+       var es = new EventSource("/events");
+       es.addEventListener("message", function(event) {
+         var data = JSON.parse(event.data);
+         addMessage(data);
+       });
+
+       dom.on("keyup", ".input input[type=text]", function(event) {
+         if (event.keyCode === 13) {
+           var target = $(event.currentTarget)
+           var message = _.trim(target.val());
+           var author = $("#username").val();
+
+           if (message.length > 0) {
+             sendMessage(author, message);
+             target.val("");
+           }
+         }
+       });
+
+     }).call(this);
+    </script>
+  </body>
+</html>

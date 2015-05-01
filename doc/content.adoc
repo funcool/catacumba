@@ -31,6 +31,7 @@ All them are good clojure libraries/frameworks but them does not satisfies me fo
   as ring adapter having all the good and all the bad of ring and it is using jetty (jetty is a
   servlet server that comes with optional async support, it isn't asynchronous from the ground up).
 
+
 === Goals
 
 Here a incomplete list of things that _Catacumba_ goals:
@@ -294,11 +295,32 @@ If a header has multiple values, the value will be a vector.
 
 ===== Cookies
 
-At this moment _catacumba_ not implements helpers for intercat with cookies, but it is already
-supported by underlying platform (ratpack/netty), so you can access to cookies from request and
-response to set cookies using java interop.
+The cookies crud operations works very similiar to the headers one. It consists in two polymorphic
+functions (`get-cookies` and `set-cookies!`) that can be used directly with context or with request
+or response instances.
 
-TBD
+.Get cookies from request example
+[source, clojure]
+----
+(ct/get-cookies context)
+;; => {:cookiename {:value "value" :path "/" :secure false}}
+----
+
+.Set cookies to the response
+[source, clojure]
+----
+(ct/set-cookies context {:cookiename {:value "foobar" :max-age 3600}})
+----
+
+The cookies map is almost identical to that you can found in ring, and has the following possible
+properties:
+
+* `:domain` - restrict the cookie to a specific domain
+* `:path` - restrict the cookie to a specific path
+* `:secure` - restrict the cookie to HTTPS URLs if true
+* `:http-only` - restrict the cookie to HTTP if true
+                 (not accessible via e.g. JavaScript)
+* `:max-age` - the number of seconds until the cookie expires
 
 
 === Routing

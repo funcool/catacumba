@@ -13,6 +13,7 @@
            ratpack.handling.Context
            ratpack.http.Request
            ratpack.http.Response
+           ratpack.http.ResponseMetaData
            ratpack.http.Headers
            ratpack.http.TypedData
            ratpack.http.MutableHeaders
@@ -159,8 +160,8 @@
   (set-status* [^DefaultContext ctx ^long status]
     (set-status* (:response ctx) status))
 
-  Response
-  (set-status* [^Response response ^long status]
+  ResponseMetaData
+  (set-status* [^ResponseMetaData response ^long status]
     (.status response status)))
 
 (extend-protocol IRequest
@@ -177,7 +178,7 @@
   (get-headers* [^DefaultContext ctx]
     (get-headers* ^Request (:request ctx)))
   (set-headers* [^DefaultContext ctx headers]
-    (set-headers* ^Response (:response ctx) headers))
+    (set-headers* ^ResponseMetaData (:response ctx) headers))
 
   Request
   (get-headers* [^Request request]
@@ -193,17 +194,16 @@
   (set-headers* [_ _]
     (throw (UnsupportedOperationException.)))
 
-  Response
+  ResponseMetaData
   (get-headers* [_]
     (throw (UnsupportedOperationException.)))
 
-  (set-headers* [^Response response headers]
+  (set-headers* [^ResponseMetaData response headers]
     (let [^MutableHeaders headersmap (.getHeaders response)]
       (loop [headers headers]
         (when-let [[key vals] (first headers)]
           (.set headersmap (name key) vals)
           (recur (rest headers)))))))
-
 
 (defn- cookie->map
   [^Cookie cookie]
@@ -226,19 +226,19 @@
   (get-cookies* [^Request request]
     (persistent!
      (reduce (fn [acc ^Cookie cookie]
-               (let [name (keyword (.getname cookie))]
-                 (assoc acc name (cookie->map cookie))))
+               (let [name (keyword (.getName cookie))]
+                 (assoc! acc name (cookie->map cookie))))
              (transient {})
              (into [] (.getCookies request)))))
 
   (set-cookies* [_ _]
     (throw (UnsupportedOperationException.)))
 
-  Response
+  ResponseMetaData
   (get-cookies* [_]
     (throw (UnsupportedOperationException.)))
 
-  (set-cookies* [response cookies]
+  (set-cookies* [^ResponseMetaData response cookies]
     (loop [cookies (into [] cookies)]
       (when-let [[cookiename cookiedata] (first cookies)]
         (let [^Cookie cookie (.cookie response (name cookiename) "")]

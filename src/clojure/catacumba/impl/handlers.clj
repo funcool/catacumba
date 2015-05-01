@@ -208,6 +208,7 @@
 (defn- cookie->map
   [^Cookie cookie]
   {:path (.getPath cookie)
+   :value (.getValue cookie)
    :domain (.getDomain cookie)
    :http-only (.isHttpOnly cookie)
    :secure (.isSecure cookie)

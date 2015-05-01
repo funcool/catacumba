@@ -54,9 +54,9 @@
       (with-server (with-meta handler {:type :ratpack})
         (let [response (client/get base-url)]
           (is (contains? response :cookies))
-          (is (= (get-in response [:cookies :path]) "/"))
-          (is (= (get-in response [:cookies :value]) "bar"))
-          (is (= (get-in response [:cookies :secure]) true)))))))
+          (is (= (get-in response [:cookies "foo" :path]) "/"))
+          (is (= (get-in response [:cookies "foo" :value]) "bar"))
+          (is (= (get-in response [:cookies "foo" :secure]) true)))))))
 
 (deftest request-response
   (testing "Using send! with context"

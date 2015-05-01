@@ -14,16 +14,16 @@
                        :url "http://oss.jfrog.org/artifactory/repo"}}
 
   :dependencies [[org.clojure/clojure "1.7.0-beta2"]
+                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [io.ratpack/ratpack-core "0.9.16-SNAPSHOT"]
                  [org.slf4j/slf4j-simple "1.7.10"]
                  [com.stuartsierra/component "0.2.3"]
+                 [buddy/buddy-core "0.5.0"]
+                 [funcool/cuerdas "0.4.0"]
                  [funcool/futura "0.1.0-alpha2"
                   :exclusions [org.reactivestreams/reactive-streams]]
                  [environ "1.0.0"]
-                 [buddy/buddy-core "0.5.0"]
-                 [potemkin "0.3.12" :exclusions [riddley]]
-                 [funcool/cuerdas "0.4.0"]
-                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]]
+                 [potemkin "0.3.12" :exclusions [riddley]]]
   :profiles {:dev {:global-vars {*warn-on-reflection* true}
                                  ;; *unchecked-math* :warn-on-boxed}
                    :source-paths ["src"]

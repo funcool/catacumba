@@ -20,6 +20,7 @@
                  [funcool/futura "0.1.0-alpha2"
                   :exclusions [org.reactivestreams/reactive-streams]]
                  [environ "1.0.0"]
+                 [buddy/buddy-core "0.5.0"]
                  [potemkin "0.3.12" :exclusions [riddley]]
                  [funcool/cuerdas "0.4.0"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]]

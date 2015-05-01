@@ -7,7 +7,8 @@
             [clojure.core.async :as async]
             [clj-http.client :as client]
             [catacumba.core :as ct]
-            [catacumba.handlers :as cth]
+            [catacumba.handlers :as handlers]
+            [catacumba.handlers.session :as session]
             [catacumba.core-tests :refer [with-server base-url]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -23,7 +24,7 @@
 (deftest cors-handler
   (testing "Simple cors request"
     (let [handler (fn [ctx] "hello world")
-          handler (ct/routes [[:all (cth/cors cors-config1)]
+          handler (ct/routes [[:all (handlers/cors cors-config1)]
                               [:get handler]])]
       (with-server handler
         (let [response (client/get base-url {:headers {"Origin" "http://localhost/"}})
@@ -35,7 +36,7 @@
 
   (testing "Options cors request"
     (let [handler (fn [ctx] "hello world")
-          handler (ct/routes [[:all (cth/cors cors-config1)]
+          handler (ct/routes [[:all (handlers/cors cors-config1)]
                               [:get handler]])]
       (with-server handler
         (let [response (client/options base-url {:headers {"Origin" "http://localhost/"
@@ -48,7 +49,7 @@
 
   (testing "Wrong cors request"
     (let [handler (fn [ctx] "hello world")
-          handler (ct/routes [[:all (cth/cors cors-config2)]
+          handler (ct/routes [[:all (handlers/cors cors-config2)]
                               [:get handler]])]
       (with-server handler
         (let [response (client/options base-url {:headers {"Origin" "http://localhast/"
@@ -68,7 +69,7 @@
   (testing "Simple cors request"
     (let [p (promise)
           handler (fn [ctx] (deliver p ctx) "hello world")
-          handler (ct/routes [[:all cth/basic-request]
+          handler (ct/routes [[:all handlers/basic-request]
                               [:all handler]])]
       (with-server handler
         (let [response (client/get (str base-url "/foo"))
@@ -77,3 +78,55 @@
           (is (= (:status response) 200))
           (is (= (:method ctx) :get))
           (is (= (:path ctx) "/foo")))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Session tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest session-handler-tests
+  (testing "Simple session access."
+    (let [p (promise)
+          handler (fn [ctx]
+                    (let [session (:session ctx)]
+                      (swap! session assoc :foo 2)
+                      (if (= (count @session) 0)
+                        (swap! session assoc :foo 2)
+                        (deliver p @session))
+                      "hello"))
+          handler (ct/routes [[:all (session/session-handler {})]
+                              [:all handler]])]
+      (with-server handler
+        (let [response (client/get (str base-url "/foo"))
+              cookie (get-in response [:cookies "sessionid"])]
+          (is (map? cookie))
+          (is (:value cookie))
+          (is (= (:status response) 200))
+          (let [cookie {:value (:value cookie)}
+                response' (client/get (str base-url "/foo") {:cookies {"sessionid" cookie}})]
+            (is (= (:status response') 200))
+            (is (= (deref p 1000 nil) {:foo 2})))))))
+
+  (testing "Session type behavior"
+    (let [s (session/session "foobar")]
+      (is (not (#'session/accessed? s)))
+      (is (not (#'session/modified? s)))
+      (is (#'session/empty? s)))
+
+    (let [s (session/session "foobar")]
+      (deref s)
+      (is (#'session/accessed? s))
+      (is (not (#'session/modified? s)))
+      (is (#'session/empty? s)))
+
+    (let [s (session/session "foobar")]
+      (swap! s assoc :foo 2)
+      (is (#'session/accessed? s))
+      (is (#'session/modified? s))
+      (is (not (#'session/empty? s)))))
+
+  (testing "In memory session storage"
+    (let [st (session/memory-storage)]
+      (is (nil? (#'session/load-data st :foo)))
+      (#'session/persist-data st :foo {:bar 2})
+      (is (= (#'session/load-data st :foo) {:bar 2}))))
+)

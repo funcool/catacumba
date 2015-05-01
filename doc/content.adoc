@@ -356,7 +356,21 @@ supported in _catacumba_'s routing: `:all` (matches all routes, often used for a
 `:post`, `:put`, `:patch` and `:delete`.
 
 
-==== Handlers chaining
+==== Dispatch by method
+
+In some circumstances you may want have different handlers depending on the http method used
+for one concrete endpoint. For it exists the `:method` route directive:
+
+[source, clojure]
+----
+(ct/routes [:prefix "api"
+            [:method "users"
+             [:get list-users-handler]
+             [:post create-users-handler]]])
+----
+
+
+==== Routin chain
 
 The chaining of handlers can be done in different ways:
 
@@ -1163,7 +1177,6 @@ java -Dcatacumba.port=8000 -Dcatacumba.debug=false -jar yourjarhere.jar
 
 
 == Examples
-
 
 === Debugging with prone
 

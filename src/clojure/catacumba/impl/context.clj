@@ -37,18 +37,6 @@
                         :request (.getRequest context')
                         :response (.getResponse context')}))
 
-(defn delegate
-  "Delegate handling to the next handler in line.
-
-  This function accept an additiona parameter for
-  pass context parameters to the next handlers, and
-  that can be obtained with `context-params`
-  function."
-  ([^DefaultContext context] (delegate context {}))
-  ([^DefaultContext context data]
-   (let [^Context ctx (:catacumba/context context)
-         ^Registry reg (Registries/just (ContextData. data))]
-     (.next ctx reg))))
 
 (defn context-params
   "Get the current context params.
@@ -63,6 +51,22 @@
         (:payload cdata))
       (catch ratpack.registry.NotInRegistryException e
         {}))))
+
+(defn delegate
+  "Delegate handling to the next handler in line.
+
+  This function accept an additiona parameter for
+  pass context parameters to the next handlers, and
+  that can be obtained with `context-params`
+  function."
+  ([^DefaultContext context]
+   (let [^Context ctx (:catacumba/context context)]
+     (.next ctx)))
+  ([^DefaultContext context data]
+   (let [^Context ctx (:catacumba/context context)
+         previous (context-params context)
+         ^Registry reg (Registries/just (ContextData. (merge previous data)))]
+     (.next ctx reg))))
 
 (defn public-address
   "Get the current public address as URI instance.

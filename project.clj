@@ -4,7 +4,7 @@
   :license {:name "BSD (2-Clause)"
             :url "http://opensource.org/licenses/BSD-2-Clause"}
 
-  :source-paths ["src" "src/clojure"]
+  :source-paths ["src/clojure"]
   :java-source-paths ["src/java"]
 
   :jar-exclusions [#"\.swp|\.swo|user.clj"]
@@ -26,7 +26,8 @@
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]]
   :profiles {:dev {:global-vars {*warn-on-reflection* true}
                                  ;; *unchecked-math* :warn-on-boxed}
-                   :codeina {:sources ["src"]
+                   :source-paths ["src"]
+                   :codeina {:sources ["src/clojure"]
                              :exclude [catacumba.impl.context
                                        catacumba.impl.helpers
                                        catacumba.impl.parse

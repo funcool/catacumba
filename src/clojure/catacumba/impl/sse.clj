@@ -19,7 +19,7 @@
 
 
 (defprotocol IEvent
-  (event [_] "Create a event"))
+  (^:private event [_] "Create a event"))
 
 (extend-protocol IEvent
   String
@@ -50,6 +50,8 @@
         (.onSubscribe subscriber subscription)))))
 
 (defn sse
+  "Start the sse connection with the client
+  and dispatch it in a special hanlder."
   [^DefaultContext context handler]
   (let [out (async/chan 1 (map event))
         pub (channel->publisher out)

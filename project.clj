@@ -10,12 +10,12 @@
   :jar-exclusions [#"\.swp|\.swo|user.clj"]
   :javac-options ["-target" "1.8" "-source" "1.8" "-Xlint:-options"]
 
-  :mirrors {"central" {:name "central"
-                       :url "http://oss.jfrog.org/artifactory/repo"}}
+  ;; :mirrors {"central" {:name "central"
+  ;;                      :url "http://oss.jfrog.org/artifactory/repo"}}
 
   :dependencies [[org.clojure/clojure "1.7.0-beta2"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
-                 [io.ratpack/ratpack-core "0.9.16-SNAPSHOT"]
+                 [io.ratpack/ratpack-core "0.9.16"]
                  [org.slf4j/slf4j-simple "1.7.10"]
                  [com.stuartsierra/component "0.2.3"]
                  [buddy/buddy-core "0.5.0"]

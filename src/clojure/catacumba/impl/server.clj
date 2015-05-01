@@ -30,9 +30,9 @@
   "A bootstrap server hook for setup initial
   registry entries and execute a user provided
   hook for do the same thing."
-  [^RegistrySpec registryspec setup]
+  [^RegistrySpec spec {:keys [setup debug]}]
   (when (fn? setup)
-    (setup registryspec)))
+    (setup spec)))
 
 (defn- build-server-config
   "Given user specified options, return a `ServerConfig` instance."
@@ -53,7 +53,7 @@
   "The ratpack server configuration callback."
   [^RatpackServerSpec spec handler {:keys [setup] :as options}]
   (.serverConfig spec ^ServerConfig (build-server-config options))
-  (.registryOf spec (helpers/action #(bootstrap-registry % setup)))
+  (.registryOf spec (helpers/action #(bootstrap-registry % options)))
   (setup-handler handler spec))
 
 (defn run-server

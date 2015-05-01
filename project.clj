@@ -48,6 +48,7 @@
                               :exclusions [org.clojure/clojure]]]
                    :dependencies [[clj-http "1.1.0"]
                                   [cc.qbits/jet "0.6.1"]
+                                  [org.clojure/tools.namespace "0.2.10"]
                                   [ring/ring-core "1.3.2"
                                    :exclusions [javax.servlet/servlet-api
                                                 org.clojure/clojure]]]}})

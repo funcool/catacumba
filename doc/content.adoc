@@ -1177,6 +1177,16 @@ NOTE: Obviously, if you are using the ring type of hanlder, you can use prone as
 additional adaptation. This example shows how it can be used with default hanlder type.
 
 
+=== Multiuser chat with SSE
+
+This example tries demostrate how can you build a simple chat using "Server-Sent Events" for
+comounicating events to the client and using *stuartsierra/component* as for an modular application
+architecture.
+
+You can see the example code here:
+https://github.com/funcool/catacumba/tree/master/examples/component-chat
+
+
 == FAQ
 
 

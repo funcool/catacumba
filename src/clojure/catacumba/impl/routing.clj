@@ -24,6 +24,15 @@
   (let [callback #(reduce attach-route % handlers)]
     (.prefix chain path ^Action (helpers/action callback))))
 
+(defmethod attach-route :method
+  [^Chain chain [_ ^String path & handlers]]
+  (let [callback #(reduce attach-route % handlers)
+        handler (fn [context]
+                  (let [^Context ctx (:catacumba/context context)]
+                    (.byMethod ctx (helpers/action callback))))
+        handler (handlers/adapter handler)]
+    (.handler chain path handler)))
+
 (defmethod attach-route :error
   [^Chain chain [_ error-handler]]
   (letfn [(on-register [^RegistrySpec rspec]
@@ -37,7 +46,7 @@
     (.register chain ^Action (helpers/action on-register))))
 
 (defmethod attach-route :default
-  [^Chain chain [method & handlers-and-path]]
+  [chain [method & handlers-and-path]]
   (let [path (first handlers-and-path)]
     (if (string? path)
       (let [^Handler handler (-> (map handlers/adapter (rest handlers-and-path))
@@ -50,7 +59,7 @@
           :patch (.patch chain path handler)
           :delete (.delete chain path handler)))
       (let [^Handler handler (-> (map handlers/adapter handlers-and-path)
-                                (Handlers/chain))]
+                                 (Handlers/chain))]
         (case method
           :all (.handler chain handler)
           :get (.get chain handler)

@@ -8,6 +8,8 @@
  [catacumba.impl.routing
   routes]
  [catacumba.impl.context
+  on-close
+  before-send
   delegate
   public-address]
  [catacumba.impl.handlers

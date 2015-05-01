@@ -1,9 +1,11 @@
 (ns catacumba.impl.context
   "Functions and helpers for work in a clojure
   way with ratpack types."
-  (:require [catacumba.utils :as utils])
+  (:require [catacumba.utils :as utils]
+            [catacumba.impl.helpers :as helpers])
   (:import ratpack.handling.Handler
            ratpack.handling.Context
+           ratpack.handling.RequestOutcome
            ratpack.http.Request
            ratpack.http.Response
            ratpack.server.PublicAddress
@@ -86,3 +88,19 @@
   [^DefaultContext context]
   (let [^Context ctx (:catacumba/context context)]
     (into {} utils/keywordice-keys-t (.getPathTokens ctx))))
+
+(defn on-close
+  "Register a callback in the context that will be called
+  when the connection with the client is closed."
+  [^DefaultContext context callback]
+  (let [^Context ctx (:catacumba/context context)]
+    (.onClose ctx (helpers/action callback))))
+
+(defn before-send
+  "Register a callback in the context that will be called
+  just before send the response to the client. Is a useful
+  hook for set some additional cookies, headers or similar
+  response transformations."
+  [^DefaultContext context callback]
+  (let [^Response response (:response context)]
+    (.beforeSend response (helpers/action callback))))

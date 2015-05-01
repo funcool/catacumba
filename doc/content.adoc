@@ -1003,11 +1003,122 @@ More information:
 * https://www.owasp.org/index.php/List_of_useful_HTTP_headers
 
 
+=== Sessions
+
+==== Getting Started
+
+The http sessions in _catacumba_ are also implemented as chain handler. So, you can add sessions
+to you application just adding the handler to your routing chain:
+
+[source, clojure]
+----
+(require '[catacumba.handlers.session :as session])
+
+(def app
+  (ct/routes [[:all (session/session-handler {:storage :inmemory})]
+              [:get your-handler]]))
+----
+
+All handlers in the route pipeline that are going after the session handler will come with `:session`
+key in the context with a "atom" like object. You just treat it as atom, so for attach some data
+to the session you should use the well known `swap!` function:
+
+[source, clojure]
+----
+(defn my-handler
+  [context]
+  (let [session (:session context)]
+    (swap! session assoc :userid 1)
+    "my response"))
+----
+
+You can clean the session just reseting to the empty map:
+
+[source, clojure]
+----
+(reset! session {})
+----
+
+One of the big advantages of using the chain routing for setup session, is that you put session
+to a concrete subset of urls/resources avoiding unnecesary code execution for hendler that
+does not need sessions:
+
+[source, clojure]
+----
+(def app
+  (ct/routes [[:prefix "admin"
+               [:all (session/session-handler {:storage :inmemory})]
+               [:get your-handler]]
+              [:prefix "api"
+               [:get "users" other-handler]
+               [:get ...]]]))
+----
+
+==== Session storages
+
+TBD
+
+
+
 == Advanced topics
 
 === Modular components
 
-TBD
+_Catacumba_ is build from its ground with optional support for the `stuartsierra/component`, and
+exposes a `catacumba-server` component with api for add routes and handlers from other components.
+
+Let see a little example on how it can be used:
+
+[source, clojure]
+----
+(ns yourapp.system
+  (:require [com.stuartsierra.component :as component]
+            [catacumba.components :refer (catacumba-server assoc-routes!)]))
+
+;; Define your web application component, it will be responsable to setup
+;; the routes to the catacumba-server component of your handlers
+
+(defrecord WebApp [server]
+  component/Lifecycle
+  (start [this]
+    (let [routes [[:get "foo" some-handler]
+                  [:get "bar" other-handler]]
+      (assoc-routes! server ::web routes)))
+
+  (stop [this]
+    ;; noop
+    ))
+
+;; Define a simple constructor for your web application component
+(defn webapp []
+  (->WebApp nil))
+
+;; Define the system with two main components: catacumba-server and webapp
+;; and explicitly specify the dependency of catacumba-server for webapp/
+
+(defn application-system
+  "The application system constructor."
+  []
+  (-> (component/system-map
+       :catacumba (catacumba-server {:port 5050})
+       :app (webapp))
+      (component/system-using
+       {:app {:server :catacumba}})))
+
+;; Just define a entry point for the application.
+
+(defn -main
+  "The main entry point to your application."
+  [& args]
+  (component/start (application-system)))
+----
+
+Take care, each call to the `assoc-routes!` function, the server is reloaded. In the majority of
+circumstances this is completely irelevant because it is done in a application bootstrap time.
+
+For understand it better, _catacumba_ comes with an <<sse-component-example,example>> that builds a
+multiuser char using "Server-Sent events" and component, so you can experiment with real code. 
+See the <<examples,examples>> section for it.
 
 
 === Launching the server

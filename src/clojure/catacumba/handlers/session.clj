@@ -1,4 +1,8 @@
 (ns catacumba.handlers.session
+  "Sessions support for catacumba.
+
+  WARNING: this is still work in progress and
+  the api will be changed in the future."
   (:refer-clojure :exclude [empty?])
   (:require [futura.atomic :as atomic]
             [buddy.core.nonce :as nonce]

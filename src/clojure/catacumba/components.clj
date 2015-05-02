@@ -27,15 +27,7 @@
 (alter-meta! #'map->Server assoc :private true)
 
 (defn catacumba-server
-  "The catacumba server component constructor.
-
-      (component/system-map
-       :catacumba (ctcomp/catacumba-server {:port 5050})
-       ;; ...
-      )
-
-  The url mapping defintion can be attached later in other
-  component."
+  "The catacumba server component constructor."
   [options]
   (map->Server {:options options
                 :routes (atom {})
@@ -49,8 +41,8 @@
     (ct/delegate context data)))
 
 (defn assoc-routes!
-  "Assoc routes to the running server. Executing
-  this function causes the server reload."
+  "Assoc routes to the running server. Executing this function
+  causes the server reload."
   [server key routes]
   (let [server' (:server server)
         routes' (:routes server)]

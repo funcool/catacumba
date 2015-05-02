@@ -258,7 +258,7 @@ or `multipart/form-data`), you should use the `parse-formdata` helper function:
 The return value of `parse-formdata` is a clojure map with parsed key value pairs, including files
 uploaded with `multipart/form-data` content type.
 
-In other some situations we need more low level access to the body. In this case, you can obtain a
+In other situations we may need more low level access to the body. In this case, you can obtain a
 object instance that represents a body using the `get-body` function. The return value of that function
 implements the convenient protocols from `clojure.java.io` namespace, then you can use it for create
 a apropiate reader or input stream depending of you needs. Also, for convenience, the request and

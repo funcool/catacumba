@@ -1,5 +1,13 @@
 # Changelog #
 
+## Version 0.2.0-SNAPSHOT ##
+
+Date: unreleased
+
+- Add the ability to force the public address value on server startup (`:public-address` option)
+- Add an option for specify the custom maximum body size (`:max-body-size` option)
+
+
 ## Version 0.1.0-alpha2 ##
 
 Date: 2015-05-03
@@ -26,6 +34,7 @@ Date: 2015-05-03
 - Update to clojure 1.7 beta 2.
 - Update futura library to 0.1.0-alpha2
 - Update ratpack to 0.9.16.
+- Add support for stuartsierra/component.
 
 
 ## Version 0.1.0-alpha1 ##

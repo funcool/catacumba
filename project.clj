@@ -25,7 +25,6 @@
                  [environ "1.0.0"]
                  [potemkin "0.3.12" :exclusions [riddley]]]
   :profiles {:dev {:global-vars {*warn-on-reflection* true}
-                                 ;; *unchecked-math* :warn-on-boxed}
                    :source-paths ["src"]
                    :codeina {:sources ["src/clojure"]
                              :exclude [catacumba.impl.context

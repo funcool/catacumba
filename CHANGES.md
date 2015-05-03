@@ -2,7 +2,7 @@
 
 ## Version 0.1.0-alpha2 ##
 
-Date: unreleased
+Date: 2015-05-03
 
 - The context now is implemented as record and allows attach additional information.
 - Improved context data forwarding, now the data is attached directy to the context.

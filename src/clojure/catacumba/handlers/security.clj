@@ -22,8 +22,8 @@
   "A chain handler that adds X-Frame-Options header to the response.
 
   The X-Frame-Options HTTP response header can be used to indicate
-  whether or not a browser should be allowed to render a page in a <frame>,
-  <iframe> or <object> . Sites can use this to avoid clickjacking attacks,
+  whether or not a browser should be allowed to render a page in a `<frame>`,
+  `<iframe>` or `<object>` . Sites can use this to avoid clickjacking attacks,
   by ensuring that their content is not embedded into other sites.
 
   Possible options:

@@ -41,22 +41,6 @@
         <input type="text" id="username" placeholder="Type here your username..." />
       </div>
       <div class="chatarea">
-        <div class="chat-entry">
-          <span class="title">2015-05-01T20:22:20.988+0200 (Anonymous):</span>
-          <span class="text">hello world</span>
-        </div>
-        <div class="chat-entry">
-          <span class="title">2015-05-01T20:22:20.988+0200 (Anonymous):</span>
-          <span class="text">hello world</span>
-        </div>
-        <div class="chat-entry">
-          <span class="title">2015-05-01T20:22:20.988+0200 (Anonymous):</span>
-          <span class="text">hello world</span>
-        </div>
-        <div class="chat-entry">
-          <span class="title">2015-05-01T20:22:20.988+0200 (Anonymous):</span>
-          <span class="text">hello world</span>
-        </div>
       </div>
       <div class="input">
         <input type="text" placeholder="Write a message..."/>
@@ -107,7 +91,7 @@
 
        dom.on("keyup", ".input input[type=text]", function(event) {
          if (event.keyCode === 13) {
-           var target = $(event.currentTarget)
+           var target = $(event.currentTarget);
            var message = _.trim(target.val());
            var author = $("#username").val();
 
@@ -118,6 +102,16 @@
          }
        });
 
+       dom.on("click", ".input input[type=button]", function(event) {
+         var target = $(event.currentTarget).prev();
+         var message = _.trim(target.val());
+         var author = $("#username").val();
+
+         if (message.length > 0) {
+           sendMessage(author, message);
+           target.val("");
+         }
+       });
      }).call(this);
     </script>
   </body>

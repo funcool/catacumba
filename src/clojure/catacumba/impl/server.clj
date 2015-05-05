@@ -19,9 +19,7 @@
   to the reatpack server instance builder."
   (fn [handler spec]
     (let [metadata (meta handler)]
-      (if (:router metadata)
-        :catacumba/router
-        (:handler-type metadata)))))
+      (:handler-type metadata))))
 
 (defmethod setup-handler :catacumba/router
   [handler ^RatpackServerSpec spec]

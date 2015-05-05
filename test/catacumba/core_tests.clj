@@ -191,7 +191,7 @@
           handler2 (fn [ctx]
                      (str "hello " (:foo ctx)))
           router (ct/routes [[:prefix "foo"
-                              [:all handler1]
+                              [:any handler1]
                               [:get handler2]]])]
       (with-server router
         (let [response (client/get (str base-url "/foo"))]
@@ -202,7 +202,7 @@
     (let [error-handler (fn [ctx error] (http/ok "no error"))
           handler (fn [ctx] (throw (Exception. "foobar")))
           router (ct/routes [[:error error-handler]
-                             [:all handler]])]
+                             [:any handler]])]
       (with-server router
         (let [response (client/get base-url)]
           (is (= (:body response) "no error"))
@@ -214,10 +214,10 @@
           handler (fn [ctx] (throw (Exception. "foobar")))
           router (ct/routes [[:prefix "foo"
                               [:error error-handler1]
-                              [:all handler]]
+                              [:any handler]]
                              [:prefix "bar"
                               [:error error-handler2]
-                              [:all handler]]])]
+                              [:any handler]]])]
       (with-server router
         (let [response1 (client/get (str base-url "/foo"))
               response2 (client/get (str base-url "/bar"))]

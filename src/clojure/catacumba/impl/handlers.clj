@@ -382,30 +382,11 @@
   [^Response response data]
   (send data response))
 
-(defn- adapt-metadata
-  [handler]
-  (let [metadata (meta handler)]
-    (cond
-      (:ring metadata)
-      (assoc metadata :handler-type :catacumba/ring)
-
-      (:websocket metadata)
-      (assoc metadata :handler-type :catacumba/websocket)
-
-      (:sse metadata)
-      (assoc metadata :handler-type :catacumba/sse)
-
-      (:router metadata)
-      (assoc metadata :handler-type :catacumba/router)
-
-      :else
-      metadata)))
-
 (defmulti adapter
   "A polymorphic function for create the
   handler adapter."
   (fn [handler & args]
-    (let [metadata (adapt-metadata handler)]
+    (let [metadata (meta handler)]
       (:handler-type metadata)))
   :default :catacumba/default)
 

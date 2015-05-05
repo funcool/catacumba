@@ -24,7 +24,7 @@
 (deftest cors-handler
   (testing "Simple cors request"
     (let [handler (fn [ctx] "hello world")
-          handler (ct/routes [[:all (handlers/cors cors-config1)]
+          handler (ct/routes [[:any (handlers/cors cors-config1)]
                               [:get handler]])]
       (with-server handler
         (let [response (client/get base-url {:headers {"Origin" "http://localhost/"}})
@@ -36,7 +36,7 @@
 
   (testing "Options cors request"
     (let [handler (fn [ctx] "hello world")
-          handler (ct/routes [[:all (handlers/cors cors-config1)]
+          handler (ct/routes [[:any (handlers/cors cors-config1)]
                               [:get handler]])]
       (with-server handler
         (let [response (client/options base-url {:headers {"Origin" "http://localhost/"
@@ -49,7 +49,7 @@
 
   (testing "Wrong cors request"
     (let [handler (fn [ctx] "hello world")
-          handler (ct/routes [[:all (handlers/cors cors-config2)]
+          handler (ct/routes [[:any (handlers/cors cors-config2)]
                               [:get handler]])]
       (with-server handler
         (let [response (client/options base-url {:headers {"Origin" "http://localhast/"
@@ -69,8 +69,8 @@
   (testing "Simple cors request"
     (let [p (promise)
           handler (fn [ctx] (deliver p ctx) "hello world")
-          handler (ct/routes [[:all handlers/basic-request]
-                              [:all handler]])]
+          handler (ct/routes [[:any handlers/basic-request]
+                              [:any handler]])]
       (with-server handler
         (let [response (client/get (str base-url "/foo"))
               ctx (deref p 1000 {})]
@@ -93,8 +93,8 @@
                         (swap! session assoc :foo 2)
                         (deliver p @session))
                       "hello"))
-          handler (ct/routes [[:all (session/session-handler {})]
-                              [:all handler]])]
+          handler (ct/routes [[:any (session/session-handler {})]
+                              [:any handler]])]
       (with-server handler
         (let [response (client/get (str base-url "/foo"))
               cookie (get-in response [:cookies "sessionid"])]

@@ -12,7 +12,8 @@
            java.util.List))
 
 (defmulti attach-route
-  (fn [chain [method & _]] method))
+  (fn [chain [method & args]]
+    method))
 
 (defmethod attach-route :assets
   [^Chain chain [_ ^String path & indexes]]
@@ -61,7 +62,7 @@
       (let [^Handler handler (-> (map handlers/adapter (rest handlers-and-path))
                                  (Handlers/chain))]
         (case method
-          :all (.handler chain path handler)
+          :any (.handler chain path handler)
           :get (.get chain path handler)
           :post (.post chain path handler)
           :put (.put chain path handler)
@@ -70,7 +71,7 @@
       (let [^Handler handler (-> (map handlers/adapter handlers-and-path)
                                  (Handlers/chain))]
         (case method
-          :all (.handler chain handler)
+          :any (.handler chain handler)
           :get (.get chain handler)
           :post (.post chain handler)
           :put (.put chain handler)

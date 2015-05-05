@@ -24,6 +24,15 @@
   (let [callback #(reduce attach-route % handlers)]
     (.prefix chain path ^Action (helpers/action callback))))
 
+(defmethod attach-route :insert
+  [^Chain chain [_ & handlers]]
+  (let [callback #(reduce attach-route % handlers)]
+    (.insert chain ^Action (helpers/action callback))))
+
+;; TODO: perform handlers adapter on definition time
+;; instead on request time, for faster error detection
+;; and performance improvements.
+
 (defmethod attach-route :by-method
   [^Chain chain [_ ^String path & handlers]]
   (let [callback #(reduce attach-route % handlers)

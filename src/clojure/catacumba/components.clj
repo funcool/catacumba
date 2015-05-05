@@ -16,7 +16,7 @@
     (let [handler (fn [^Chain chain]
                     (doseq [item (vals @routes)]
                       (reduce routing/attach-route chain item)))
-          handler (with-meta handler {:type :ratpack-router})]
+          handler (with-meta handler {:handler-type :catacumba/router})]
       (assoc component :server (run-server handler options))))
 
   (stop [component]
@@ -46,5 +46,5 @@
   [server key routes]
   (let [server' (:server server)
         routes' (:routes server)]
-    (swap! routes' assoc key routes)
+    (swap! routes' assoc key [(apply vector :insert routes)])
     (.reload ^RatpackServer server')))

@@ -77,8 +77,8 @@
   (start [this]
     (let [routes [[:all (ctcomp/extra-data {::app this})]
                   [:get index-page]
-                  [:method "events"
-                   [:get (with-meta events-page {:type :sse})]
+                  [:by-method "events"
+                   [:get ^:sse events-page]
                    [:post post-message]]]]
       (ctcomp/assoc-routes! server ::web routes)))
 

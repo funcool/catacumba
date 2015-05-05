@@ -1180,7 +1180,7 @@ java -Dcatacumba.port=8000 -Dcatacumba.debug=false -jar yourjarhere.jar
 
 === Debugging with prone
 
-link:https://github.com/magnars/prone[Prone] is really awesome middleware for ring that allows show
+link:https://github.com/magnars/prone[Prone] is really awesome middleware for ring that shows
 a beautiful and human readable stack traces when a exception is raised in our application. It is not
 directly compatible with _catacumba_ but is relativelly easy adapt it.
 
@@ -1192,8 +1192,8 @@ additional adaptation. This example shows how it can be used with default hanlde
 
 === Multiuser chat with SSE
 
-This example tries demostrate how can you build a simple chat using "Server-Sent Events" for
-comounicating events to the client and using *stuartsierra/component* as for an modular application
+This example tries to demostrate how can you build a simple chat using "Server-Sent Events" for
+communicating events to the client and using *stuartsierra/component* for the modular application
 architecture.
 
 You can see the example code here:
@@ -1206,14 +1206,14 @@ https://github.com/funcool/catacumba/tree/master/examples/component-chat
 [[difference-with-aleph]]
 === What is the difference with aleph
 
-First of all, Aleph is one of the most robus libraries in clojure ecosystem for build asynchronous
-servers. Here a incomplete list of differences and why I wrote _catacumba_ instead of use _aleph_
+First of all, Aleph is one of the most robust libraries in clojure ecosystem for building asynchronous
+servers. Here is an incomplete list of differences and motivations why I wrote _catacumba_ instead of using _aleph_
 directly in my applications:
 
-- Aleph with manifold offers good abstractions for creating async servers but them are to much
-  low level and only provides the basic building blocks. _Catacumba_ intends to be a toolkit highly
-  focused in web development providing a good collection of facilities for that.
-- I wrote _catacumba_ for have something different to ring and _Aleph_ uses ring abstraction for
+- Aleph with manifold offers good abstractions for creating async servers but they are to much
+  low level and only provide the basic building blocks. _Catacumba_ intends to be a toolkit highly
+  focused on web development providing a good collection of facilities for that.
+- I wrote _catacumba_ tp have something different to ring and _Aleph_ that uses ring abstraction for
   handle web requests.
 - Aleph has a good path to have an easily readable  and user friendly documentation.
 - Aleph is build on manifold streams and _catacumba_ uses reactive-streams abstractions.

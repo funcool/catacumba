@@ -67,7 +67,7 @@
     (->> (WebSocketSession. in out ctrl context handler)
          (WebSockets/websocket ^Context (:catacumba/context context)))))
 
-(defmethod handlers/adapter :websocket
+(defmethod handlers/adapter :catacumba/websocket
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]

@@ -18,7 +18,7 @@
                 (close! out))))
           (handler [context]
             (ct/websocket context websocket))]
-    (with-server (with-meta handler {:type :ratpack})
+    (with-server handler
       (let [p (promise)]
         (ws/connect! "ws://localhost:5050/"
                      (fn [{:keys [in out]}]
@@ -35,7 +35,8 @@
               (let [received (<! in)]
                 (>! out "PONG")
                 (close! out))))]
-    (with-server (with-meta handler {:type :websocket})
+    (with-server (with-meta handler
+                   {:handler-type :catacumba/websocket})
       (let [p (promise)]
         (ws/connect! "ws://localhost:5050/"
                      (fn [{:keys [in out]}]
@@ -61,7 +62,8 @@
                   (deliver p3 received))
                 (>! out "PONG")
                 (close! out)))]
-      (with-server (with-meta handler {:type :websocket})
+      (with-server (with-meta handler
+                     {:handler-type :catacumba/websocket})
         (let [p4 (promise)]
           (ws/connect! "ws://localhost:5050/"
                        (fn [{:keys [in out]}]

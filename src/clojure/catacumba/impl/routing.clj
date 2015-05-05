@@ -72,6 +72,5 @@
   "Is a high order function that access a routes vector
   as argument and return a ratpack router type handler."
   [routes]
-  (with-meta
-    (fn [chain] (reduce attach-route chain routes))
-    {:type :ratpack-router}))
+  (with-meta (fn [chain] (reduce attach-route chain routes))
+    {:handler-type :catacumba/router}))

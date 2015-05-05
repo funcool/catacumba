@@ -382,13 +382,34 @@
   [^Response response data]
   (send data response))
 
+(defn- adapt-metadata
+  [handler]
+  (let [metadata (meta handler)]
+    (cond
+      (:ring metadata)
+      (assoc metadata :handler-type :catacumba/ring)
+
+      (:websocket metadata)
+      (assoc metadata :handler-type :catacumba/websocket)
+
+      (:sse metadata)
+      (assoc metadata :handler-type :catacumba/sse)
+
+      (:router metadata)
+      (assoc metadata :handler-type :catacumba/router)
+
+      :else
+      metadata)))
+
 (defmulti adapter
   "A polymorphic function for create the
   handler adapter."
-  (fn [handler & args] (:type (meta handler)))
-  :default :ratpack)
+  (fn [handler & args]
+    (let [metadata (adapt-metadata handler)]
+      (:handler-type metadata)))
+  :default :catacumba/default)
 
-(defmethod adapter :ratpack
+(defmethod adapter :catacumba/default
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]
@@ -401,7 +422,7 @@
         (when (satisfies? IHandlerResponse response)
           (handle-response response context))))))
 
-(defmethod adapter :ring
+(defmethod adapter :catacumba/ring
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]

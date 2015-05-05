@@ -17,9 +17,13 @@
 (defmulti setup-handler
   "A polymorphic function for setup the handler
   to the reatpack server instance builder."
-  (fn [handler spec] (:type (meta handler))))
+  (fn [handler spec]
+    (let [metadata (meta handler)]
+      (if (:router metadata)
+        :catacumba/router
+        (:handler-type metadata)))))
 
-(defmethod setup-handler :ratpack-router
+(defmethod setup-handler :catacumba/router
   [handler ^RatpackServerSpec spec]
   (.handlers spec ^Action (helpers/action handler)))
 

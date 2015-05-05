@@ -40,7 +40,7 @@
         handler (fn [context]
                   (deliver p (ct/public-address context))
                   "hello world")]
-    (with-server (with-meta handler {:type :ratpack})
+    (with-server handler
       (let [response (client/get base-url)
             uri (deref p 1000 nil)]
         (is (= (str uri) "http://localhost:5050")))))
@@ -51,7 +51,7 @@
     (letfn [(handler [context]
               (ct/set-cookies! context {:foo {:value "bar" :secure true :http-only true}})
               "hello world")]
-      (with-server (with-meta handler {:type :ratpack})
+      (with-server handler
         (let [response (client/get base-url)]
           (is (contains? response :cookies))
           (is (= (get-in response [:cookies "foo" :path]) "/"))
@@ -61,14 +61,14 @@
 (deftest request-response
   (testing "Using send! with context"
     (let [handler (fn [ctx] (ct/send! ctx "hello world"))]
-      (with-server (with-meta handler {:type :ratpack})
+      (with-server handler
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))))))
 
   (testing "Using string as return value."
     (let [handler (fn [ctx] "hello world")]
-      (with-server (with-meta handler {:type :ratpack})
+      (with-server handler
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))))))
@@ -76,7 +76,7 @@
   (testing "Using client ns functions."
     (let [handler (fn [ctx]
                     (http/ok "hello world" {:x-header "foobar"}))]
-      (with-server (with-meta handler {:type :ratpack})
+      (with-server handler
         (let [response (client/get base-url)]
           (is (= (get-in response [:headers "x-header"]) "foobar"))
           (is (= (:body response) "hello world"))
@@ -94,7 +94,7 @@
                         (>! ch "world")
                         (close! ch))
                       (http/ok ch)))]
-      (with-server (with-meta handler {:type :ratpack})
+      (with-server handler
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))))))
@@ -104,7 +104,7 @@
               (go
                 (<! (timeout 100))
                 "hello world"))]
-      (with-server (with-meta handler {:type :ratpack})
+      (with-server handler
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))))))
@@ -114,7 +114,7 @@
               (m/mlet [x (p/promise (fn [resolve]
                                       (async/thread (resolve "hello"))))]
                 (str x " world")))]
-      (with-server (with-meta handler {:type :ratpack})
+      (with-server handler
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))))))
@@ -124,7 +124,7 @@
               (let [p (stream/publisher ["hello" " " "world"])
                     p (stream/publisher (map str/upper) p)]
                 (http/accepted p)))]
-      (with-server (with-meta handler {:type :ratpack})
+      (with-server handler
         (let [response (client/get base-url)]
           (is (= (:body response) "HELLO WORLD"))
           (is (= (:status response) 202))))))
@@ -135,7 +135,7 @@
                 (async/thread
                   (md/success! d "hello world"))
                 (http/accepted d)))]
-      (with-server (with-meta handler {:type :ratpack})
+      (with-server handler
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 202))))))
@@ -149,7 +149,7 @@
                   @(ms/put! d "world")
                   (ms/close! d))
                 (http/accepted d)))]
-      (with-server (with-meta handler {:type :ratpack})
+      (with-server handler
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 202))))))
@@ -260,7 +260,7 @@
                     (let [body (ct/get-body ctx)]
                       (deliver p (slurp body)))
                     "hello world")]
-      (with-server (with-meta handler {:type :ratpack})
+      (with-server handler
         (let [response (client/get base-url {:body "Hello world"
                                              :content-type "application/zip"})]
           (is (= (:body response) "hello world"))

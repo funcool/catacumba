@@ -18,7 +18,7 @@
   `(let [handler# (-> ~handler
                       ring-kw-params/wrap-keyword-params
                       ring-params/wrap-params)
-         handler# (with-meta handler# {:type :ring})
+         handler# (with-meta handler# {:handler-type :catacumba/ring})
          server# (ct/run-server handler#)]
      (try
        ~@body

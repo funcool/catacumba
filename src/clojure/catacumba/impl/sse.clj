@@ -62,7 +62,7 @@
       (handler context out))
     (.render ctx sse')))
 
-(defmethod handlers/adapter :sse
+(defmethod handlers/adapter :catacumba/sse
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]

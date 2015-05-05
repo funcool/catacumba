@@ -24,7 +24,7 @@
               (close! out)))
           (handler [context]
             (ct/sse context sse-handler))]
-    (with-server (with-meta handler {:type :ratpack})
+    (with-server handler
       (let [p (promise)
             response (<!! (http/get client "http://localhost:5050/" {:fold-chunked-response? false}))]
         (is (= (:status response) 200))
@@ -43,7 +43,8 @@
               (>! out {:id "foobar"})
               (>! out {:id "foobar" :data "3"})
               (close! out)))]
-    (with-server (with-meta sse-handler {:type :sse})
+    (with-server (with-meta sse-handler
+                   {:handler-type :catacumba/sse})
       (let [p (promise)
             response (<!! (http/get client "http://localhost:5050/" {:fold-chunked-response? false}))]
         (is (= (:status response) 200))

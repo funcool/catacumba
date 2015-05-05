@@ -1,10 +1,13 @@
-= Catacumba - Asynchronous web toolkit for Clojure.
+= Catacumba - Web toolkit for Clojure.
 Andrey Antukh, <niwi@niwi.be>
 :toc: left
 :numbered:
+:idseparator: -
+:idprefix:
 :source-highlighter: pygments
 :pygments-style: friendly
 :sectlinks:
+
 
 == Introduction
 
@@ -326,10 +329,10 @@ properties:
 === Routing
 
 In difference to ring, _catacumba_ is a toolkit for web development and offers builtin support for
-advanced routing that allows handlers chaining, partitioning, error handling, among others.
+advanced routing that allows handlers chaining, partitioning, error handling, among others features.
 
 _Catacumba_ has polymorphic and extensible way to setup handlers, and routing is one of possible
-implementations. Is completelly optional and you can use any ther routing library if you want.
+implementations. Is completelly optional and you can use any other routing library if you want.
 
 
 ==== Basic syntax
@@ -364,7 +367,7 @@ for one concrete endpoint. For it exists the `:method` route directive:
 [source, clojure]
 ----
 (ct/routes [:prefix "api"
-            [:method "users"
+            [:by-method "users"
              [:get list-users-handler]
              [:post create-users-handler]]])
 ----
@@ -484,11 +487,6 @@ The context in catacumba as in ratpack has this responsabilities:
 * Convenience helpers for common handlers operation.
 
 
-==== Contextual objects
-
-TBD
-
-
 ==== Handlers delegation
 
 In _catacumba_, the request is handled using a chain of handlers. And one concrete handler can decide
@@ -512,11 +510,12 @@ The delegation action can be done with `delegate` multiarity function. Let see a
   (ct/routes [[:get "foo" handler1 handler2]]))
 ----
 
-In this example, when request arrives to handler1, it delegates it to the next possible handler. It do
-not know about it, it just delegates to the next.
+In this example, when request arrives to handler1, which delegates the execution to the next
+handler in the chain. It do not know about next handler, it just delegates to the routing chain
+to find a next handler or raise corresponding error.
 
 Additionally to the simple handlers delegation, _catacumba_ offers a simple way to pass context data
-to the next handlers, passing additional parameter to the `delegate` function:
+to the next handlers. It can be done passing additional parameter to the `delegate` function:
 
 [source, clojure]
 ----
@@ -536,25 +535,8 @@ In this example the second handler prints the message found in the context.
 
 === Asynchronous Handlers
 
-_Catacumba_ has support for multiple abstractions for asynchronous (stream or not) abstractions and
-addopts a flexible and extensible way for make easy for the user adapt it to hes needs and hes
-abstractions.
-
-The main abstraction are defined in the link:https://github.com/funcool/futura[futura library],
-that provides basic building blocks for promise like abstractions and stream abstraction.
-
-The link:https://github.com/funcool/futura[futura library] instead of reinvent the wheel, is build
-up on existing implementations such as:
-
-* _JDK8 CompletableFuture_ for *promise* abstraction.
-* _Reactive Streams_ for the *stream* abstraction.
-
-Using the link:http://www.reactive-streams.org/[reactive streams] instead of reinvent yet another
-stream abstraction has huge amount of advantages. There three most important:
-
-* Interoprability with all libraries that has support for reactive streams
-* Well and strongly defined behavior of the abstraction.
-* Comes with support for *backpressure* in its core (that is mandatory in asynchronous environments).
+Asynchronous handlers are handlers that return a value in asyncrhonous way using one of the
+supported abstractions, such as core.async, reactve-streams and much others (explained below).
 
 
 ==== Channels
@@ -593,11 +575,9 @@ And this is the aspect of async handler returning channel as response:
       (:message result)))
 ----
 
-Do not worry about how data you can send to the client, if you are using channels in a right way
-in a go block, yo will send data to the client as fast as client can consume it. This technique is
+Do not worry about how much data you can send to the client, if you are using channels in a right way
+(in a go block), yo will send data to the client as fast as client can consume it. This technique is
 also called backpressure, and is fully supported for chunked responses.
-
-NOTE: Behind the scenes it adapts the channel into link:http://www.reactive-streams.org/[Reactive Streams] `Publisher`.
 
 
 ==== Promises
@@ -704,7 +684,7 @@ Reactive streams implementation in link:https://github.com/funcool/futura[futura
 support for different kind of coercions and with clojure 1.7 *transducers*.
 
 
-=== Websockets
+=== WebSockets
 
 One of the main goals of _catacumba_ is come with builtin, full featured and backpressure aware
 websockets support.
@@ -732,18 +712,14 @@ function. It not need special handlers for treat websockets. Let see an example:
                [:all my-handler]]]))
 ----
 
-It is very simple, you can use a plain handlers or handlers attached in a route chain with the ability
-to start websocket connection in any place.
-
 Additionally, _catacumba_ offers a a way to setup websocket handler directly, without additional step
-on standard handler:
+on default handler:
 
 [source, clojure]
 ----
 (defn echo-handler
   "This is my echo handler that serves as
   a websocket handler example."
-  {:type :websocket}
   [{:keys [in out]}]
   (go-loop []
     (if-let [received (<! in)]
@@ -754,10 +730,40 @@ on standard handler:
 
 (def route
   (ct/routes [[:prefix "events"
-               [:all echo-handler]]]))
+               [:all ^:websocket echo-handler]]]))
 ----
 
-TIP: The handlers adaptation is driven by its metadata and is defined using clojure multimethods. It allows you define own adapters for websockets or any other handlers if the builtin does not satisfies you.
+The `^:websocket` metadata indicates to _catacumba_ which type of addapter should use for this
+handler. _Catacumba_ comes with limited handler types out of the box and allow the short
+syntax for them. Behind the scenes it converts it to this:
+
+[source, clojure]
+----
+(ct/routes [[:prefix "events"
+             [:all (with-meta echo-handler
+                     {:handler-type :catacumba/websocket})]]])
+----
+
+As you can observe, the handler adapters are driven by the metadata, so storing metadata
+in the var also is possible:
+
+[source, clojure]
+----
+(defn echo-handler
+  "This is my echo handler that serves as
+  a websocket handler example."
+  {:handler-type :catacumba/websocket}
+  [{:keys [in out]}]
+  ;; implementation
+  )
+
+(def route
+  (ct/routes [[:prefix "events"
+               [:all #'echo-handler]]]))
+----
+
+Clojure offers a lot of flexibility for work with metadata so, you can set the handler type
+in the way that you prefers.
 
 
 === Server-Sent Events
@@ -775,7 +781,6 @@ gives the ability to receive data:
 (defn time-notification
   "Handler that notifies each second
   the current server time to the client."
-  {:type :sse}
   [context out]
   (go-loop []
     (when-let [_ (>! out (str (java.time.Instant/now)))]
@@ -784,7 +789,7 @@ gives the ability to receive data:
 
 (def route
   (ct/routes [[:prefix "events"
-               [:all time-notification]]]))
+               [:all ^:sse time-notification]]]))
 
 ----
 
@@ -843,21 +848,21 @@ Let see how it can be done:
 ----
 (defn myringhandler
   "My example ring handler."
-  {:type :ring}
   [request]
   {:status 200
    :body "hello world"})
 
 ;; As standalone handler
-(ct/run-server myringhandler)
+(ct/run-server ^:ring myringhandler)
 
 ;; Or in a _catacumba_ routing chain
-(-> (ct/routes [[:get myringhandler]])
+(-> (ct/routes [[:get ^:ring myringhandler]])
     (ct/run-server))
 ----
 
 Ring handlers can be set as standalone handlers (mainly for use them as compojure and all related
 middlewares) or in a _catacumba_'s routing chain.
+
 
 == Builtin Handlers
 
@@ -913,7 +918,9 @@ it on your application:
 ----
 
 
-=== Content Security Policy
+=== Security
+
+==== Content Security Policy
 
 Is a security related chain handler that appropiatelly set the `Content-Security-Policy` headers.
 
@@ -944,7 +951,7 @@ This handler supports the following directives: `:default-src`, `:frame-ancestor
 and `:reflected-xss`.
 
 
-=== Frame Options
+==== Frame Options
 
 This is a security related chain handler that adds `X-Frame-Options` header to the response.
 
@@ -970,7 +977,7 @@ WARNING: The frame-ancestors directive from the CSP Level 2 specification
 officially replaces this non-standard header.
 
 
-=== Strict Transport Security
+==== Strict Transport Security
 
 This is a security related chain handler that adds the `Strict-Transport-Security` to the response.
 
@@ -992,7 +999,7 @@ Usage example:
 You can read more about that headers here: https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security
 
 
-=== Content Type Options
+==== Content Type Options
 
 This is a security related chain handler that adds the `X-Content-Type-Options` header to the
 response.It prevents resources with invalid media types being loaded as stylesheets or scripts.
@@ -1131,7 +1138,7 @@ Take care, each call to the `assoc-routes!` function, the server is reloaded. In
 circumstances this is completely irelevant because it is done in a application bootstrap time.
 
 For understand it better, _catacumba_ comes with an <<sse-component-example,example>> that builds a
-multiuser char using "Server-Sent events" and component, so you can experiment with real code. 
+multiuser char using "Server-Sent events" and component, so you can experiment with real code.
 See the <<examples,examples>> section for it.
 
 

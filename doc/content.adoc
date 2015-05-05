@@ -355,7 +355,7 @@ handler in the pipeline. If you know the *pedestal* interceptors concept, this i
 familiar for you.
 
 Additionally to `:get` route type that you have seen in previous example, it there others that already
-supported in _catacumba_'s routing: `:all` (matches all routes, often used for add chain handlers),
+supported in _catacumba_'s routing: `:any` (matches all routes, often used for add chain handlers),
 `:post`, `:put`, `:patch` and `:delete`.
 
 
@@ -394,7 +394,7 @@ them as interceptors:
 ----
 (def routes
   (ct/routes [[:prefix "api"
-               [:all authentication-handler]
+               [:any authentication-handler]
                [:get "users" users-handler]]]))
 ----
 
@@ -422,7 +422,7 @@ there also possible set different error handlers for different prefixes:
 (def routes
   (ct/routes [[:prefix "api"
                [:error my-error-handler-for-this-prefix]
-               [:all authentication-handler]
+               [:any authentication-handler]
                [:get "users" users-handler]
                [:put "users" check-permissions-handler update-users-hander]]
               [:prefix "statix"
@@ -709,7 +709,7 @@ function. It not need special handlers for treat websockets. Let see an example:
 
 (def route
   (ct/routes [[:prefix "events"
-               [:all my-handler]]]))
+               [:any my-handler]]]))
 ----
 
 Additionally, _catacumba_ offers a a way to setup websocket handler directly, without additional step
@@ -720,6 +720,7 @@ on default handler:
 (defn echo-handler
   "This is my echo handler that serves as
   a websocket handler example."
+  {:handler-type :catacumba/websocket}
   [{:keys [in out]}]
   (go-loop []
     (if-let [received (<! in)]
@@ -730,36 +731,22 @@ on default handler:
 
 (def route
   (ct/routes [[:prefix "events"
-               [:all ^:websocket echo-handler]]]))
+               [:any #'echo-handler]]]))
 ----
 
-The `^:websocket` metadata indicates to _catacumba_ which type of addapter should use for this
-handler. _Catacumba_ comes with limited handler types out of the box and allow the short
-syntax for them. Behind the scenes it converts it to this:
+As you can observe, a function has additional metadata that indicates to _catacumba_ that that
+function is a websocket type handler, so _catacumba_ bootstraps the websocket connection for you.
+
+Is very important pass a var reference to the router instead of the function directly, because
+the metadata defined in the function is bound to the var and not to the function.
+
+Also, you can attach metadata inline, using the `with-meta` clojure builtin function:
 
 [source, clojure]
 ----
 (ct/routes [[:prefix "events"
-             [:all (with-meta echo-handler
+             [:any (with-meta echo-handler
                      {:handler-type :catacumba/websocket})]]])
-----
-
-As you can observe, the handler adapters are driven by the metadata, so storing metadata
-in the var also is possible:
-
-[source, clojure]
-----
-(defn echo-handler
-  "This is my echo handler that serves as
-  a websocket handler example."
-  {:handler-type :catacumba/websocket}
-  [{:keys [in out]}]
-  ;; implementation
-  )
-
-(def route
-  (ct/routes [[:prefix "events"
-               [:all #'echo-handler]]]))
 ----
 
 Clojure offers a lot of flexibility for work with metadata so, you can set the handler type
@@ -770,17 +757,18 @@ in the way that you prefers.
 
 WebSockets are cool because they allow bi-directional comunication, but in some circumstances we only
 need something unidirectional, for notify the client about some changes or any other events. For this
-purtpose exists link:https://developer.mozilla.org/en-US/docs/Server-sent_events[Server-Sent Events]
+purpose exists link:https://developer.mozilla.org/en-US/docs/Server-sent_events[Server-Sent Events]
 and _catacumba_ also has support for it.
 
-The *sse* handlers are very similar to websocket ones, with the principal difference that it does not
-gives the ability to receive data:
+The handlers for sse not differs a lot from websockets that we have seen in previous section. The
+main difference is that the reception of the data is not allowed.
 
 [source, clojure]
 ----
 (defn time-notification
   "Handler that notifies each second
   the current server time to the client."
+  {:handler-type :catacumba/sse}
   [context out]
   (go-loop []
     (when-let [_ (>! out (str (java.time.Instant/now)))]
@@ -789,11 +777,11 @@ gives the ability to receive data:
 
 (def route
   (ct/routes [[:prefix "events"
-               [:all ^:sse time-notification]]]))
+               [:any #'time-notification]]]))
 
 ----
 
-Like with websocket handlers, you can start the sse in any place, such as standard _catacumba_ handler:
+In a similar way to websockets, you can start the sse in any place, such as standard _catacumba_ handler:
 
 [source, clojure]
 ----
@@ -810,12 +798,11 @@ Like with websocket handlers, you can start the sse in any place, such as standa
 
 (def route
   (ct/routes [[:prefix "events"
-               [:all time-notification]]]))
+               [:any time-notification]]]))
 
 ----
 
-You operate with all posible options that sse exposes with the ability to send data, send the event
-name or specify the `id`:
+Let see some examples how you can send other parameters that simple data:
 
 [source, clojure]
 ----
@@ -830,10 +817,10 @@ name or specify the `id`:
 (>! out {:id "2"})
 ----
 
-NOTE: As you can observe, the _catacumba_'s sse support uses core.async channels, but if you are not
+NOTE: The _catacumba_'s sse support uses core.async channels, but if you are not
 happy with core.async and want use some thing different (such as manifold streams), you may want know
 that everything in _catacumba_ is implemented using abstractions and implement your own sse type
-of handler that uses manifold streams is very very easy.
+of handler that uses manifold streams is very easy.
 
 
 === Ring compatibility
@@ -885,7 +872,7 @@ _Catacumba_ has builtin support for CORS, let see how you can use it:
 
 (def app
   (ct/routes [[:prefix "api/v1"
-               [:all (cors cors-conf)]
+               [:any (cors cors-conf)]
                [:get "foo" some-handler]
                [:post "foo" some-save-handler]]]))
 ----
@@ -912,7 +899,7 @@ it on your application:
 
 (def app
   (ct/routes [[:prefix "api/v1"
-               [:all basic-request]
+               [:any basic-request]
                [:get "foo" some-handler]
                [:post "foo" some-save-handler]]]))
 ----
@@ -939,7 +926,7 @@ Here a simple example on how to use it:
 
 (def app
   (ct/routes [[:prefix "web"
-               [:all (csp-headers cspconf)]
+               [:any (csp-headers cspconf)]
                [:get your-handler]]])
 ----
 
@@ -967,7 +954,7 @@ Example:
 
 (def app
   (ct/routes [[:prefix "web"
-               [:all (handlers/frame-options-headers {:policy :deny})]
+               [:any (handlers/frame-options-headers {:policy :deny})]
                [:get your-handler]]]))
 ----
 
@@ -992,7 +979,7 @@ Usage example:
 
 (def app
   (ct/routes [[:prefix "web"
-               [:all (handlers/hsts-headers {:max-age 31536000 :subdomains true })]
+               [:any (handlers/hsts-headers {:max-age 31536000 :subdomains true })]
                [:get your-handler]]]))
 ----
 
@@ -1013,7 +1000,7 @@ can use it:
 
 (def app
   (ct/routes [[:prefix "web"
-               [:all handlers/content-type-options-headers]
+               [:any handlers/content-type-options-headers]
                [:get your-handler]]]))
 ----
 
@@ -1036,7 +1023,7 @@ to you application just adding the handler to your routing chain:
 (require '[catacumba.handlers.session :as session])
 
 (def app
-  (ct/routes [[:all (session/session-handler {:storage :inmemory})]
+  (ct/routes [[:any (session/session-handler {:storage :inmemory})]
               [:get your-handler]]))
 ----
 
@@ -1068,7 +1055,7 @@ does not need sessions:
 ----
 (def app
   (ct/routes [[:prefix "admin"
-               [:all (session/session-handler {:storage :inmemory})]
+               [:any (session/session-handler {:storage :inmemory})]
                [:get your-handler]]
               [:prefix "api"
                [:get "users" other-handler]

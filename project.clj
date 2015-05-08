@@ -43,6 +43,7 @@
                                        catacumba.handlers.cors
                                        catacumba.handlers.security
                                        catacumba.handlers.session
+                                       catacumba.handlers.interceptor
                                        catacumba.experimental.stomp
                                        catacumba.experimental.stomp.parser
                                        catacumba.experimental.stomp.broker]

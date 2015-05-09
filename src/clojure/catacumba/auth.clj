@@ -31,15 +31,15 @@
 ;; Handlers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn autentication
+(defn authentication
   "Authentication chain handler constructor."
   [& backends]
   {:pre [(pos? (count backends))]}
   (fn [context]
-    (let [context (assoc context :auth-backend current)]
-      (loop [[current & pending] backends]
-        (let [last? (empty? pending)
-              resp (buddy-proto/parse current context)]
+    (loop [[current & pending] backends]
+      (let [last? (empty? pending)
+            context (assoc context :auth-backend current)
+            resp (buddy-proto/parse current context)]
         (if (and (buddy-http/response? resp) last?)
           resp
           (if (and (nil? resp) last?)
@@ -49,7 +49,7 @@
                 resp
                 (if (or (:identity resp) last?)
                   (context/delegate context resp)
-                  (recur pending)))))))))))
+                  (recur pending))))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Adapters

@@ -19,6 +19,7 @@
                  [org.slf4j/slf4j-simple "1.7.10"]
                  [com.stuartsierra/component "0.2.3"]
                  [buddy/buddy-core "0.5.0"]
+                 [buddy/buddy-auth "0.5.3-SNAPSHOT"]
                  [funcool/cuerdas "0.4.0"]
                  [funcool/futura "0.1.0-alpha2"
                   :exclusions [org.reactivestreams/reactive-streams]]

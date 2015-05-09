@@ -16,12 +16,12 @@
 (defn- exec-interceptor
   [interceptor]
   (reify ExecInterceptor
-    (^void intercept [_ ^Execution e ^ExecInterceptor$ExecType t ^Block b]
+    (^void intercept [_ ^Execution exc ^ExecInterceptor$ExecType t ^Block b]
       (let [continuation #(.execute b)
             exectype (if (= t ExecInterceptor$ExecType/BLOCKING)
                        :blocking
                        :compute)]
-        (interceptor exectype continuation)))))
+        (interceptor exc exectype continuation)))))
 
 (defn interceptor
   "Start interceptor from current context.

@@ -13,8 +13,14 @@
             [manifold.deferred :as md]
             [catacumba.core :as ct]
             [catacumba.http :as http]
-            [catacumba.impl.parse :as parse])
-  (:import ratpack.registry.Registries))
+            [catacumba.impl.parse :as parse]
+            [catacumba.handlers.interceptor])
+  (:import ratpack.registry.Registries
+           ratpack.exec.Execution
+           ratpack.func.Action
+           ratpack.func.Block
+           ratpack.exec.ExecInterceptor
+           ratpack.exec.ExecInterceptor$ExecType))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helpers
@@ -268,4 +274,31 @@
           (let [bodydata (deref p 1000 nil)]
             (is (= bodydata "Hello world"))))))))
 
+(deftest interceptors-tests
+  (let [counter (atom 0)
+        p1 (promise)
+        p2 (promise)
+        p3 (promise)
+        p4 (promise)]
+    (letfn [(interceptor [_ type continuation]
+              (deliver p1 (swap! counter inc))
+              (continuation)
+              (deliver p2 (swap! counter inc)))
 
+            (handler2 [context]
+              (deliver p3 (swap! counter inc))
+              (ct/delegate context))
+
+            (handler3 [context]
+              (deliver p4 (swap! counter inc))
+              "hello world")]
+      (with-server (ct/routes [[:interceptor interceptor]
+                               [:any handler2]
+                               [:any handler3]])
+        (let [response (client/get base-url)]
+          (is (= (:body response) "hello world"))
+          (is (= (:status response) 200))
+          (is (= (deref p1 1000 nil) 1))
+          (is (= (deref p2 1000 nil) 4))
+          (is (= (deref p3 1000 nil) 2))
+          (is (= (deref p4 1000 nil) 3)))))))

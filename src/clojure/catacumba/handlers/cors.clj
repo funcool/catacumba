@@ -1,6 +1,7 @@
 (ns catacumba.handlers.cors
   (:require [cuerdas.core :as str]
-            [catacumba.core :as ct])
+            [catacumba.impl.context :as ct]
+            [catacumba.impl.handlers :as hs])
   (:import ratpack.http.Request
            ratpack.http.Response))
 
@@ -17,26 +18,26 @@
   (let [^Response response (:response context)
         ^String origin (get headers "origin")]
     (when-let [origin (allow-origin? origin opts)]
-      (ct/set-headers! response {"Access-Control-Allow-Origin" origin
+      (hs/set-headers! response {"Access-Control-Allow-Origin" origin
                                 "Access-Control-Allow-Methods" (str/join "," allow-methods)})
       (when allow-credentials
-        (ct/set-headers! response {"Access-Control-Allow-Credentials" true}))
+        (hs/set-headers! response {"Access-Control-Allow-Credentials" true}))
       (when max-age
-        (ct/set-headers! response {"Access-Control-Max-Age" max-age}))
+        (hs/set-headers! response {"Access-Control-Max-Age" max-age}))
       (when allow-headers
-        (ct/set-headers! response {"Access-Control-Allow-Headers" (str/join "," allow-headers)})))
-    (ct/send! context "")))
+        (hs/set-headers! response {"Access-Control-Allow-Headers" (str/join "," allow-headers)})))
+    (hs/send! context "")))
 
 (defn- handle-response
   [context headers {:keys [allow-headers expose-headers origin] :as opts}]
   (let [^Response response (:response context)
         ^String origin (get headers "origin")]
     (when-let [origin (allow-origin? origin opts)]
-      (ct/set-headers! response {"Access-Control-Allow-Origin" origin})
+      (hs/set-headers! response {"Access-Control-Allow-Origin" origin})
       (when allow-headers
-        (ct/set-headers! response {"Access-Control-Allow-Headers" (str/join "," allow-headers)}))
+        (hs/set-headers! response {"Access-Control-Allow-Headers" (str/join "," allow-headers)}))
       (when expose-headers
-        (ct/set-headers! response {"Access-Control-Expose-Headers" (str/join "," expose-headers)})))
+        (hs/set-headers! response {"Access-Control-Expose-Headers" (str/join "," expose-headers)})))
     (ct/delegate context)))
 
 (defn- cors-preflight?
@@ -50,7 +51,7 @@
   [{:keys [origin] :as opts}]
   (fn [context]
     (let [^Request request (:request context)
-          headers (ct/get-headers request)]
+          headers (hs/get-headers request)]
       (if (cors-preflight? request headers)
         (handle-preflight context request headers opts)
         (handle-response context headers opts)))))

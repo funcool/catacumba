@@ -1,5 +1,6 @@
 (ns catacumba.handlers.security
-  (:require [catacumba.core :as ct]
+  (:require [catacumba.impl.context :as ct]
+            [catacumba.impl.handlers :as hs]
             [cuerdas.core :as str])
   (:import ratpack.http.Response))
 
@@ -15,7 +16,7 @@
   ([{:keys [max-age subdomains] :or {max-age 31536000 subdomains true}}]
    (fn [context]
      (let [header-value (str "max-age=" max-age (when subdomains "; includeSubDomains"))]
-       (ct/set-headers! context {"Strict-Transport-Security" header-value})
+       (hs/set-headers! context {"Strict-Transport-Security" header-value})
        (ct/delegate context)))))
 
 (defn frame-options-headers
@@ -38,7 +39,7 @@
               (= policy :deny))]}
    (let [header-value (str/upper (name policy))]
      (fn [context]
-       (ct/set-headers! context {"X-Frame-Options" header-value})
+       (hs/set-headers! context {"X-Frame-Options" header-value})
        (ct/delegate context)))))
 
 (defn csp-headers
@@ -73,7 +74,7 @@
                        [] (seq options'))]
      (assert (pos? (count value)))
      (fn [context]
-       (ct/set-headers! context {"Content-Security-Policy" (str/join "; " value)})
+       (hs/set-headers! context {"Content-Security-Policy" (str/join "; " value)})
        (ct/delegate context)))))
 
 (defn content-type-options-headers
@@ -87,5 +88,5 @@
   http://msdn.microsoft.com/en-us/library/ie/gg622941(v=vs.85).aspx
   https://www.owasp.org/index.php/List_of_useful_HTTP_headers"
   [context]
-  (ct/set-headers! {"X-Content-Type-Options" "nosniff"})
+  (hs/set-headers! {"X-Content-Type-Options" "nosniff"})
   (ct/delegate context))

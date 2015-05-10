@@ -1,5 +1,6 @@
 (ns catacumba.handlers.core
-  (:require [catacumba.core :as ct])
+  (:require [catacumba.impl.context :as context]
+            [catacumba.impl.handlers :as handlers])
   (:import ratpack.http.Request))
 
 (defn basic-request
@@ -10,5 +11,5 @@
     (->> {:path (str "/" (.. request getPath))
           :query-string (.. request getQuery)
           :method (keyword (.. request getMethod getName toLowerCase))
-          :headers (ct/get-headers request)}
-         (ct/delegate context))))
+          :headers (handlers/get-headers request)}
+         (context/delegate context))))

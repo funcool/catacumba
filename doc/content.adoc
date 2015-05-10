@@ -373,6 +373,40 @@ for one concrete endpoint. For it exists the `:method` route directive:
 ----
 
 
+==== Routing params
+
+The _catacumba_'s routing also allows capture url parameters using special symbols. For example,
+the path string "foo/:val" will match paths such as "foo/bar", "foo/123".  The matched parameters
+are automatically populated to the context under the `:route-params` keys.
+
+[source, clojure]
+----
+(def article-detail
+  [context]
+  (let [id (get-in context [:route-params :id])]
+    (http/ok (str "You have requested article with id=" id))))
+
+(def app
+  (ct/routes [[:get "articles/:id" article-detail]]))
+----
+
+Additionally to the basic token for represent the url parameter, _catacumba_ also allows use of
+regular expressions for delimit the input or mark a url token optional.
+
+See the following table for all supported url tokens:
+
+.Supported url matching tokens
+[options="header", cols="2,3,3,2"]
+|===========================================================================
+| Path Type | Syntax | Route example | Matching url example
+| Literal | `foo` | `[:get "foo" handler]` | `/foo`
+| Mandatory | `:«token-name»` | `[:get "foo/:param" handler]` | `/foo/bar`
+| Optional | `:«token-name»?` | `[:get "foo/:param?" handler]` | `/foo` and `/foo/bar`
+| Mandatory & Regex | `:«token-name»:«regex»` | `[:get "foo/:id:\d+" handler]` | `/foo/2`
+| Optional & Regex | `:«token-name»?:«regex»` | `[:get "foo/:id?:\d+" handler]` | `/foo/2` and `/foo`
+|===========================================================================
+
+
 ==== Routin chain
 
 The chaining of handlers can be done in different ways:
@@ -425,9 +459,9 @@ there also possible set different error handlers for different prefixes:
                [:any authentication-handler]
                [:get "users" users-handler]
                [:put "users" check-permissions-handler update-users-hander]]
-              [:prefix "statix"
+              [:prefix "admin"
                [:error my-error-handler-for-this-other-prefix]
-               [:assets "public"]]]))
+               [:get "dashboard" my-dashboard-handler]]]))
 ----
 
 The error handler aspect is very similar to standard http handler, the difference is that it receives
@@ -439,40 +473,6 @@ additional parameter the throwable instance:
   [ctx error]
   (http/internal-server-error (.getMessage error)))
 ----
-
-
-==== Routing params
-
-The _catacumba_'s routing also allows capture url parameters using special symbols. For example,
-the path string "foo/:val" will match paths such as "foo/bar", "foo/123".  The matched parameters
-are automatically populated to the context under the `:route-params` keys.
-
-[source, clojure]
-----
-(def article-detail
-  [context]
-  (let [id (get-in context [:route-params :id])]
-    (http/ok (str "You have requested article with id=" id))))
-
-(def app
-  (ct/routes [[:get "articles/:id" article-detail]]))
-----
-
-Additionally to the basic token for represent the url parameter, _catacumba_ also allows use of
-regular expressions for delimit the input or mark a url token optional.
-
-See the following table for all supported url tokens:
-
-.Supported url matching tokens
-[options="header", cols="2,3,3,2"]
-|===========================================================================
-| Path Type | Syntax | Route example | Matching url example
-| Literal | `foo` | `[:get "foo" handler]` | `/foo`
-| Mandatory | `:«token-name»` | `[:get "foo/:param" handler]` | `/foo/bar`
-| Optional | `:«token-name»?` | `[:get "foo/:param?" handler]` | `/foo` and `/foo/bar`
-| Mandatory & Regex | `:«token-name»:«regex»` | `[:get "foo/:id:\d+" handler]` | `/foo/2`
-| Optional & Regex | `:«token-name»?:«regex»` | `[:get "foo/:id?:\d+" handler]` | `/foo/2` and `/foo`
-|===========================================================================
 
 
 === Context
@@ -890,8 +890,7 @@ But _catacumba_ at this moment offers a very limited set of helper functions for
 data: get/set headers and read the body (explained in previous sections).
 
 For compensate this, _catacumba_ comes with special chain handler that populates the context with
-basic request properties such as, headers, path and method: `basic-request` and let see how you can use
-it on your application:
+basic request properties such as, headers, path and method:
 
 [source, clojure]
 ----

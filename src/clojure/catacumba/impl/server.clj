@@ -54,7 +54,7 @@
         sslcontext (build-ssl-context keystore)
         config (if (string? basedir)
                  (ServerConfig/baseDir ^Path (utils/str->path basedir))
-                 (ServerConfig/findBaseDir "catacumba.properties"))]
+                 (ServerConfig/noBaseDir))]
     (when sslcontext (.ssl config sslcontext))
     (when public-address (.publicAddress config (java.net.URI. public-address)))
     (when max-body-size (.maxContentLength config max-body-size))

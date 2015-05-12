@@ -6,6 +6,11 @@ Date: unreleased
 
 - Add the ability to force the public address value on server startup (`:public-address` option)
 - Add an option for specify the custom maximum body size (`:max-body-size` option)
+- Improved support for sessions (mainly internal changes).
+- Add helper for parse the query params: `catacumba.core/parse-queryparams`.
+- Add support for interceptors.
+- Removed support for automatic searching of `catacumba.properties` file for basedir.
+
 
 
 ## Version 0.1.0-alpha2 ##

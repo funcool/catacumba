@@ -6,7 +6,11 @@
             [clojure.pprint :refer [pprint]]
             [clojure.core.async :as async]
             [clj-http.client :as client]
+            [buddy.auth.backends.token :refer [jws-backend]]
+            [buddy.sign.jws :as jws]
+            [slingshot.slingshot :refer [try+]]
             [catacumba.core :as ct]
+            [catacumba.http :as http]
             [catacumba.handlers :as hs]
             [catacumba.handlers.session :as session]
             [catacumba.core-tests :refer [with-server base-url]]))
@@ -159,3 +163,26 @@
           (is (= (deref p2 1000 nil) 4))
           (is (= (deref p3 1000 nil) 2))
           (is (= (deref p4 1000 nil) 3)))))))
+
+
+(def auth-backend
+  (jws-backend {:secret "secret"}))
+
+(deftest auth-tests
+  (letfn [(handler [context]
+            (if (:identity context)
+              (http/ok "Identified")
+              (http/unauthorized "Unauthorized")))]
+    (with-server (ct/routes [[:auth auth-backend]
+                             [:any handler]])
+      (try+
+       (let [response (client/get base-url)]
+         (is (= (:status response) 401)))
+       (catch Object e
+         (is (= (:status e) 401))))
+
+      (let [token (jws/sign {:userid 1} "secret")
+            headers {"Authorization" (str "Token " token)}
+            response (client/get base-url {:headers headers})]
+        (is (= (:status response) 200))))))
+

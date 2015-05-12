@@ -3,6 +3,7 @@
   using funcool/buddy-auth."
   (:require [buddy.auth.http :as buddy-http]
             [buddy.auth.protocols :as buddy-proto]
+            [catacumba.handlers.core :refer [hydrate-context]]
             [catacumba.impl.handlers :as handlers]
             [catacumba.impl.routing :as routing]
             [catacumba.impl.context :as context]
@@ -51,20 +52,21 @@
   [& backends]
   {:pre [(pos? (count backends))]}
   (fn [context]
-    (loop [[current & pending] backends]
-      (let [last? (empty? pending)
-            context (assoc context :auth-backend current)
-            resp (buddy-proto/parse current context)]
-        (if (and (buddy-http/response? resp) last?)
-          resp
-          (if (and (nil? resp) last?)
-            (context/delegate context)
-            (let [resp (buddy-proto/authenticate current context resp)]
-              (if (and (buddy-http/response? resp) last?)
-                resp
-                (if (or (:identity resp) last?)
-                  (context/delegate context resp)
-                  (recur pending))))))))))
+    (let [context (hydrate-context context)]
+      (loop [[current & pending] backends]
+        (let [last? (empty? pending)
+              context (assoc context :auth-backend current)
+              resp (buddy-proto/parse current context)]
+          (if (and (buddy-http/response? resp) last?)
+            resp
+            (if (and (nil? resp) last?)
+              (context/delegate context)
+              (let [resp (buddy-proto/authenticate current context resp)]
+                (if (and (buddy-http/response? resp) last?)
+                  resp
+                  (if (or (:identity resp) last?)
+                    (context/delegate context resp)
+                    (recur pending)))))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Adapters

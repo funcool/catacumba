@@ -1,4 +1,4 @@
-(ns catacumba.auth
+(ns catacumba.handlers.auth
   "Authentication and Authorization facilities for catacumba
   using funcool/buddy-auth."
   (:require [buddy.auth.http :as buddy-http]

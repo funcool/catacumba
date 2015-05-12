@@ -273,3 +273,27 @@
           (is (= (:status response) 200))
           (let [bodydata (deref p 1000 nil)]
             (is (= bodydata "Hello world"))))))))
+
+;; (deftest experiments
+;;   (letfn [(handler1 [context]
+;;             (println 1111)
+;;             "hello world")
+;;           (handler4 [context]
+;;             (println 4444)
+;;             (ct/delegate context))
+;;           (handler2 [context]
+;;             (println 2222)
+;;             "hello world")
+;;           (handler3 [context]
+;;             (println 3333)
+;;             "hello world")]
+;;     (with-server (ct/routes [[:insert
+;;                               [:any handler4]
+;;                               [:get "foo" handler1]]
+;;                              [:insert
+;;                               [:any handler4]
+;;                               [:get "bar" handler2]]
+;;                              [:any handler3]])
+;;       (let [response (client/get (str base-url "/bar"))]
+;;         (is (= (:body response) "hello world"))
+;;         (is (= (:status response) 200))))))

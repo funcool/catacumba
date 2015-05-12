@@ -28,10 +28,25 @@
   (response? [_] true))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Builtin backends
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn session-backend
+  "Given some options, create a new instance
+  of Session backend and return it."
+  []
+  (reify
+    buddy-proto/IAuthentication
+    (parse [_ context]
+      (:identity @(:session context)))
+    (authenticate [_ context data]
+      (assoc context :identity data))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Handlers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn authentication
+(defn auth
   "Authentication chain handler constructor."
   [& backends]
   {:pre [(pos? (count backends))]}
@@ -57,6 +72,6 @@
 
 (defmethod routing/attach-route :auth
   [^Chain chain [_ & backends]]
-  (let [^Handler handler (-> (apply authentication backends)
+  (let [^Handler handler (-> (apply auth backends)
                              (handlers/adapter))]
     (.handler chain handler)))

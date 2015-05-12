@@ -27,7 +27,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defmacro with-server [handler & body]
-  `(let [server# (ct/run-server ~handler)]
+  `(let [server# (ct/run-server ~handler {:basedir "."})]
      (try
        ~@body
        (finally
@@ -174,7 +174,7 @@
 
   (testing "Routing assets with prefix."
     (let [handler (ct/routes [[:prefix "static"
-                               [:assets "public"]]])]
+                               [:assets "resources/public"]]])]
       (with-server handler
         (let [response (client/get (str base-url "/static/test.txt"))]
           (is (= (:body response) "hello world from test.txt\n"))

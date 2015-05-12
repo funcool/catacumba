@@ -7,7 +7,7 @@
             [clojure.core.async :as async]
             [clj-http.client :as client]
             [catacumba.core :as ct]
-            [catacumba.handlers :as handlers]
+            [catacumba.handlers :as hs]
             [catacumba.handlers.session :as session]
             [catacumba.core-tests :refer [with-server base-url]]))
 
@@ -24,7 +24,7 @@
 (deftest cors-handler
   (testing "Simple cors request"
     (let [handler (fn [ctx] "hello world")
-          handler (ct/routes [[:any (handlers/cors cors-config1)]
+          handler (ct/routes [[:any (hs/cors cors-config1)]
                               [:get handler]])]
       (with-server handler
         (let [response (client/get base-url {:headers {"Origin" "http://localhost/"}})
@@ -36,7 +36,7 @@
 
   (testing "Options cors request"
     (let [handler (fn [ctx] "hello world")
-          handler (ct/routes [[:any (handlers/cors cors-config1)]
+          handler (ct/routes [[:any (hs/cors cors-config1)]
                               [:get handler]])]
       (with-server handler
         (let [response (client/options base-url {:headers {"Origin" "http://localhost/"
@@ -49,7 +49,7 @@
 
   (testing "Wrong cors request"
     (let [handler (fn [ctx] "hello world")
-          handler (ct/routes [[:any (handlers/cors cors-config2)]
+          handler (ct/routes [[:any (hs/cors cors-config2)]
                               [:get handler]])]
       (with-server handler
         (let [response (client/options base-url {:headers {"Origin" "http://localhast/"
@@ -69,7 +69,7 @@
   (testing "Simple cors request"
     (let [p (promise)
           handler (fn [ctx] (deliver p ctx) "hello world")
-          handler (ct/routes [[:any handlers/basic-request]
+          handler (ct/routes [[:any hs/basic-request]
                               [:any handler]])]
       (with-server handler
         (let [response (client/get (str base-url "/foo"))
@@ -93,7 +93,7 @@
                         (swap! session assoc :foo 2)
                         (deliver p @session))
                       "hello"))
-          handler (ct/routes [[:any (session/session-handler {})]
+          handler (ct/routes [[:any (hs/session {})]
                               [:any handler]])]
       (with-server handler
         (let [response (client/get (str base-url "/foo"))
@@ -107,18 +107,18 @@
             (is (= (deref p 1000 nil) {:foo 2})))))))
 
   (testing "Session type behavior"
-    (let [s (session/session "foobar")]
+    (let [s (#'session/->session "foobar")]
       (is (not (#'session/accessed? s)))
       (is (not (#'session/modified? s)))
       (is (#'session/empty? s)))
 
-    (let [s (session/session "foobar")]
+    (let [s (#'session/->session "foobar")]
       (deref s)
       (is (#'session/accessed? s))
       (is (not (#'session/modified? s)))
       (is (#'session/empty? s)))
 
-    (let [s (session/session "foobar")]
+    (let [s (#'session/->session "foobar")]
       (swap! s assoc :foo 2)
       (is (#'session/accessed? s))
       (is (#'session/modified? s))
@@ -126,9 +126,9 @@
 
   (testing "In memory session storage"
     (let [st (session/memory-storage)]
-      (is (nil? (#'session/load-data st :foo)))
-      (#'session/persist-data st :foo {:bar 2})
-      (is (= (#'session/load-data st :foo) {:bar 2}))))
+      (is (nil? (#'session/read-session st :foo)))
+      (#'session/write-session st :foo {:bar 2})
+      (is (= (#'session/read-session st :foo) {:bar 2}))))
 )
 
 (deftest interceptors-tests

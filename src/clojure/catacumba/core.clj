@@ -26,4 +26,5 @@
  [catacumba.impl.sse
   sse]
  [catacumba.impl.parse
-  parse-formdata])
+  parse-formdata
+  parse-queryparams])

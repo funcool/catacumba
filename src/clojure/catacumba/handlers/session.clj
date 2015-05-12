@@ -7,7 +7,8 @@
   (:require [futura.atomic :as atomic]
             [buddy.core.nonce :as nonce]
             [buddy.core.codecs :as codecs]
-            [catacumba.core :as ct])
+            [catacumba.impl.handlers :as handlers]
+            [catacumba.impl.context :as context])
   (:import clojure.lang.IAtom
            clojure.lang.IDeref
            clojure.lang.Counted
@@ -31,8 +32,9 @@
   (^:private modified? [_] "Check if session is modified"))
 
 (defprotocol ISessionStorage
-  (^:private load-data [_ key] "")
-  (^:private persist-data [_ key data] ""))
+  (^:private read-session [_ key] "")
+  (^:private write-session [_ key data] "")
+  (^:private delete-session [_ key] ""))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Types
@@ -81,32 +83,38 @@
 
 (alter-meta! #'->Session assoc :private true)
 
-(defn session
+(defn- ->session
   "A session object constructor."
-  ([sessionid] (session sessionid {}))
+  ([sessionid] (->session sessionid {}))
   ([sessionid data]
    (Session. (atom data)
              sessionid
              (atomic/boolean false)
              (atomic/boolean false))))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Storages
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn memory-storage
+  "In memmory session storage constructor."
   []
   (let [internalstore (atom {})]
     (reify ISessionStorage
-      (load-data [_ key]
+      (read-session [_ key]
         (let [key (keyword key)]
           (get @internalstore key nil)))
-      (persist-data [_ key data]
+      (write-session [_ key data]
         (let [key (keyword key)]
-          (swap! internalstore assoc key data))))))
+          (swap! internalstore assoc key data)))
+      (delete-session [_ key]
+        (let [key (keyword key)]
+          (swap! internalstore dissoc key))))))
 
 (defn lookup-storage
+  "A helper for create session storages with
+  helpfull shortcuts."
+  {:no-doc true}
   [storage]
   (case storage
     :inmemory (memory-storage)
@@ -134,40 +142,33 @@
 (defn- context->session
   [context {:keys [storage cookie-name]
             :or {cookie-name default-cookie-name}}]
-  (let [cookies (ct/get-cookies context)
+  (let [cookies (handlers/get-cookies context)
         cookie (get cookies (keyword cookie-name) nil)
         sid (:value cookie)]
     (if sid
-      (let [data (load-data storage sid)]
-        [sid (session sid data)])
+      (let [data (read-session storage sid)]
+        [sid (->session sid data)])
       (let [sid (codecs/bytes->safebase64 (nonce/random-nonce 48))]
-        [sid (session sid)]))))
+        [sid (->session sid)]))))
 
-(defn- patch-vary-headers
-  [response])
+(defn session
+  ([] (session {}))
+  ([{:keys [storage cookie-name]
+     :or {storage :inmemory cookie-name default-cookie-name}
+     :as options}]
+   (let [storage (lookup-storage storage)
+         options (assoc options :storage storage)]
+     (fn [context]
+       (let [[sid session] (context->session context options)]
+         (context/before-send context (fn [^ResponseMetaData response]
+                                        (cond
+                                          (empty? session)
+                                          (let [cookie (-> (make-cookie sid options)
+                                                           (assoc :max-age 0))]
+                                            (handlers/set-cookies! context {cookie-name cookie}))
 
-
-(defn session-handler
-  [{:keys [storage cookie-name]
-    :or {storage :inmemory cookie-name default-cookie-name}
-    :as options}]
-  (let [storage (lookup-storage storage)
-        options (assoc options :storage storage)]
-    (fn [context]
-      (let [[sid session] (context->session context options)]
-        (ct/before-send context (fn [^ResponseMetaData response]
-                                  (cond
-                                    (empty? session)
-                                    (let [cookie (-> (make-cookie sid options)
-                                                     (assoc :max-age 0))]
-                                      (ct/set-cookies! context {cookie-name cookie}))
-
-                                    (modified? session)
-                                    (let [cookie (make-cookie sid options)]
-                                      (persist-data storage sid @session)
-                                      (patch-vary-headers response)
-                                      (ct/set-cookies! context {cookie-name cookie}))
-
-                                    (accessed? session)
-                                    (patch-vary-headers response))))
-        (ct/delegate context {:session session})))))
+                                          (modified? session)
+                                          (let [cookie (make-cookie sid options)]
+                                            (write-session storage sid @session)
+                                            (handlers/set-cookies! context {cookie-name cookie})))))
+         (context/delegate context {:session session}))))))

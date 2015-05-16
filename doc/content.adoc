@@ -854,31 +854,122 @@ middlewares) or in a _catacumba_'s routing chain.
 
 == Builtin Handlers
 
-=== Cross-Origin Resource Sharing
+=== Auth
 
-Is a mechanism that allows restricted resources (e.g. fonts, JavaScript, etc.) on a web page to be
-requested from another domain outside the domain from which the resource originated.
+The authentication facilites in _catacumba_ are built using link:https://github.com/funcool/buddy[buddy]
+security library.
 
-Is often used for protect api resources to be accessed out of the domain of your web applications.
+As _catacumba_ handlers system is very flexible, so you really don't locked to use _buddy_. You can
+write your own auth facilities and attach them to _catacumba_ using the routing chain.
 
-_Catacumba_ has builtin support for CORS, let see how you can use it:
+For start using auth facilities in your application, you should add the `auth` handler
+to you routing chain. Let see an example using session based auth backend:
 
 [source, clojure]
 ----
-(require '[catacumba.handlers :refer [cors]])
+(require '[catacumba.handlers :as hs])
+(require '[catacumba.handlers.auth :as auth])
 
-(def cors-conf {:origin #{"http://website.com"}                       ;; mandatory
-                :max-age 3600                                         ;; optional
-                :allow-headers ["X-Requested-With", "Content-Type"]}) ;; optional
+;; Create an instance of auth backend
+(def auth-backend
+  (auth/session-backend))
 
 (def app
-  (ct/routes [[:prefix "api/v1"
-               [:any (cors cors-conf)]
-               [:get "foo" some-handler]
-               [:post "foo" some-save-handler]]]))
+  (ct/routes [[:any (hs/session {:storage :inmemory})]
+              [:any (hs/auth auth-backend)]
+              [:get some-handler]]))
 ----
 
-The `:origin` key can be a set of possible origins or directlly `"*"` for allow all origins.
+As we mentioned previously, behind the scenes _buddy_ is used, so almost all auth backends
+defined in buddy can be used with _catacumba_, such as jws and jwe backens.
+
+It there some exceptions, such as the session auth backend, because the sessions works
+slightly different in _catacumba_ and the buddy session auth backend reliad in a ring
+session behavior.
+
+The buddy access rules are not supported because, the _catacumba_ routing chain system
+fullfills that gap. You can define concrete authorization rules and attach them directly
+in a routing chain.
+
+You can see a working example using auth facilties <<website-example,here>>.
+
+
+=== Sessions
+
+==== Getting Started
+
+The http sessions in _catacumba_ are also implemented as chain handler. So, you can add sessions
+to you application just adding the handler to your routing chain:
+
+[source, clojure]
+----
+(require '[catacumba.handlers :as hs])
+
+(def app
+  (ct/routes [[:any (hs/session {:storage :inmemory})]
+              [:get your-handler]]))
+----
+
+All handlers in the route pipeline that are going after the session handler will come with `:session`
+key in the context with a "atom" like object. You just treat it as atom, so for attach some data
+to the session you should use the well known `swap!` function:
+
+[source, clojure]
+----
+(defn my-handler
+  [context]
+  (let [session (:session context)]
+    (swap! session assoc :userid 1)
+    "my response"))
+----
+
+You can clean the session just reseting to the empty map:
+
+[source, clojure]
+----
+(reset! session {})
+----
+
+One of the big advantages of using the chain routing for setup session, is that you put session
+to a concrete subset of urls/resources avoiding unnecesary code execution for hendler that
+does not need sessions:
+
+[source, clojure]
+----
+(def app
+  (ct/routes [[:prefix "admin"
+               [:any (hs/session {:storage :inmemory})]
+               [:get your-handler]]
+              [:prefix "api"
+               [:get "users" other-handler]
+               [:get ...]]]))
+----
+
+
+==== Session storages
+
+Currently _catacumba_ comes with one basic session storage, the `:inmemory`. But the session
+storage system is plugable and is defined in terms of the following protocol:
+
+[source, clojure]
+----
+(defprotocol ISessionStorage
+  (read-session [_ key])
+  (write-session [_ key data])
+  (delete-session [_ key]))
+----
+
+If you known the ring based session storages, you can observe that the _catacumba_ session
+storage abstraction is almost identical to the ring session abstracition, so migrate or
+adapt the ring session storages is really easy.
+
+For use a concrete session storage, just pass a instance of it as value of the `:storage`
+key in a session handler constructor:
+
+[source, clojure]
+----
+(hs/session {:storage (my-storage-constructor)})
+----
 
 
 === Context as Request
@@ -906,6 +997,33 @@ basic request properties such as, headers, path and method:
 
 
 === Security
+
+==== Cross-Origin Resource Sharing
+
+Is a mechanism that allows restricted resources (e.g. fonts, JavaScript, etc.) on a web page to be
+requested from another domain outside the domain from which the resource originated.
+
+Is often used for protect api resources to be accessed out of the domain of your web applications.
+
+_Catacumba_ has builtin support for CORS, let see how you can use it:
+
+[source, clojure]
+----
+(require '[catacumba.handlers :refer [cors]])
+
+(def cors-conf {:origin #{"http://website.com"}                       ;; mandatory
+                :max-age 3600                                         ;; optional
+                :allow-headers ["X-Requested-With", "Content-Type"]}) ;; optional
+
+(def app
+  (ct/routes [[:prefix "api/v1"
+               [:any (cors cors-conf)]
+               [:get "foo" some-handler]
+               [:post "foo" some-save-handler]]]))
+----
+
+The `:origin` key can be a set of possible origins or directlly `"*"` for allow all origins.
+
 
 ==== Content Security Policy
 
@@ -1011,63 +1129,6 @@ More information:
 * https://www.owasp.org/index.php/List_of_useful_HTTP_headers
 
 
-=== Sessions
-
-==== Getting Started
-
-The http sessions in _catacumba_ are also implemented as chain handler. So, you can add sessions
-to you application just adding the handler to your routing chain:
-
-[source, clojure]
-----
-(require '[catacumba.handlers.session :as session])
-
-(def app
-  (ct/routes [[:any (session/session-handler {:storage :inmemory})]
-              [:get your-handler]]))
-----
-
-All handlers in the route pipeline that are going after the session handler will come with `:session`
-key in the context with a "atom" like object. You just treat it as atom, so for attach some data
-to the session you should use the well known `swap!` function:
-
-[source, clojure]
-----
-(defn my-handler
-  [context]
-  (let [session (:session context)]
-    (swap! session assoc :userid 1)
-    "my response"))
-----
-
-You can clean the session just reseting to the empty map:
-
-[source, clojure]
-----
-(reset! session {})
-----
-
-One of the big advantages of using the chain routing for setup session, is that you put session
-to a concrete subset of urls/resources avoiding unnecesary code execution for hendler that
-does not need sessions:
-
-[source, clojure]
-----
-(def app
-  (ct/routes [[:prefix "admin"
-               [:any (session/session-handler {:storage :inmemory})]
-               [:get your-handler]]
-              [:prefix "api"
-               [:get "users" other-handler]
-               [:get ...]]]))
-----
-
-==== Session storages
-
-TBD
-
-
-
 == Advanced topics
 
 === Modular components
@@ -1169,7 +1230,7 @@ java -jar yourjarhere.jar
 java -Dcatacumba.port=8000 -Dcatacumba.debug=false -jar yourjarhere.jar
 ----
 
-
+[[examples]]
 == Examples
 
 === Debugging with prone
@@ -1183,7 +1244,7 @@ You can see the example code here: https://github.com/funcool/catacumba/tree/mas
 NOTE: Obviously, if you are using the ring type of hanlder, you can use prone as is, without any
 additional adaptation. This example shows how it can be used with default hanlder type.
 
-
+[[sse-component-example]]
 === Multiuser chat with SSE
 
 This example tries to demostrate how can you build a simple chat using "Server-Sent Events" for
@@ -1192,6 +1253,15 @@ architecture.
 
 You can see the example code here:
 https://github.com/funcool/catacumba/tree/master/examples/component-chat
+
+[[website-example]]
+=== Website and Auth
+
+This example tries to show the way to use _catacumba_ in a website like projects, with authentication
+and session.
+
+You can see the example code here:
+https://github.com/funcool/catacumba/tree/master/examples/website
 
 
 == FAQ

@@ -46,7 +46,7 @@
         (let [response (client/options base-url {:headers {"Origin" "http://localhost/"
                                                            "access-control-request-method" "post"}})
               headers (:headers response)]
-          (is (= (:body response)) "")
+          (is (= (:body response) ""))
           (is (= (:status response) 200))
           (is (= (get headers "access-control-allow-origin") "*"))
           (is (= (get headers "access-control-max-age") "3600"))))))
@@ -59,7 +59,7 @@
         (let [response (client/options base-url {:headers {"Origin" "http://localhast/"
                                                            "access-control-request-method" "post"}})
               headers (:headers response)]
-          (is (= (:body response)) "")
+          (is (= (:body response) ""))
           (is (= (:status response) 200))
           (is (= (get headers "access-control-allow-origin") nil))
           (is (= (get headers "access-control-max-age") nil))))))

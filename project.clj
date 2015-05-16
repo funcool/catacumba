@@ -19,7 +19,7 @@
                  [org.slf4j/slf4j-simple "1.7.10"]
                  [com.stuartsierra/component "0.2.3"]
                  [buddy/buddy-core "0.5.0"]
-                 [buddy/buddy-auth "0.5.3-SNAPSHOT"]
+                 [buddy/buddy-auth "0.5.3"]
                  [funcool/cuerdas "0.4.0"]
                  [funcool/futura "0.1.0-alpha2"
                   :exclusions [org.reactivestreams/reactive-streams]]
@@ -51,11 +51,12 @@
                              :output-dir "doc/api"
                              :src-dir-uri "http://github.com/funcool/catacumba/blob/master/"
                              :src-linenum-anchor-prefix "L"}
-                   :plugins [[funcool/codeina "0.1.0-SNAPSHOT"
+                   :plugins [[funcool/codeina "0.1.0"
                               :exclusions [org.clojure/clojure]]]
                    :dependencies [[clj-http "1.1.0"]
                                   [cc.qbits/jet "0.6.1"]
                                   [org.clojure/tools.namespace "0.2.10"]
                                   [ring/ring-core "1.3.2"
                                    :exclusions [javax.servlet/servlet-api
+                                                clj-time
                                                 org.clojure/clojure]]]}})

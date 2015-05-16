@@ -835,15 +835,16 @@ Let see how it can be done:
 ----
 (defn myringhandler
   "My example ring handler."
+  {:handler-type :catacumba/ring}
   [request]
   {:status 200
    :body "hello world"})
 
 ;; As standalone handler
-(ct/run-server ^:ring myringhandler)
+(ct/run-server #'myringhandler)
 
 ;; Or in a _catacumba_ routing chain
-(-> (ct/routes [[:get ^:ring myringhandler]])
+(-> (ct/routes [[:get #'myringhandler]])
     (ct/run-server))
 ----
 

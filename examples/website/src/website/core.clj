@@ -1,6 +1,5 @@
 (ns website.core
   (:require [clojure.java.io :as io]
-            ;; [hiccup.core :as hc]
             [hiccup.page :as hc]
             [catacumba.core :as ct]
             [catacumba.handlers :as hs]
@@ -27,23 +26,27 @@
 ;; Home Page
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; Shows a simple html with two links, one to restricted area and
-;; an other directly to the login. If you are go directly to the
-;; restricted area without to be authenticated, you will be redirected
-;; to the login page.
+;; Shows a simple html page. It has different content for anonynmous
+;; and logged users.
 
 (defn home-page
   [context]
   (-> (layout [:section {:class "home-page"}
-               [:p "Welcome to the dummy website application."]
-               [:p [:a {:href "/restricted"} "Restricted Area"]]
-               [:p [:a {:href "/login"} "Login"]]])
+               (if-let [user (:identity context)]
+                 [:div
+                  [:p (format "Welcome %s" (:username user))]
+                  [:p [:a {:href "/logout"} "logout"]]]
+                 [:div
+                  [:p "Welcome to the dummy website application."]
+                  [:p [:a {:href "/login"} "Login"]]])])
       (http/ok {:content-type "text/html"})))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Login page
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; A helper function for render login page, it used also for initial
+;; rendering and render login page with errors on post requests.
 
 (defn- render-login-page
   ([] (render-login-page []))
@@ -56,23 +59,43 @@
         (for [e errors] [:div e])])
      [:form {:action "" :method "post"}
       [:div {:class "input-wrapper"}
-       [:input {:type "text" :name "username" :placeholder "Write your username here..."}]]
+       [:input {:type "text" :name "username"
+                :placeholder "Write your username here..."}]]
       [:div {:class "input-wrapper"}
-       [:input {:type "password" :name "password" :placeholder "Write your password here..."}]]
+       [:input {:type "password" :name "password"
+                :placeholder "Write your password here..."}]]
       [:div {:class "input-wrapper"}
        [:input {:type "submit" :value "Submit"}]]]])))
 
+
+;; A simple function that has the responsability of authenticate the incomoning
+;; credentials on login post request. In the current implementation it just
+;; checks if a user and password matches to the builtin "user" representation,
+;; but in your implementation this function may access to the database or any
+;; other source for authenticate. This is just a example.
 
 (defn- authenticate
   [username, password]
   (when (and (= username "admin")
              (= password "123123"))
-    {:userid 1}))
+    {:username "Admin"}))
+
+;; A hanlder that simply render the login page for GET requests.
 
 (defn login-page
   [context]
-  (-> (render-login-page ["foo", "bar"])
+  (-> (render-login-page)
       (http/ok {:content-type "text/html"})))
+
+;; A handler that clears the session and redirect to the home page.
+
+(defn logout-page
+  [context]
+  (let [session (:session context)]
+    (swap! session dissoc :identity)
+    (http/found "/")))
+
+;; A handler that handles the POST requests for login page.
 
 (defn login-submit
   [context]
@@ -81,10 +104,22 @@
         username (get form-params "username" "")
         password (get form-params "password" "")]
     (if (or (empty? username) (empty? password))
+      ;; Firstly validates the input, if required fields
+      ;; are empty, render the login page html with
+      ;; convenient error mesasage and return it.
       (http/ok (render-login-page ["The two fields are mandatory."])
                {:content-type "text/html"})
+
+      ;; In case contrary, try validate the incoming
+      ;; credentials, and in case of them validates
+      ;; successful, update the session `:identity` key
+      ;; with the authenticated user object.
+      ;; In case contrary, return a login page
+      ;; rendered with approapiate error message
       (if-let [user (authenticate username password)]
-        (let [nexturl (get query-params "next" "/")]
+        (let [nexturl (get query-params "next" "/")
+              session (:session context)]
+          (swap! session assoc :identity user)
           (http/found nexturl))
         (http/ok (render-login-page ["User or password are incorrect"])
                  {:content-type "text/html"})))))
@@ -100,21 +135,23 @@
 (def auth-backend
   (auth/session-backend))
 
-(def app
-  (ct/routes [[:any (hs/session {:storage :inmemory})]
-              [:any (hs/auth auth-backend)
-              [:get home-page]
-              [:by-method "login"
-               [:get login-page]
-               [:post login-submit]]
-              [:prefix "assets"
-               [:assets "resources/public"]]]))
+;; Define the application routes using `ct/routes`
+;; function from catacumba.
 
-;; Start the server using the `run-server` function.
-;; This has one peculiarity, the `:registry` property. It
-;; is used for setup contextual objects and in this case
-;; the function `session-decorator` returns a handler
-;; decorator that it should be attached to the registry
+(def app
+  (ct/routes [[:prefix "assets"
+               [:assets "resources/public"]]
+              [:scope
+               [:any (hs/session {:storage :inmemory})]
+               [:any (hs/auth auth-backend)]
+               [:get home-page]
+               [:get "logout" logout-page]
+               [:by-method "login"
+                [:get login-page]
+                [:post login-submit]]]]))
+
+;; Define the main entry point that starts the catacumba
+;; server un the port 5051.
 
 (defn -main
   "The main entry point to your application."

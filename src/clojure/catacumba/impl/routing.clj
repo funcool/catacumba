@@ -25,7 +25,7 @@
   (let [callback #(reduce attach-route % handlers)]
     (.prefix chain path ^Action (helpers/action callback))))
 
-(defmethod attach-route :insert
+(defmethod attach-route :scope
   [^Chain chain [_ & handlers]]
   (let [callback #(reduce attach-route % handlers)]
     (.insert chain ^Action (helpers/action callback))))

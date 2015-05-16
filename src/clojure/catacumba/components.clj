@@ -46,5 +46,5 @@
   [server key routes]
   (let [server' (:server server)
         routes' (:routes server)]
-    (swap! routes' assoc key [(apply vector :insert routes)])
+    (swap! routes' assoc key [(apply vector :scope routes)])
     (.reload ^RatpackServer server')))

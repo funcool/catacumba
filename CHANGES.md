@@ -9,8 +9,10 @@ Date: unreleased
 - Improved support for sessions (mainly internal changes).
 - Add helper for parse the query params: `catacumba.core/parse-queryparams`.
 - Add support for interceptors.
+- Add support for auth facilities.
 - Removed support for automatic searching of `catacumba.properties` file for basedir.
-
+- Start using boot-clj as replacement of leiningen (only for main library, examples
+  stil using leiningen beacuse users are more familiar with it).
 
 
 ## Version 0.1.0-alpha2 ##

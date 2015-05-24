@@ -7,13 +7,13 @@
 
                  ;; Boot dependencies
                  [boot-deps "0.1.4" :scope "test"]
-                 [funcool/bootutils "0.1.0" :scope "test"]
+                 [funcool/bootutils "0.2.0" :scope "test"]
                  [funcool/boot-codeina "0.1.0-SNAPSHOT" :scope "test"]
                  [adzerk/boot-test "1.0.4" :scope "test"]
 
                  ;; Testing dependecines
                  [clj-http "1.1.2" :scope "test"]
-                 [cc.qbits/jet "0.6.2" :scope "test"]
+                 [aleph "0.4.0" :scope "test"]
                  [org.clojure/tools.namespace "0.2.10" :scope "test"]
                  [ring/ring-core "1.3.2"
                   :scope "test"

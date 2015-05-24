@@ -5,13 +5,9 @@
             [clojure.java.io :as io]
             [clojure.pprint :refer [pprint]]
             [clojure.core.async :as async]
-            ;; [clj-http.client :as client]
-            [qbits.jet.client.websocket :as ws]
-            [qbits.jet.client.http :as http]
+            [clj-http.client :as client]
             [catacumba.core :as ct]
             [catacumba.core-tests :refer [with-server]]))
-
-(def client (http/client))
 
 (deftest sse-standard-handler
   (letfn [(sse-handler [context out]
@@ -26,13 +22,15 @@
             (ct/sse context sse-handler))]
     (with-server handler
       (let [p (promise)
-            response (<!! (http/get client "http://localhost:5050/" {:fold-chunked-response? false}))]
+            response (client/get "http://localhost:5050/")]
         (is (= (:status response) 200))
-        (is (= (-> response :body <!!) "data: 1\n\n"))
-        (is (= (-> response :body <!!) "data: 2\n\n"))
-        (is (= (-> response :body <!!) "event: foobar\n\n"))
-        (is (= (-> response :body <!!) "id: foobar\n\n"))
-        (is (= (-> response :body <!!) "data: 3\nid: foobar\n\n"))))))
+        (is (= (:body response)
+               (str "data: 1\n\n"
+                    "data: 2\n\n"
+                    "event: foobar\n\n"
+                    "id: foobar\n\n"
+                    "data: 3\n"
+                    "id: foobar\n\n")))))))
 
 (deftest sse-specific-handler
   (letfn [(sse-handler [context out]
@@ -46,10 +44,12 @@
     (with-server (with-meta sse-handler
                    {:handler-type :catacumba/sse})
       (let [p (promise)
-            response (<!! (http/get client "http://localhost:5050/" {:fold-chunked-response? false}))]
+            response (client/get "http://localhost:5050/" {:fold-chunked-response? false})]
         (is (= (:status response) 200))
-        (is (= (-> response :body <!!) "data: 1\n\n"))
-        (is (= (-> response :body <!!) "data: 2\n\n"))
-        (is (= (-> response :body <!!) "event: foobar\n\n"))
-        (is (= (-> response :body <!!) "id: foobar\n\n"))
-        (is (= (-> response :body <!!) "data: 3\nid: foobar\n\n"))))))
+        (is (= (:body response)
+               (str "data: 1\n\n"
+                    "data: 2\n\n"
+                    "event: foobar\n\n"
+                    "id: foobar\n\n"
+                    "data: 3\n"
+                    "id: foobar\n\n")))))))

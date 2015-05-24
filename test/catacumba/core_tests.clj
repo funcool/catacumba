@@ -32,7 +32,7 @@
        ~@body
        (finally
          (.stop server#)
-         (Thread/sleep 200)))))
+         (Thread/sleep 50)))))
 
 
 (def base-url "http://localhost:5050")

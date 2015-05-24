@@ -9,7 +9,6 @@
                  [boot-deps "0.1.4" :scope "test"]
                  [funcool/bootutils "0.2.0" :scope "test"]
                  [funcool/boot-codeina "0.1.0-SNAPSHOT" :scope "test"]
-                 [adzerk/boot-test "1.0.4" :scope "test"]
 
                  ;; Testing dependecines
                  [clj-http "1.1.2" :scope "test"]
@@ -36,7 +35,6 @@
 (require
  '[funcool.bootutils :refer :all]
  '[funcool.boot-codeina :refer :all]
- '[adzerk.boot-test :refer :all]
  '[boot-deps :refer [ancient]])
 
 (def +version+ "0.2.0-SNAPSHOT")
@@ -75,8 +73,22 @@
          :src-uri "http://github.com/funcool/catacumba/blob/master/"
          :src-uri-prefix "#L"})
 
-
 (deftask doc
   []
   (comp (javac)
         (apidoc)))
+
+(deftask watch-tests
+  [n namespaces NAMESPACE #{sym} "The set of namespace symbols to run tests in."
+   f filters    EXPR      #{edn} "The set of expressions to use to filter namespaces."
+   s tname      NAME      sym    "The name symbol for filtering."]
+  (let [namespaces (or namespaces
+                       #{'catacumba.core-tests
+                         'catacumba.handlers-tests
+                         'catacumba.ring-tests
+                         'catacumba.websocket-tests})]
+    (comp (javac)
+          (watch :verbose true)
+          (run-tests :namespaces namespaces
+                     :filters filters
+                     :tname tname))))

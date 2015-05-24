@@ -2,7 +2,7 @@
  :source-paths #{"src/clojure" "src/java" "test"}
  :resource-paths #{"resources"}
  :dependencies '[;; Current runtime dependencies
-                 [org.clojure/clojure "1.7.0-beta3" :scope "provided"]
+                 [org.clojure/clojure "1.7.0-RC1" :scope "provided"]
                  [org.slf4j/slf4j-simple "1.7.12" :scope "provided"]
 
                  ;; Boot dependencies

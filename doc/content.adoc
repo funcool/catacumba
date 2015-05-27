@@ -278,29 +278,6 @@ and return it.
 Furthermore, _catacumba_ offers more flexible way to parsing body data based on the incoming
 content type, but it is explained with more details in the <<body-parsing,handlers section>>.
 
-////
-_Catacumba_ offers different ways to read the incoming data from request. All depens on that really
-you needs. If you are working with standatd http form submits (with `application/x-www-form-urlencoded`
-or `multipart/form-data`), you should use the `parse-formdata` helper function:
-
-[source, clojure]
-----
-(def myhandler
-  [context]
-  (let [formdata (ct/parse-formdata context)]
-    (do-something-with-formdata formdata)
-    (http/ok "Readed for data correctly")))
-----
-
-The return value of `parse-formdata` is a clojure map with parsed key value pairs, including files
-uploaded with `multipart/form-data` content type.
-
-In other situations we may need more low level access to the body. In this case, you can obtain a
-object instance that represents a body using the `get-body` function. The return value of that function
-implements the convenient protocols from `clojure.java.io` namespace, then you can use it for create
-a apropiate reader or input stream depending of you needs. Also, for convenience, the request and
-context instances also implements that protocol for make things more easy.
-////
 
 ===== Headers
 

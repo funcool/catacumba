@@ -1235,29 +1235,9 @@ java -jar yourjarhere.jar
 java -Dcatacumba.port=8000 -Dcatacumba.debug=false -jar yourjarhere.jar
 ----
 
+
 [[examples]]
 == Examples
-
-=== Debugging with prone
-
-link:https://github.com/magnars/prone[Prone] is really awesome middleware for ring that shows
-a beautiful and human readable stack traces when a exception is raised in our application. It is not
-directly compatible with _catacumba_ but is relativelly easy adapt it.
-
-You can see the example code here: https://github.com/funcool/catacumba/tree/master/examples/debugging
-
-NOTE: Obviously, if you are using the ring type of hanlder, you can use prone as is, without any
-additional adaptation. This example shows how it can be used with default hanlder type.
-
-[[sse-component-example]]
-=== Multiuser chat with SSE
-
-This example tries to demostrate how can you build a simple chat using "Server-Sent Events" for
-communicating events to the client and using *stuartsierra/component* for the modular application
-architecture.
-
-You can see the example code here:
-https://github.com/funcool/catacumba/tree/master/examples/component-chat
 
 [[website-example]]
 === Website and Auth
@@ -1278,6 +1258,29 @@ in one file and execute them like a shell script or an executable.
 This example requires http://boot-clj.com/
 
 https://github.com/funcool/catacumba/tree/master/examples/single-file
+
+
+[[sse-component-example]]
+=== Multiuser chat with SSE
+
+This example tries to demostrate how can you build a simple chat using "Server-Sent Events" for
+communicating events to the client and using *stuartsierra/component* for the modular application
+architecture.
+
+You can see the example code here:
+https://github.com/funcool/catacumba/tree/master/examples/component-chat
+
+
+=== Debugging with prone
+
+link:https://github.com/magnars/prone[Prone] is really awesome middleware for ring that shows
+a beautiful and human readable stack traces when a exception is raised in our application. It is not
+directly compatible with _catacumba_ but is relativelly easy adapt it.
+
+You can see the example code here: https://github.com/funcool/catacumba/tree/master/examples/debugging
+
+NOTE: Obviously, if you are using the ring type of hanlder, you can use prone as is, without any
+additional adaptation. This example shows how it can be used with default hanlder type.
 
 
 == FAQ

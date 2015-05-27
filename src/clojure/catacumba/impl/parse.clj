@@ -32,12 +32,12 @@
              (transient {})
              (.keySet params)))))
 
-(defn parse-formdata
+(defn parse-formdata*
   "Parse form encoded or multipart request data and return
   a maybe multivalue map."
-  [^DefaultContext context]
-  (let [^Context ctx (:catacumba/context context)
-        ^MultiValueMap form (.parse ctx Form)
+  {:no-doc true}
+  [^Context ctx]
+  (let [^MultiValueMap form (.parse ctx Form)
         ^MultiValueMap files (extract-files form)
         result (transient {})]
     (reduce (fn [acc key]
@@ -51,3 +51,10 @@
             result
             (.keySet form))
     (persistent! result)))
+
+(defn parse-formdata
+  "Parse form encoded or multipart request data and return
+  a maybe multivalue map."
+  [^DefaultContext context]
+  (let [^Context ctx (:catacumba/context context)]
+    (parse-formdata* ctx)))

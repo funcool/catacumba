@@ -9,11 +9,66 @@
             [buddy.auth.backends.token :refer [jws-backend]]
             [buddy.sign.jws :as jws]
             [slingshot.slingshot :refer [try+]]
+            [cheshire.core :as json]
             [catacumba.core :as ct]
             [catacumba.http :as http]
             [catacumba.handlers :as hs]
             [catacumba.handlers.session :as session]
             [catacumba.core-tests :refer [with-server base-url]]))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Body params parsing
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest body-parsing
+  (testing "Explicit body parsing with multipart request with multiple files."
+    (let [p (promise)
+          handler (fn [context]
+                    (let [form (ct/parse-formdata context)]
+                      (deliver p form)
+                      "hello world"))]
+      (with-server handler
+        (let [multipart {:multipart [{:name "foo" :content "bar"}
+                                     {:name "myfile"
+                                      :content (-> (io/resource "public/test.txt")
+                                                   (io/file))
+                                      :encoding "UTF-8"
+                                      :mime-type "text/plain"}
+                                     {:name "myfile"
+                                      :content (-> (io/resource "public/test.txt")
+                                                   (io/file))
+                                      :encoding "UTF-8"
+                                      :mime-type "text/plain"}]}
+              response (client/post base-url multipart)]
+          (is (= (:status response) 200))
+          (is (= (:body response) "hello world"))
+          (let [formdata (deref p 1000 nil)]
+            (is (= (get formdata "foo") "bar")))))))
+
+  (testing "Form encoded body parsing using chain handler"
+    (let [p (promise)
+          app (ct/routes [[:any (hs/body-params)]
+                          [:any #(do
+                                   (deliver p (:body %))
+                                   "hello world")]])]
+      (with-server app
+        (let [response (client/post base-url {:form-params {:foo "bar"}})]
+          (is (= {"foo" "bar"} (deref p 1000 nil)))))))
+
+  (testing "Json encoded body parsing using chain handler"
+    (let [p (promise)
+          app (ct/routes [[:any (hs/body-params)]
+                          [:any #(do
+                                   (deliver p (:body %))
+                                   "hello world")]])]
+      (with-server app
+        (let [response (client/post base-url {:body (json/generate-string {:foo "bar"})
+                                              :content-type "application/json"})]
+          (is (= {:foo "bar"} (deref p 1000 nil)))))))
+)
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; CORS
@@ -135,6 +190,10 @@
       (is (= (#'session/read-session st :foo) {:bar 2}))))
 )
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Interceptors
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (deftest interceptors-tests
   (let [counter (atom 0)
         p1 (promise)
@@ -164,6 +223,10 @@
           (is (= (deref p3 1000 nil) 2))
           (is (= (deref p4 1000 nil) 3)))))))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Auth
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def auth-backend
   (jws-backend {:secret "secret"}))

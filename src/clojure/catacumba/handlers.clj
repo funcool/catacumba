@@ -1,5 +1,5 @@
 (ns catacumba.handlers
-  (:require [catacumba.handlers core cors security interceptor session auth parse]
+  (:require [catacumba.handlers core cors security interceptor session auth parsing]
             [potemkin.namespaces :refer [import-vars]]))
 
 (import-vars
@@ -7,7 +7,7 @@
   basic-request]
  [catacumba.handlers.cors
   cors]
- [catacumba.handlers.parse
+ [catacumba.handlers.parsing
   body-params]
  [catacumba.handlers.interceptor
   interceptor]

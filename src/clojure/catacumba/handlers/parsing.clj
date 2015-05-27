@@ -1,4 +1,4 @@
-(ns catacumba.handlers.parse
+(ns catacumba.handlers.parsing
   (:require [catacumba.impl.context :as context]
             [catacumba.impl.parse :as parse]
             [catacumba.impl.handlers :as handlers]

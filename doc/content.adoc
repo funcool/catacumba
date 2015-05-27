@@ -1289,8 +1289,8 @@ additional adaptation. This example shows how it can be used with default hanlde
 === What is the difference with aleph
 
 First of all, Aleph is one of the most robust libraries in clojure ecosystem for building asynchronous
-servers. Here is an incomplete list of differences and motivations why I wrote _catacumba_ instead of using _aleph_
-directly in my applications:
+servers. Here is an incomplete list of differences and motivations why I wrote _catacumba_ instead
+of using _aleph_ directly in my applications:
 
 - Aleph with manifold offers good abstractions for creating async servers but they are to much
   low level and only provide the basic building blocks. _catacumba_ intends to be a toolkit highly

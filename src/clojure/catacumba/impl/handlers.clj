@@ -35,7 +35,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defprotocol ISend
-  (send [data response] "Send data."))
+  "A low level send abstraction."
+  (send [data ctx] "Send data."))
 
 (defprotocol IHandlerResponse
   (handle-response [_ context] "Handle the ratpack handler response."))
@@ -61,49 +62,40 @@
 (extend-protocol IHandlerResponse
   String
   (handle-response [data ^DefaultContext context]
-    (let [response (:response context)]
-      (send data response)))
+    (send data (:catacumba/context context)))
 
   clojure.lang.IPersistentMap
   (handle-response [data ^DefaultContext context]
-    (let [^Response response (:response context)
-          {:keys [status headers body]} data]
-      (when status
-        (.status response ^long status))
-      (when headers
-        (set-headers* response headers))
-      (send body response)))
+    (let [{:keys [status headers body]} data]
+      (when status (set-status* context status))
+      (when headers (set-headers* context headers))
+      (send body (:catacumba/context context))))
 
   catacumba.impl.http.Response
   (handle-response [data ^DefaultContext context]
-    (let [^Response response (:response context)]
-      (.status response ^long (:status data))
-      (set-headers* response (:headers data))
-      (send (:body data) response)))
+    (set-status* context (:status data))
+    (set-headers* context (:headers data))
+    (send (:body data) (:catacumba/context context)))
 
   clojure.core.async.impl.channels.ManyToManyChannel
   (handle-response [data ^DefaultContext context]
-    (let [^Response response (:response context)]
-      (.status response 200)
-      (send data response)))
+    (set-status* context 200)
+    (send data (:catacumba/context context)))
 
   manifold.stream.default.Stream
   (handle-response [data ^DefaultContext context]
-    (let [^Response response (:response context)]
-      (.status response 200)
-      (send data response)))
+    (set-status* context 200)
+    (send data (:catacumba/context context)))
 
   Publisher
   (handle-response [data ^DefaultContext context]
-    (let [^Response response (:response context)]
-      (.status response 200)
-      (send data response)))
+    (set-status* context 200)
+    (send data (:catacumba/context context)))
 
   futura.promise.Promise
   (handle-response [data ^DefaultContext context]
-    (let [^Response response (:response context)]
-      (.status response 200)
-      (send data response)))
+    (set-status* context 200)
+    (send data (:catacumba/context context)))
 
   CompletableFuture
   (handle-response [data ^DefaultContext context]
@@ -111,43 +103,48 @@
 
 (extend-protocol ISend
   String
-  (send [data ^Response response]
-    (.send response data))
+  (send [data ^Context ctx]
+    (let [^Response response (.getResponse ctx)]
+      (.send response data)))
 
   clojure.core.async.impl.channels.ManyToManyChannel
-  (send [data ^Response response]
+  (send [data ^Context ctx]
     (-> (stream/publisher data)
-        (send response)))
+        (send ctx)))
 
   manifold.stream.default.Stream
-  (send [data ^Response response]
+  (send [data ^Context ctx]
     (-> (stream/publisher data)
-        (send response)))
+        (send ctx)))
 
   futura.promise.Promise
-  (send [data ^Response response]
+  (send [data ^Context ctx]
     (-> (stream/publisher data)
-        (send response)))
+        (send ctx)))
 
   manifold.deferred.IDeferred
-  (send [data ^Response response]
+  (send [data ^Context ctx]
     (-> (stream/publisher data)
-        (send response)))
+        (send ctx)))
 
   CompletableFuture
-  (send [data ^Response response]
+  (send [data ^Context ctx]
     (-> (stream/publisher data)
-        (send response)))
+        (send ctx)))
 
   Publisher
-  (send [data ^Response response]
-    (->> (stream/publisher (map helpers/bytebuffer) data)
-         (.sendStream response)))
+  (send [data ^Context ctx]
+    (let [^Response response (.getResponse ctx)]
+      (->> (stream/publisher data)
+           (stream/transform (map helpers/bytebuffer))
+           (.stream ctx)
+           (.sendStream response))))
 
   InputStream
-  (send [data ^Response response]
+  (send [data ^Context ctx]
     (let [^bytes buffer (byte-array 1024)
-          ^ByteBuf buf (Unpooled/buffer (.available data))]
+          ^ByteBuf buf (Unpooled/buffer (.available data))
+          ^Response response (.getResponse ctx)]
       (loop [index 0]
         (let [readed (.read data buffer 0 1024)]
           (when-not (= readed -1)
@@ -376,11 +373,7 @@
 
 (defmethod send! DefaultContext
   [^DefaultContext context data]
-  (send data (:response context)))
-
-(defmethod send! Response
-  [^Response response data]
-  (send data response))
+  (send data (:catacumba/context context)))
 
 (defmulti adapter
   "A polymorphic function for create the

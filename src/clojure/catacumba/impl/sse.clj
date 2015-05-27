@@ -2,6 +2,7 @@
   "Server-Sent Events handler adapter implementation."
   (:require [clojure.core.async :refer [chan go-loop close! >! <! put!] :as async]
             [futura.stream :as stream]
+            [futura.stream.channel :as schannel]
             [catacumba.utils :as utils]
             [catacumba.impl.context :as ctx]
             [catacumba.impl.helpers :as helpers]
@@ -41,20 +42,12 @@
     (when id (.id event' id))
     event'))
 
-(defn- channel->publisher
-  "Create a publisher with core.async channel as source."
-  [source]
-  (reify Publisher
-    (^void subscribe [_ ^Subscriber subscriber]
-      (let [subscription (stream/chan->subscription subscriber source true)]
-        (.onSubscribe subscriber subscription)))))
-
 (defn sse
   "Start the sse connection with the client
   and dispatch it in a special hanlder."
   [^DefaultContext context handler]
   (let [out (async/chan 1 (map event))
-        pub (channel->publisher out)
+        pub (schannel/publisher out {:close true})
         tfm (helpers/action transform-event)
         sse' (ServerSentEvents/serverSentEvents pub tfm)
         ctx (:catacumba/context context)]

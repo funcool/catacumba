@@ -128,7 +128,7 @@
   (testing "Using publisher as body"
     (letfn [(handler [ctx]
               (let [p (stream/publisher ["hello" " " "world"])
-                    p (stream/publisher (map str/upper) p)]
+                    p (stream/transform (map str/upper) p)]
                 (http/accepted p)))]
       (with-server handler
         (let [response (client/get base-url)]

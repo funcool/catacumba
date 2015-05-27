@@ -1326,7 +1326,7 @@ additional adaptation. This example shows how it can be used with default hanlde
 == FAQ
 
 [[difference-with-aleph]]
-=== What is the difference with aleph
+=== Differences with aleph
 
 First of all, Aleph is one of the most robust libraries in clojure ecosystem for building asynchronous
 servers. Here is an incomplete list of differences and motivations why I wrote _catacumba_ instead
@@ -1382,7 +1382,7 @@ For run tests just execute this:
 
 [source, text]
 ----
-lein test
+boot watch-tests
 ----
 
 

@@ -1,5 +1,5 @@
 (set-env!
- :source-paths #{"src/clojure" "src/java" "test"}
+ :source-paths #{"src/clojure" "src/java"}
  :resource-paths #{"resources"}
  :dependencies '[;; Current runtime dependencies
                  [org.clojure/clojure "1.7.0-RC1" :scope "provided"]
@@ -28,7 +28,7 @@
                  [buddy/buddy-auth "0.5.3"]
                  [cats "0.4.0"]
                  [funcool/cuerdas "0.4.0"]
-                 [funcool/futura "0.1.0-alpha2" :exclusions [org.reactivestreams/reactive-streams]]
+                 [funcool/futura "0.2.0"]
                  [environ "1.0.0"]
                  [potemkin "0.3.13" :exclusions [riddley]]])
 
@@ -82,6 +82,7 @@
   [n namespaces NAMESPACE #{sym} "The set of namespace symbols to run tests in."
    f filters    EXPR      #{edn} "The set of expressions to use to filter namespaces."
    s tname      NAME      sym    "The name symbol for filtering."]
+  (set-env! :source-paths #{"src/clojure" "src/java" "test"})
   (let [namespaces (or namespaces
                        #{'catacumba.core-tests
                          'catacumba.handlers-tests

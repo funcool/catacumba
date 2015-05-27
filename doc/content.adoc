@@ -253,6 +253,32 @@ the request form context.
 
 ===== Body
 
+For access to the request body, _catacumba_ exposes a `get-body` function. That function returns a
+ratpack link:http://ratpack.io/manual/current/api/ratpack/http/TypedData.html[internal type] that
+represents a body.
+
+That object exposes through java interop methods for access to the conten type and the raw data. For
+convenience it also implements necesarry protocols of `clojure.java.io` namespace for make it
+compatible with clojure facilities for read data.
+
+A good demostration of it, is using the clojure `slurp` function. It uses `clojure.java.io` abstractions
+behind the scenes and serves as helper for read some resource as string:
+
+[source, clojure]
+----
+(def myechohandler
+  [context]
+  (let [^String body (slurp (ct/get-body context))]
+    (http/ok body)))
+----
+
+If you don't know the behavior of slurp, it reads the content of the provided resource as string
+and return it.
+
+Furthermore, _catacumba_ offers more flexible way to parsing body data based on the incoming
+content type, but it is explained with more details in the <<body-parsing,handlers section>>.
+
+////
 _Catacumba_ offers different ways to read the incoming data from request. All depens on that really
 you needs. If you are working with standatd http form submits (with `application/x-www-form-urlencoded`
 or `multipart/form-data`), you should use the `parse-formdata` helper function:
@@ -274,21 +300,7 @@ object instance that represents a body using the `get-body` function. The return
 implements the convenient protocols from `clojure.java.io` namespace, then you can use it for create
 a apropiate reader or input stream depending of you needs. Also, for convenience, the request and
 context instances also implements that protocol for make things more easy.
-
-A good demostration of it, is using the clojure `slurp` function. It uses `clojure.java.io` abstractions
-behind the scenes and serves as helper for read some resource as string:
-
-[source, clojure]
-----
-(def myechohandler
-  [context]
-  (let [body (slurp context)]
-    (http/ok body)))
-----
-
-If you don't know the behavior of slurp, it reads the content of the provided resource as string
-and return it.
-
+////
 
 ===== Headers
 
@@ -858,6 +870,57 @@ middlewares) or in a _catacumba_'s routing chain.
 
 
 == Builtin Handlers
+
+This section will cover different kind of builtin additional handlers for make the experience of
+using _catacumba_ more pleasant.
+
+
+=== Body parsing
+
+_Catacumba_ comes with builtin support for conditional body parsing depengin on the incoming
+content type. It consists in a route chain that adds the `:body` entry in the context with the
+parsed data or `nil` in case of incoming content type does not has attached parser implementation.
+
+For use it, it is simple as prepend the `body-params` handler to your route chain:
+
+[source, clojure]
+----
+(require '[catacumba.handlers :as hs])
+
+(defn example-handler
+  [context]
+  (let [body (:body context)]
+    (println "Received body:" body) 
+    (http/no-content)))
+
+(def app
+  (ct/routes [[:any (hs/body-params)]
+              [:any example-handler]]))
+
+;; ...
+----
+
+By default, the `application/x-www-form-urlencoded`, `multipart/form-data` and
+`application/json` parsers are comes out of the box.
+The link:https://github.com/dakrone/cheshire[cheshire] json parser is used
+for parse body with the `application/json` content type.
+
+The body parsing is a open system, implemented using clojure polymorphism facilites
+such as multimethods. If you want add additional parser, is as simple how add
+implmenetation to the `parse` multimethod with your content-type as dispatch tag.
+
+[source, clojure]
+----
+(require '[catacumba.handlers.parsing :as parsing])
+(import 'ratpack.http.TypedData
+        'ratpack.handling.Context)
+
+(defmethod parsing/parse :application/xml
+  [^Context ctx ^TypedData body]
+  ;; your parsing logic here
+  )
+----
+
 
 === Auth
 

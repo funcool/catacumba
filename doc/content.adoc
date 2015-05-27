@@ -110,7 +110,7 @@ returns something renderable. Let see an example:
 The handler maybe looks very familiar if you are previously have used ring, the main difference
 is that it receives some kind of context object instead of request. And may return a string directly.
 
-All of related concepts and full introduction on how the hanlders works are explained in below sections.
+All of related concepts and full introduction on how the handlers works are explained in below sections.
 
 
 === Run the server
@@ -462,7 +462,7 @@ additional parameter the throwable instance:
 
 [source, clojure]
 ----
-(defn my-error-hanlder
+(defn my-error-handler
   [context error]
   (http/internal-server-error (.getMessage error)))
 ----
@@ -1319,8 +1319,8 @@ directly compatible with _catacumba_ but is relativelly easy adapt it.
 
 You can see the example code here: https://github.com/funcool/catacumba/tree/master/examples/debugging
 
-NOTE: Obviously, if you are using the ring type of hanlder, you can use prone as is, without any
-additional adaptation. This example shows how it can be used with default hanlder type.
+NOTE: Obviously, if you are using the ring type of handler, you can use prone as is, without any
+additional adaptation. This example shows how it can be used with default handler type.
 
 
 == FAQ

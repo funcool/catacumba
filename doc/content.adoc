@@ -1323,6 +1323,15 @@ NOTE: Obviously, if you are using the ring type of handler, you can use prone as
 additional adaptation. This example shows how it can be used with default handler type.
 
 
+=== Instrumentation
+
+_Catacumba_ comes with the ability to instrument your application for take different kind of diagnosis,
+such as performance, latency, etc. This example shows how it can be done.
+
+You can see the example code here: https://github.com/funcool/catacumba/tree/master/examples/interceptor
+
+
+
 == FAQ
 
 [[difference-with-aleph]]

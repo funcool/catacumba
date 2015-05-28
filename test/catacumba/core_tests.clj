@@ -234,31 +234,6 @@
 )
 
 
-(deftest form-parsing
-  (testing "Multipart form parsing with multiple files."
-    (let [p (promise)
-          handler (fn [context]
-                    (let [form (ct/parse-formdata context)]
-                      (deliver p form)
-                      "hello world"))]
-      (with-server handler
-        (let [multipart {:multipart [{:name "foo" :content "bar"}
-                                     {:name "myfile"
-                                      :content (-> (io/resource "public/test.txt")
-                                                   (io/file))
-                                      :encoding "UTF-8"
-                                      :mime-type "text/plain"}
-                                     {:name "myfile"
-                                      :content (-> (io/resource "public/test.txt")
-                                                   (io/file))
-                                      :encoding "UTF-8"
-                                      :mime-type "text/plain"}]}
-              response (client/post base-url multipart)]
-          (is (= (:status response) 200))
-          (is (= (:body response) "hello world"))
-          (let [formdata (deref p 1000 nil)]
-            (is (= (get formdata "foo") "bar"))))))))
-
 (deftest request-body-handling
   (testing "Read body as text"
     (let [p (promise)

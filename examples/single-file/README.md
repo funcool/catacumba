@@ -1,6 +1,6 @@
 # signle-file: single file web application example #
 
-This is a example application that uses http://boot-clj.com/ ability to
+This is an example application that uses http://boot-clj.com/ ability to
 create single file clojure scripts for create a single file sample web
 application with catacumba.
 

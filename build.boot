@@ -27,7 +27,7 @@
                  [buddy/buddy-core "0.5.0"]
                  [buddy/buddy-auth "0.5.3"]
                  [cats "0.4.0"]
-                 [cheshire "5.4.0" :exclusions [com.fasterxml.jackson.core/jackson-core]]
+                 [cheshire "5.5.0" :exclusions [com.fasterxml.jackson.core/jackson-core]]
                  [funcool/cuerdas "0.4.0"]
                  [funcool/futura "0.2.0"]
                  [environ "1.0.0"]

@@ -183,11 +183,11 @@
       (is (#'session/modified? s))
       (is (not (#'session/empty? s)))))
 
-  (testing "In memory session storage"
-    (let [st (session/memory-storage)]
-      (is (nil? (#'session/read-session st :foo)))
-      (#'session/write-session st :foo {:bar 2})
-      (is (= (#'session/read-session st :foo) {:bar 2}))))
+  ;; (testing "In memory session storage"
+  ;;   (let [st (session/memory-storage)]
+  ;;     (is (nil? (#'session/read-session st :foo)))
+  ;;     (#'session/write-session st :foo {:bar 2})
+  ;;     (is (= (#'session/read-session st :foo) {:bar 2}))))
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

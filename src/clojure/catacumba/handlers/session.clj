@@ -5,8 +5,10 @@
   the api will be changed in the future."
   (:refer-clojure :exclude [empty?])
   (:require [futura.atomic :as atomic]
+            [futura.promise :as p]
             [buddy.core.nonce :as nonce]
             [buddy.core.codecs :as codecs]
+            [catacumba.impl.helpers :as helpers]
             [catacumba.impl.handlers :as handlers]
             [catacumba.impl.context :as context])
   (:import clojure.lang.IAtom
@@ -14,6 +16,9 @@
            clojure.lang.Counted
            clojure.lang.IFn
            clojure.lang.ISeq
+           ratpack.exec.Fulfiller
+           ratpack.exec.Promise
+           ratpack.handling.Context
            ratpack.http.ResponseMetaData))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -102,14 +107,18 @@
   (let [internalstore (atom {})]
     (reify ISessionStorage
       (read-session [_ key]
-        (let [key (keyword key)]
-          (get @internalstore key nil)))
+        (p/promise (fn [deliver]
+                     (let [key (keyword key)]
+                       (deliver (get @internalstore key nil))))))
+
       (write-session [_ key data]
-        (let [key (keyword key)]
-          (swap! internalstore assoc key data)))
+        (p/promise (fn [deliver]
+                     (let [key (keyword key)]
+                       (deliver (swap! internalstore assoc key data))))))
       (delete-session [_ key]
-        (let [key (keyword key)]
-          (swap! internalstore dissoc key))))))
+        (p/promise (fn [deliver]
+                     (let [key (keyword key)]
+                       (deliver (swap! internalstore dissoc key)))))))))
 
 (defn lookup-storage
   "A helper for create session storages with
@@ -142,14 +151,18 @@
 (defn- context->session
   [context {:keys [storage cookie-name]
             :or {cookie-name default-cookie-name}}]
-  (let [cookies (handlers/get-cookies context)
+  (let [^Context ctx (:catacumba/context context)
+        cookies (handlers/get-cookies context)
         cookie (get cookies (keyword cookie-name) nil)
         sid (:value cookie)]
-    (if sid
-      (let [data (read-session storage sid)]
-        [sid (->session sid data)])
-      (let [sid (codecs/bytes->safebase64 (nonce/random-nonce 48))]
-        [sid (->session sid)]))))
+    (.promise ctx (helpers/action
+                   (fn [^Fulfiller ff]
+                     (if sid
+                       (let [data (read-session storage sid)]
+                         (p/then (read-session storage sid)
+                                 #(.success ff [sid (->session sid %)])))
+                       (let [sid (codecs/bytes->safebase64 (nonce/random-nonce 48))]
+                         (.success ff [sid (->session sid)]))))))))
 
 (defn session
   ([] (session {}))
@@ -159,16 +172,18 @@
    (let [storage (lookup-storage storage)
          options (assoc options :storage storage)]
      (fn [context]
-       (let [[sid session] (context->session context options)]
-         (context/before-send context (fn [^ResponseMetaData response]
-                                        (cond
-                                          (empty? session)
-                                          (let [cookie (-> (make-cookie sid options)
-                                                           (assoc :max-age 0))]
-                                            (handlers/set-cookies! context {cookie-name cookie}))
+       (let [^Promise prom (context->session context options)]
+         (.then prom (helpers/action
+                      (fn [[sid session]]
+                        (context/before-send context (fn [^ResponseMetaData response]
+                                                       (cond
+                                                         (empty? session)
+                                                         (let [cookie (-> (make-cookie sid options)
+                                                                          (assoc :max-age 0))]
+                                                           (handlers/set-cookies! context {cookie-name cookie}))
 
-                                          (modified? session)
-                                          (let [cookie (make-cookie sid options)]
-                                            (write-session storage sid @session)
-                                            (handlers/set-cookies! context {cookie-name cookie})))))
-         (context/delegate context {:session session}))))))
+                                                         (modified? session)
+                                                         (let [cookie (make-cookie sid options)]
+                                                           (write-session storage sid @session)
+                                                           (handlers/set-cookies! context {cookie-name cookie})))))
+                        (context/delegate context {:session session})))))))))

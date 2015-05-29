@@ -12,8 +12,6 @@ Date: unreleased
 - Add support for auth facilities.
 - Add support for extensible body parsing.
 - Removed support for automatic searching of `catacumba.properties` file for basedir.
-- Start using boot-clj as replacement of leiningen (only for main library, examples
-  stil using leiningen beacuse users are more familiar with it).
 
 
 ## Version 0.1.0-alpha2 ##

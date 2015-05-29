@@ -18,7 +18,6 @@
            org.reactivestreams.Subscription
            catacumba.impl.context.DefaultContext))
 
-
 (defprotocol IEvent
   (^:private event [_] "Create a event"))
 

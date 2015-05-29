@@ -4,14 +4,14 @@
 
 Date: unreleased
 
+- Improve session storage api and make it asynchronous by default.
 - Add the ability to force the public address value on server startup (`:public-address` option)
 - Add an option for specify the custom maximum body size (`:max-body-size` option)
-- Improved support for sessions (mainly internal changes).
 - Add helper for parse the query params: `catacumba.core/parse-queryparams`.
 - Add support for interceptors.
 - Add support for auth facilities.
 - Add support for extensible body parsing.
-- Removed support for automatic searching of `catacumba.properties` file for basedir.
+- Remove support for automatic searching of `catacumba.properties` file for basedir.
 
 
 ## Version 0.1.0-alpha2 ##
@@ -19,10 +19,10 @@ Date: unreleased
 Date: 2015-05-03
 
 - The context now is implemented as record and allows attach additional information.
-- Improved context data forwarding, now the data is attached directy to the context.
-- Simplified access to request and response, because now are simple keys in the context type.
-- Simplified internal abstraction for get/set headers.
-- Simplified access to the route params, now are attached directly to the context under
+- Improve context data forwarding, now the data is attached directy to the context.
+- Simplify access to request and response, because now are simple keys in the context type.
+- Simplify internal abstraction for get/set headers.
+- Simplify access to the route params, now are attached directly to the context under
   the `:route-params` key.
 - Add support for Server-Sent Events.
 - Add CORS support with as chain handler.

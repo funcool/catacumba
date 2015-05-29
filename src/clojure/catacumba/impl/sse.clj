@@ -46,14 +46,15 @@
   "Start the sse connection with the client
   and dispatch it in a special hanlder."
   [^DefaultContext context handler]
-  (let [out (async/chan 1 (map event))
-        pub (schannel/publisher out {:close true})
-        tfm (helpers/action transform-event)
-        sse' (ServerSentEvents/serverSentEvents pub tfm)
-        ctx (:catacumba/context context)]
+  (let [^Context ctx (:catacumba/context context)
+        out (async/chan 1 (map event))
+        pub (->> (schannel/publisher out {:close true})
+                 (.stream ctx))
+        tfm (helpers/action transform-event)]
     (async/thread
       (handler context out))
-    (.render ctx sse')))
+    (->> (ServerSentEvents/serverSentEvents pub tfm)
+         (.render ctx))))
 
 (defmethod handlers/adapter :catacumba/sse
   [handler]

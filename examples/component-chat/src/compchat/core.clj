@@ -68,6 +68,7 @@
 (defn events-page
   "A server-sent envents endpoint for send
   the messages to the client."
+  {:handler-type :catacumba/sse}
   [context out]
   (let [bus (get-in context [::app :eventbus])]
     (subscribe bus out)))
@@ -75,10 +76,10 @@
 (defrecord WebApp [eventbus server]
   component/Lifecycle
   (start [this]
-    (let [routes [[:all (ctcomp/extra-data {::app this})]
+    (let [routes [[:any (ctcomp/extra-data {::app this})]
                   [:get index-page]
                   [:by-method "events"
-                   [:get ^:sse events-page]
+                   [:get #'events-page]
                    [:post post-message]]]]
       (ctcomp/assoc-routes! server ::web routes)))
 

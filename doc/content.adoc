@@ -1006,7 +1006,8 @@ storage system is plugable and is defined in terms of the following protocol:
 
 If you known the ring based session storages, you can observe that the _catacumba_ session
 storage abstraction is almost identical to the ring session abstracition, so migrate or
-adapt the ring session storages is really easy.
+adapt the ring session storages is really easy. The unique difference is that functions
+should return a promise (from futura library).
 
 For use a concrete session storage, just pass a instance of it as value of the `:storage`
 key in a session handler constructor:
@@ -1015,6 +1016,8 @@ key in a session handler constructor:
 ----
 (hs/session {:storage (my-storage-constructor)})
 ----
+
+If you want implement own session storage, take a look to the :inmemory builtin one.
 
 
 === Context as Request

@@ -41,13 +41,11 @@
                                        catacumba.impl.types
                                        catacumba.handlers.core
                                        catacumba.handlers.cors
+                                       catacumba.handlers.auth
                                        catacumba.handlers.parsing
                                        catacumba.handlers.security
                                        catacumba.handlers.session
-                                       catacumba.handlers.interceptor
-                                       catacumba.experimental.stomp
-                                       catacumba.experimental.stomp.parser
-                                       catacumba.experimental.stomp.broker]
+                                       catacumba.handlers.interceptor]
                              :language :clojure
                              :output-dir "doc/api"
                              :src-dir-uri "http://github.com/funcool/catacumba/blob/master/"

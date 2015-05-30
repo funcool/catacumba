@@ -2,15 +2,16 @@
 
 ## Version 0.2.0-SNAPSHOT ##
 
-Date: unreleased
+Date: 2015-05-30
 
 - Improve session storage api and make it asynchronous by default.
 - Add the ability to force the public address value on server startup (`:public-address` option)
 - Add an option for specify the custom maximum body size (`:max-body-size` option)
 - Add helper for parse the query params: `catacumba.core/parse-queryparams`.
-- Add support for interceptors.
+- Add support for interceptors (instrumentation)
 - Add support for auth facilities.
 - Add support for extensible body parsing.
+- Update futura library to the last version that adds fully asynchronous publishers.
 - Remove support for automatic searching of `catacumba.properties` file for basedir.
 
 

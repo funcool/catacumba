@@ -18,41 +18,41 @@ well known ring.
 
 === Rationale
 
-I start writting this library as a research project for provide a simple an non obstructive
+I start writting this library as a research project to provide a simple an non obstructive
 (a la ring) way to build asynchronous and non-blocking web services.
 
-In clojure ecosystem there are several solutions for that purpose: pedestal, aleph, and jet.
-All them are good clojure libraries/frameworks but them does not satisfies me for different reasons:
+In the Clojure ecosystem there are several solutions for that purpose: Pedestal, Aleph, and Jet.
+All them are good Clojure libraries/frameworks but none of them satisfies me for different reasons:
 
 * The pedestal approach is very opinionated and too much high level and I prefer something simple,
   lightweight and maybe less opinionated.
-* Aleph, seems a great library but lacks of good, readable, user friendly documentation and
-  its generic approach (not only http) not helps much. If you want read more about differences with
+* Aleph, seems like a great library but lacks good, readable, user friendly documentation and
+  its generic approach (not only http) does not help much. If you want read more about differences with
   aleph, see <<difference-with-aleph,this>> faq entry.
-* Jet is a asynchronous ring addapter for jetty9. It is really great library that I have used in
+* Jet is a asynchronous ring addapter for Jetty 9. It is really great library that I have used in
   some projects, and fits very well on my idea of web toolkit but it has two drawbacks, it is build
-  as ring adapter having all the good and all the bad of ring and it is using jetty (jetty is a
+  as ring adapter having all the good and all the bad of ring and it is using Jetty (Jetty is a
   servlet server that comes with optional async support, it isn't asynchronous from the ground up).
 
 
 === Goals
 
-Here a incomplete list of things that _catacumba_ goals:
+Here a incomplete list of things that _catacumba_ aims to achieve:
 
 * Have a flexible and extensible way to setup different kind of handlers
-* Provide a simple and lightweight approach for define asynchronous web services with support for
-  different abstractions, such as promise, future, core.async, manifold, reactive-streams, ...
+* Provide a simple and lightweight approach for definining asynchronous web services with support for
+  different abstractions, such as promises, futures, core.async, manifold, reactive-streams, ...
 * Build almost everything up on abstractions for simple and easy extensibility.
-* Provide a builtin, data based routing.
+* Provide a built-in, data-based routing.
 * To be flexible and not very opinionated.
 * Have backpressure support out of the box.
 
 _Catacumba_ goals are not:
 
-* To by a fully integrated full stack solution like immutant or pedestal.
-* Provide a opinionated way to structure your "bussines logic"
-* Provide all possible features that you might need.
-* Low level, ring based library.
+* To be a fully integrated full stack solution like immutant or pedestal.
+* To provide an opinionated way to structure your "bussines logic"
+* To provide all possible features that you might need.
+* To be a low level, ring based library.
 
 
 === Project Maturity
@@ -89,7 +89,7 @@ If you are using gradle, this is a dependency line for gradle dsl:
 compile "funcool:catacumba:0.2.0"
 ----
 
-
+[[quickstart]]
 == Quick Start
 
 This section intends to explain how to get _catacumba_ up and running.
@@ -97,7 +97,7 @@ This section intends to explain how to get _catacumba_ up and running.
 
 === First handler
 
-The handler consists in a function that accepts a "context" as first parameter and
+The handler consists of a function that accepts a "context" as first parameter and
 returns something renderable. Let see an example:
 
 [source, clojure]
@@ -107,15 +107,15 @@ returns something renderable. Let see an example:
   "Hello World")
 ----
 
-The handler maybe looks very familiar if you are previously have used ring, the main difference
-is that it receives some kind of context object instead of request. And may return a string directly.
+The handler may look very familiar if you have used ring previously. The main difference
+is that it receives a context object instead of a request object. Additionally it may return a string directly.
 
-All of related concepts and full introduction on how the handlers works are explained in below sections.
+The following sections explain all related concepts and give a full introduction on how handlers work.
 
 
-=== Run the server
+=== Running the server
 
-Now having defined the simple, hello world handler, it is time to run it. For it
+Now having defined the simple, hello world handler, it is time to run it. To do it,
 import the `run-server` function from `catacumba.core` ns and execute it with
 handler as first parameter:
 
@@ -126,13 +126,13 @@ handler as first parameter:
 (ct/run-server my-hello-world-handler)
 ----
 
-TIP: The `run-server` function does not blocks and you can execute it in a repl without
+TIP: The `run-server` function does not block and you can execute it in a repl without
 problems. It uses jvm not daemon threads for avoid shutdown the jvm.
 
 
 === Complete example
 
-It there the complete source code of the example:
+This is what the complete source code of the example looks like:
 
 [source, clojure]
 ----
@@ -157,25 +157,25 @@ you setup your first project.
 == User Guide
 
 This section intends explain all the different parts of _catacumba_ and
-how they are run together.
+how they are playing together.
 
 
 === Handlers
 
-The handlers is a fundamental piece of the _catacumba_ library and this chapter intends
-to explain everything related to defult handlers.
+The idea of handlers is a fundamental piece of the _catacumba_ library and this chapter intends
+to explain everything related to default handlers.
 
 
 ==== What is a handler?
 
-As we have viewed in "Quick Start" section, a handler mainly consists in a simple function
+As we have seen int the "<<Quick Start,quickstart>>" section, a handler mainly consists of a simple function
 that acts on the handling context.
 
-Do not worry about the context, it will be explained in below sections. The only thing that you
-shoult known about it at this time, is that is the central part of the request and response
+Do not worry about the context for now, it will be explained in later sections. The only thing that you
+should known about it at this time, is that is the central part of the request and response
 lifetime. It stores the current state of the http request and everything related.
 
-The hello world handler has this aspect:
+The hello world handler has this source code:
 
 [source, clojure]
 ----
@@ -190,8 +190,8 @@ handlers out of the box and allows to be extended with used defined ones.
 
 ==== Write to response
 
-As you can observe from the previous example, no status code is provided, only the content. For
-send a complete response you can use a builtin response type or ring like hashmap:
+As you can observe from the previous example, no status code is being provided, only the body of the response. To
+send a complete response you can use a builtin response type or a ring-like hashmap:
 
 [source, clojure]
 ----
@@ -202,11 +202,11 @@ send a complete response you can use a builtin response type or ring like hashma
   (http/ok "Hello World"))
 ----
 
-This is a list of supported output values:
+Following output data types are supported for a handler function:
 
-- a *string*, that will result in a response with 200 status code and "text/plain" as content type.
+- a *string*, will result in a response with status code 200 and "text/plain" as content type.
 - a *ring style* hash map.
-- a *response* type (very similar to ring one)
+- a *response* type (very similar to ring one).
 
 The handler's return value is implemented using clojure protocols and its behavior can be extended
 easily with user defined types.
@@ -224,7 +224,7 @@ Let see an other example, using _catacumba_'s response type with additional head
 
 In the previous examples, we have seen how the return value is handled, but behind the scenes
 the context is the responsible of interactions with the request and the response. Let see the
-same example but interacting directly with context:
+same example but interacti directly with the context:
 
 [source, clojure]
 ----
@@ -235,34 +235,33 @@ same example but interacting directly with context:
   (ct/send! context "hello world"))
 ----
 
-The return value handling is really a helper for people that comes from ring. Internally, the
+The return value handling is really a helper for people coming from ring. Internally, the
 context is the main protagonist in IO operations.
 
 
 ==== Reading the request
 
-As we mentioned previously, the request can be retrieved also from context instance. But in our case,
-catacumpa provides helpers functions for access to the basic parts how the request body, incoming
+As we mentioned previously, the request can also be retrieved from the context instance. But in our case,
+_catacumba_ provides helpers functions to access the most essential data such as the request body, request
 headers, cookies and routing tokens.
 
-You can access to the request object using `get-request` function. But, in almost all situations you
-do not need it because the _catacumba_ api is polymorphic and you cann access to almost all basic
-properties from request using a context as parameter, removing the repeating action of extracting
-the request form context.
+You can access to the request object using the `get-request` function. But, in almost all situations you
+do not need it because the _catacumba_ api is polymorphic and you can get access to almost all basic
+properties from request using a context as parameter, so you don't need to extract the request from context repeatedly.
 
 
 ===== Body
 
-For access to the request body, _catacumba_ exposes a `get-body` function. That function returns a
+For access to the request body, _catacumba_ exposes a `get-body` function. This function returns a
 ratpack link:http://ratpack.io/manual/current/api/ratpack/http/TypedData.html[internal type] that
 represents a body.
 
-That object exposes through java interop methods for access to the conten type and the raw data. For
-convenience it also implements necesarry protocols of `clojure.java.io` namespace for make it
-compatible with clojure facilities for read data.
+That object exposes through Java interop methods to access the content type and the raw data of the request body. For
+convenience sake, it also implements the necesarry protocols of the `clojure.java.io` namespace to make it
+compatible with Clojure's native facilities for reading data.
 
-A good demostration of it, is using the clojure `slurp` function. It uses `clojure.java.io` abstractions
-behind the scenes and serves as helper for read some resource as string:
+A good demostration of this is using the clojure `slurp` function. It uses `clojure.java.io` abstractions
+behind the scenes and serves as helper for reading a resource as a string:
 
 [source, clojure]
 ----
@@ -275,14 +274,14 @@ behind the scenes and serves as helper for read some resource as string:
 If you don't know the behavior of slurp, it reads the content of the provided resource as string
 and return it.
 
-Furthermore, _catacumba_ offers more flexible way to parsing body data based on the incoming
-content type, but it is explained with more details in the <<body-parsing,handlers section>>.
+Furthermore, _catacumba_ offers a more flexible way to parsing body data based on the incoming
+content type, but it is explained with more details in the <<Body parsing section,body-parsing>> of this document.
 
 
 ===== Headers
 
-For extract headers you should use the `get-headers` function. Like as usual, is a polymorphic function
-and you could use it over context instance without problems. The return value is a clojure map.
+In order to extract headers you should use the `get-headers` function. As usual, it is a polymorphic function
+and you could use it with a context instance without problems. The return value is a clojure map.
 
 If a header has multiple values, the value will be a vector.
 
@@ -295,7 +294,7 @@ If a header has multiple values, the value will be a vector.
 
 ===== Cookies
 
-The cookies crud operations works very similiar to the headers one. It consists in two polymorphic
+The cookies CRUD operations works very similiar to the headers one. It consists in two polymorphic
 functions (`get-cookies` and `set-cookies!`) that can be used directly with context or with request
 or response instances.
 
@@ -306,13 +305,13 @@ or response instances.
 ;; => {:cookiename {:value "value" :path "/" :secure false}}
 ----
 
-.Set cookies to the response
+.Set cookies in the response
 [source, clojure]
 ----
 (ct/set-cookies context {:cookiename {:value "foobar" :max-age 3600}})
 ----
 
-The cookies map is almost identical to that you can found in ring, and has the following possible
+The cookies map is almost identical to the one that you can find in ring, and has the following possible
 properties:
 
 * `:domain` - restrict the cookie to a specific domain
@@ -325,16 +324,16 @@ properties:
 
 === Routing
 
-In difference to ring, _catacumba_ is a toolkit for web development and offers builtin support for
-advanced routing that allows handlers chaining, partitioning, error handling, among others features.
+In contrast to ring, _catacumba_ is a toolkit for web development and offers builtin support for
+advanced routing that allows handlers chaining, partitioning, error handling, among other features.
 
-NOTE: _Catacumba_ has polymorphic and extensible way to setup handlers, and routing is one of possible
-implementations. Is completelly optional and you can use any other routing library if you want.
+NOTE: _Catacumba_ has a polymorphic and extensible way to setup handlers, and routing is one of multiple possible
+implementations. Is completely optional and you can use any other routing library if you want.
 
 
 ==== Basic syntax
 
-The routes in _catacumba_ are defined using clojure data structures: vectors and keywords. Let
+The routes in _catacumba_ are defined using clojure data structures: vectors and keywords. Let's
 see a little example of the aspect in a complete example:
 
 [source, clojure]
@@ -346,9 +345,8 @@ see a little example of the aspect in a complete example:
 (ct/run-server routes)
 ----
 
-The order of statemens is very important because the routing in _catacumba_ is a simple chain or in
-other words: pipeline. The handlers has the ability to delegate the request handign to the next
-handler in the pipeline.
+The order of statements is very important because the routing in _catacumba_ is a simple chain or pipeline. 
+Each handler has the ability to delegate the request handling to the next handler in the pipeline.
 
 This is a complete list of route directives that you can use a part of `:get`:  `:any` (matches all
 routes, often used for add chain handlers), `:post`, `:put`, `:patch` and `:delete`.
@@ -356,8 +354,8 @@ routes, often used for add chain handlers), `:post`, `:put`, `:patch` and `:dele
 
 ==== Dispatch by method
 
-In some circumstances you may want have different handlers depending on the http method used
-for one concrete endpoint. For it exists the `:by-method` route directive:
+In some circumstances you may want have different handlers depending on the HTTP method used
+for one concrete endpoint. For this purpose there is the `:by-method` route directive:
 
 [source, clojure]
 ----
@@ -370,8 +368,8 @@ for one concrete endpoint. For it exists the `:by-method` route directive:
 
 ==== Routing params
 
-The _catacumba_'s routing also allows capture url parameters using special symbols. For example,
-the path string "foo/:val" will match paths such as "foo/bar", "foo/123".  The matched parameters
+The _catacumba_'s routing also allows to capture URL values encoded in the URL or as URL parameters using special symbols. 
+For example, the path string "foo/:val" will match paths such as "foo/bar", "foo/123".  The matched parameters
 are automatically populated to the context under the `:route-params` keys.
 
 [source, clojure]
@@ -388,7 +386,7 @@ are automatically populated to the context under the `:route-params` keys.
 Additionally to the basic token for represent the url parameter, _catacumba_ also allows use of
 regular expressions for delimit the input or mark a url token optional.
 
-See the following table for all supported url tokens:
+See the following table for all supported URL tokens:
 
 .Supported url matching tokens
 [options="header", cols="2,3,3,2"]
@@ -852,6 +850,7 @@ This section will cover different kind of builtin additional handlers for make t
 using _catacumba_ more pleasant.
 
 
+[[body-parsing]]
 === Body parsing
 
 _Catacumba_ comes with builtin support for conditional body parsing depengin on the incoming

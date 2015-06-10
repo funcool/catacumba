@@ -40,7 +40,7 @@ All them are good Clojure libraries/frameworks but none of them satisfies me for
 Here a incomplete list of things that _catacumba_ aims to achieve:
 
 * Have a flexible and extensible way to setup different kind of handlers
-* Provide a simple and lightweight approach for definining asynchronous web services with support for
+* Provide a simple and lightweight approach for defining asynchronous web services with support for
   different abstractions, such as promises, futures, core.async, manifold, reactive-streams, ...
 * Build almost everything up on abstractions for simple and easy extensibility.
 * Provide a built-in, data-based routing.
@@ -345,7 +345,7 @@ see a little example of the aspect in a complete example:
 (ct/run-server routes)
 ----
 
-The order of statements is very important because the routing in _catacumba_ is a simple chain or pipeline. 
+The order of statements is very important because the routing in _catacumba_ is a simple chain or pipeline.
 Each handler has the ability to delegate the request handling to the next handler in the pipeline.
 
 This is a complete list of route directives that you can use a part of `:get`:  `:any` (matches all
@@ -368,7 +368,7 @@ for one concrete endpoint. For this purpose there is the `:by-method` route dire
 
 ==== Routing params
 
-The _catacumba_'s routing also allows to capture URL values encoded in the URL or as URL parameters using special symbols. 
+_catacumba_'s routing also allows to capture URL values encoded in the URL or as URL parameters using special symbols.
 For example, the path string "foo/:val" will match paths such as "foo/bar", "foo/123".  The matched parameters
 are automatically populated to the context under the `:route-params` keys.
 
@@ -383,8 +383,8 @@ are automatically populated to the context under the `:route-params` keys.
   (ct/routes [[:get "articles/:id" article-detail]]))
 ----
 
-Additionally to the basic token for represent the url parameter, _catacumba_ also allows use of
-regular expressions for delimit the input or mark a url token optional.
+Additionally to the basic token for representing URL parameters, _catacumba_ also allows the use of
+regular expressions for delimiting the input or marking a URL token optional.
 
 See the following table for all supported URL tokens:
 
@@ -402,19 +402,20 @@ See the following table for all supported URL tokens:
 
 ==== Routing chain
 
-The chaining of handlers can be done in different ways:
+The chaining of handlers can be done in two different ways:
 
 - *inline*: providing more that one handler for concrete http method.
-- *multiple route*: providing a "match all" handlers at the start of prefix.
+- *multiple routes*: providing a "match all" handler at the start of prefix.
 
-The inline handlers chaining has this aspect:
+Chaining handlers inline follows this pattern:
 
 [source, clojure]
 ----
 (ct/routes [[:get "users" permission-check-handler get-users-handler]])
 ----
 
-Also, you can setup "catch all" handlers at the start and use them as interceptors:
+Additionally, you can setup "catch all" handlers at the start of a routing
+definition and use them as interceptors:
 
 [source, clojure]
 ----
@@ -424,13 +425,14 @@ Also, you can setup "catch all" handlers at the start and use them as intercepto
                [:get "users" users-handler]]]))
 ----
 
-For better understanding how the handlers chain delegation works, see the *Context* chapter.
+For a better understanding of how the handler delegation chain works, see the *Context* chapter.
 
 
 ==== Error handling
 
-The _catacumba_ router chain allows setup user defined error handling functions. Do it, is very
-simple, just add an other route entry with `:error` route directive:
+The _catacumba_ router chain allows to setup user defined error handling
+functions. This requires a very, very simple setup, you only have to add another
+route entry with using `:error` route directive:
 
 [source, clojure]
 ----
@@ -439,8 +441,9 @@ simple, just add an other route entry with `:error` route directive:
               [:get "users" users-handler]]))
 ----
 
-With previous code we have set a global (for all handlers in a route chain) error handler. But
-there also possible set different error handlers for different prefixes:
+With the previous code we have set up a global error handler, applying to all
+routes in the chain. But there is also the possibility to set different error
+handlers for different prefixes:
 
 [source, clojure]
 ----
@@ -455,8 +458,9 @@ there also possible set different error handlers for different prefixes:
                [:get "dashboard" my-dashboard-handler]]]))
 ----
 
-The error handler aspect is very similar to standard http handler, the difference is that it receives
-additional parameter the throwable instance:
+The error handler signature is very similar to standard HTTP handler signature,
+with the difference being that it receives the throwable instance as an
+additional parameter:
 
 [source, clojure]
 ----
@@ -468,9 +472,9 @@ additional parameter the throwable instance:
 
 === Context
 
-An other core part of the _catacumba_ is the *Context*.
+Another core part of _catacumba_ is the *Context*.
 
-The context in catacumba as in ratpack has this responsabilities:
+Just like in ratpack, the context in _catacumba_ has following responsbibilities:
 
 * Provide direct access to the request and response objects.
 * Access to the contextual objects (called registry).
@@ -478,10 +482,12 @@ The context in catacumba as in ratpack has this responsabilities:
 * Convenience helpers for common handlers operation.
 
 
-==== Handlers delegation
+==== Handler delegation
 
-In _catacumba_, the request is handled using a chain of handlers. And one concrete handler can decide
-delegate tha work to the next matching handler in the chain. Probably, you have seen the different ways of chaining handlers in the router section, in this section we will see how we can delegate the request
+In _catacumba_, the request is handled using a chain of handlers. Each concrete
+handler can decide to delegate some work to the next matching handler in the chain.
+You have probably seen the different ways of chaining handlers in the router section,
+in this section we will see how we can delegate the request
 handling to the next matching handler.
 
 The delegation action can be done with `delegate` multiarity function. Let see a simple example:
@@ -501,12 +507,12 @@ The delegation action can be done with `delegate` multiarity function. Let see a
   (ct/routes [[:get "foo" handler1 handler2]]))
 ----
 
-In this example, when request arrives to handler1, which delegates the execution to the next
-handler in the chain. It do not know about next handler, it just delegates to the routing chain
-to find a next handler or raise corresponding error.
+In this example, when the request arrives at `handler1`, it delegates the execution to the next
+handler in the chain. It do not need to know about next handler, it just delegates to the routing chain
+to find a next handler or raise a corresponding error.
 
-Additionally to the simple handlers delegation, _catacumba_ offers a simple way to pass context data
-to the next handlers. It can be done passing additional parameter to the `delegate` function:
+In addition to the simple handler delegation, _catacumba_ offers a simple way to pass context data
+to the next handler in the chain. It can be done by passing an additional parameter to the `delegate` function:
 
 [source, clojure]
 ----
@@ -866,7 +872,7 @@ For use it, it is simple as prepend the `body-params` handler to your route chai
 (defn example-handler
   [context]
   (let [body (:body context)]
-    (println "Received body:" body) 
+    (println "Received body:" body)
     (http/no-content)))
 
 (def app

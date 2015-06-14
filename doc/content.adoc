@@ -527,19 +527,19 @@ to the next handler in the chain. It can be done by passing an additional parame
     (http/ok message)))
 ----
 
-In this example the second handler prints the message found in the context.
+In the example above, the second handler prints the message found in the context.
 
 
 === Asynchronous Handlers
 
-Asynchronous handlers are handlers that return a value in asyncrhonous way using one of the
-supported abstractions, such as core.async, reactve-streams and much others (explained below).
+Asynchronous handlers are handlers that return a value in an asynchronous way using one of the
+supported abstractions, such as core.async, reactive-streams and many others (explained below).
 
 
 ==== Channels
 
-The `core.async` channels is one of the supported abstractions that comes with _catacumba_ out
-of the box. It consist in a handler that returns a body as a channel or response as a channel.
+The `core.async` channel is one of the supported abstractions that comes with _catacumba_ out
+of the box. It consists of a handler that returns a body as a channel or response as a channel.
 
 This is the aspect of async handler returning the channel as a body:
 
@@ -556,12 +556,12 @@ This is the aspect of async handler returning the channel as a body:
     (http/ok ch)))
 ----
 
-Returning channel as a body has the advantage that you have the ability of set additional
-headers and returning code. But, if you are return a channel as a response value, the default
-status code will be set for you. The behavior of two approaches is the same, resultin in a chunked
-encoded response to the client.
+Returning a channel as the body has the advantage that you have the ability of setting additional
+headers and HTTP status in your function body code. But, if you are return a channel as a response
+value, the default status code will be set for you. The behavior of two approaches is the same,
+resulting in a chunked encoded response to the client.
 
-And this is the aspect of async handler returning channel as response:
+And this is an example of an async handler returning a channel as response:
 
 [source, clojure]
 ----
@@ -573,19 +573,19 @@ And this is the aspect of async handler returning channel as response:
 ----
 
 Do not worry about how much data you can send to the client, if you are using channels in a right way
-(in a go block), yo will send data to the client as fast as client can consume it. This technique is
+(in a go block), you will send data to the client as fast as the client can consume it. This technique is
 also called backpressure, and is fully supported for chunked responses.
 
 
 ==== Promises
 
-Promises is an other abstraction supported out of the box in _catacumba_. It comes from the
+Promises are another abstraction supported out of the box in _catacumba_. It comes from the
 link:https://github.com/funcool/futura[futura library] and is build on top of JDK8 _CompletableFuture_.
 
-Sometimes, yo do not need send a chunked stream to the clien, but your "bussines logic" is defined
-with asynchronous friendly api using promises (or something similar). In this case, with _catacumba_
+Sometimes, you do not need send a chunked stream to the client, but your "bussines logic" is defined
+in an asynchronous friendly API using promises (or something similar). In this case, with _catacumba_
 you can return a promise as a body or as a response and the data will be sent to the client when
-the promise is successfully resolved.
+the promise has been resolved successfully.
 
 [source, clojure]
 ----
@@ -597,7 +597,7 @@ the promise is successfully resolved.
     (http/ok promise {:content-type "text/plain"})))
 ----
 
-Thanks to the *future* library internals, we can use it with
+Thanks to the *futura* library internals, we can use it with
 link:https://github.com/funcool/cats[cats] `mlet` macro, that allows us structure pure async
 code in a synchronous way:
 
@@ -608,7 +608,7 @@ code in a synchronous way:
 
 (defn my-async-handler
   [context]
-  (m/mlet [a (something-that-return-promise context)
+  (m/mlet [a (something-that-returns-promise context)
            b (do-something-with a)]
     (do-other-thing-with b)))
 ----
@@ -619,7 +619,7 @@ from `(do-other-thing-with b)` expression.
 
 ==== Futures
 
-As previously explained promises are build on top of *CompletableFutures* of JDK8, _catacumba_ also
+As previously explained promises are built on top of *CompletableFutures* of JDK8, _catacumba_ also
 supports the raw usage of them:
 
 [source, clojure]
@@ -634,8 +634,8 @@ supports the raw usage of them:
 ==== Manifold
 
 The link:https://github.com/ztellman/manifold[manifold] library offers different kind of deferred and
-stream abstractions for clojure and you can use both them as response or body of the response for send
-asynchronously data to the client.
+stream abstractions for Clojure and you can use both them as response or body of the response for sending
+data to the client asynchronously.
 
 [source, clojure]
 ----
@@ -651,15 +651,15 @@ asynchronously data to the client.
 ==== Reactive Streams
 
 This is the core of all abstractions, and support for it comes out of the box from *ratpack*. All
-other abstractions that we have seen are always coerced to *Publisher* instance before send it to the
+other abstractions that we have seen are always coerced to a *Publisher* instance before sending it to the
 client.
 
-Here nothing new to explain, if you have a function that return some kind of publisher, you can return
+Here there isn't anything  new to explain, if you have a function that return some kind of *Publisher*, you can return
 it as response or send it as body like as usual.
 
-The adaptations and coerciones are done thanks to the
+The adaptations and coercions are done thanks to the
 link:https://github.com/funcool/futura[futura library] that has more adaptations supported out of the
-box that which are comming with _catacumba_.
+box that which are coming with _catacumba_.
 
 Let see an example:
 
@@ -677,17 +677,17 @@ Let see an example:
 ;; It will return a chunked response to the client with "HELLO WORLD" string.
 ----
 
-Reactive streams implementation in link:https://github.com/funcool/futura[futura library] comes with
+The reactive streams implementation in the link:https://github.com/funcool/futura[futura library] comes with
 support for different kind of coercions and with clojure 1.7 *transducers*.
 
 
 === WebSockets
 
-One of the main goals of _catacumba_ is come with builtin, full featured and backpressure aware
+One of the main goals of _catacumba_ is come with builtin, full featured and backpressure-aware
 websockets support.
 
 You can start a websocket connection in any _catacumba_ handler or route handler using `websocket`
-function. It not need special handlers for treat websockets. Let see an example:
+function. It does not require any special handlers for dealing with websockets. Let see an example:
 
 [source, clojure]
 ----
@@ -710,8 +710,8 @@ function. It not need special handlers for treat websockets. Let see an example:
 ----
 
 
-Additionally, _catacumba_ offers a a way to setup websocket handler directly, without additional step
-on default handler:
+Additionally, _catacumba_ offers a a way to set up a websocket handler directly, without an additional step
+in the default handler:
 
 [source, clojure]
 ----
@@ -732,13 +732,13 @@ on default handler:
                [:any #'echo-handler]]]))
 ----
 
-As you can observe, a function has additional metadata that indicates to _catacumba_ that that
-function is a websocket type handler, so _catacumba_ bootstraps the websocket connection for you.
+As you can observe, for any function has additional metadata that indicates to _catacumba_ that this
+function is a websocket type handler, _catacumba_ will bootstrap the websocket connection for you.
 
 Is very important pass a var reference to the router instead of the function directly, because
 the metadata defined in the function is bound to the var and not to the function.
 
-Also, you can attach metadata inline, using the `with-meta` clojure builtin function:
+Also, you can attach metadata inline, using the `with-meta` Clojure built-in function:
 
 [source, clojure]
 ----
@@ -747,18 +747,18 @@ Also, you can attach metadata inline, using the `with-meta` clojure builtin func
                      {:handler-type :catacumba/websocket})]]])
 ----
 
-Clojure offers a lot of flexibility for work with metadata so, you can set the handler type
-in the way that you prefers.
+Clojure offers a lot of flexibility for working with metadata so you can set the handler type
+in the way that you prefer.
 
 
 === Server-Sent Events
 
 WebSockets are cool because they allow bi-directional comunication, but in some circumstances we only
-need something unidirectional, for notify the client about some changes or any other events. For this
-purpose exists link:https://developer.mozilla.org/en-US/docs/Server-sent_events[Server-Sent Events]
+need something unidirectional, for notifying the client about some changes or any other events. For this
+purpose exists link:https://developer.mozilla.org/en-US/docs/Server-sent_events[Server-Sent Events] (SSE)
 and _catacumba_ also has support for it.
 
-The handlers for sse not differs a lot from websockets that we have seen in previous section. The
+The handler for SSE does not differs a lot from websockets that we have seen in the previous section. The
 main difference is that the reception of the data is not allowed.
 
 [source, clojure]
@@ -779,7 +779,7 @@ main difference is that the reception of the data is not allowed.
 
 ----
 
-In a similar way to websockets, you can start the sse in any place, such as standard _catacumba_ handler:
+In a similar way to websockets, you can start SSE in any place, such as a standard _catacumba_ handler:
 
 [source, clojure]
 ----
@@ -800,7 +800,7 @@ In a similar way to websockets, you can start the sse in any place, such as stan
 
 ----
 
-Let see some examples how you can send other parameters that simple data:
+Let see some examples how you can send other parameters than simple data:
 
 [source, clojure]
 ----
@@ -815,15 +815,15 @@ Let see some examples how you can send other parameters that simple data:
 (>! out {:id "2"})
 ----
 
-NOTE: The _catacumba_'s sse support uses core.async channels, but if you are not
+NOTE: The _catacumba_'s SSE support uses core.async channels, but if you are not
 happy with core.async and want use something different (such as manifold streams), you may want know
-that everything in _catacumba_ is implemented using abstractions and to implement your own sse type
+that everything in _catacumba_ is implemented using abstractions and to implement your own SSE type
 of handler that uses manifold streams is very easy.
 
 
 === Ring compatibility
 
-Although ring support is not first citizen in _catacumba_, the current design of it allows create an
+Although ring support is not first citizen in _catacumba_, the current design of it allows to create an
 handler adapter that follows the ring specification. This is a great example of extensibility of
 _catacumba_.
 
@@ -846,24 +846,24 @@ Let see how it can be done:
     (ct/run-server))
 ----
 
-Ring handlers can be set as standalone handlers (mainly for use them as compojure and all related
+Ring handlers can be set as standalone handlers (mainly for using them with compojure and all related
 middlewares) or in a _catacumba_'s routing chain.
 
 
-== Builtin Handlers
+== Built-in Handlers
 
-This section will cover different kind of builtin additional handlers for make the experience of
+This section will cover different kind of built-in additional handlers to make the experience of
 using _catacumba_ more pleasant.
 
 
 [[body-parsing]]
 === Body parsing
 
-_Catacumba_ comes with builtin support for conditional body parsing depengin on the incoming
-content type. It consists in a route chain that adds the `:body` entry in the context with the
-parsed data or `nil` in case of incoming content type does not has attached parser implementation.
+_Catacumba_ comes with builtin support for conditional body parsing depending on the incoming
+content type. It consists of a routing chain that adds the `:body` entry in the context with the
+parsed data or `nil` in case of an incoming content type does not have an attached parser implementation.
 
-For use it, it is simple as prepend the `body-params` handler to your route chain:
+In order to use it, it is simple as prepending the `body-params` handler to your route chain:
 
 [source, clojure]
 ----
@@ -883,13 +883,13 @@ For use it, it is simple as prepend the `body-params` handler to your route chai
 ----
 
 By default, the `application/x-www-form-urlencoded`, `multipart/form-data` and
-`application/json` parsers are comes out of the box.
+`application/json` parsers come out of the box.
 The link:https://github.com/dakrone/cheshire[cheshire] json parser is used
-for parse body with the `application/json` content type.
+for parsing the body with the `application/json` content type.
 
-The body parsing is a open system, implemented using clojure polymorphism facilites
-such as multimethods. If you want add additional parser, is as simple how add
-implmenetation to the `parse` multimethod with your content-type as dispatch tag.
+The body parsing is a open system, implemented using clojure's polymorphism facilites
+such as multimethods. If you want add additional parser, is as simple as adding an
+implementation to the `parse` multimethod with your content-type as dispatch tag.
 
 [source, clojure]
 ----
@@ -904,16 +904,16 @@ implmenetation to the `parse` multimethod with your content-type as dispatch tag
 ----
 
 
-=== Auth
+=== Authentication
 
-The authentication facilites in _catacumba_ are built using link:https://github.com/funcool/buddy[buddy]
+The authentication facilites in _catacumba_ are built using the link:https://github.com/funcool/buddy[buddy]
 security library.
 
-As _catacumba_ handlers system is very flexible, you really don't locked to use _buddy_. You can
+As _catacumba_'s handler system is very flexible, you really don't need to use _buddy_. You can
 write your own auth facilities and attach them to _catacumba_ using the routing chain.
 
-For start using auth facilities in your application, you should add the `auth` handler
-to you routing chain. Let see an example using session based auth backend:
+In order to start using auth facilities in your application, you should add the `auth` handler
+to you routing chain. Let see an example of using session-based auth backend:
 
 [source, clojure]
 ----
@@ -931,25 +931,25 @@ to you routing chain. Let see an example using session based auth backend:
 ----
 
 As we mentioned previously, behind the scenes _buddy_ is used, so almost all auth backends
-defined in buddy can be used with _catacumba_, such as jws and jwe backens.
+defined in buddy can be used with _catacumba_, such as JWS and JWE backens.
 
-It there some exceptions, such as the session auth backend, because the sessions works
-slightly different in _catacumba_ and the buddy session auth backend reliad in a ring
+However there are some exceptions, such as the session auth backend, because sessions work
+slightly different in _catacumba_ and the buddy session auth backend relied on a ring-like
 session behavior.
 
 The buddy access rules are not supported because, the _catacumba_ routing chain system
 fullfills that gap. You can define concrete authorization rules and attach them directly
 in a routing chain.
 
-You can see a working example using auth facilties <<website-example,here>>.
+You can see a working example using auth facilities <<website-example,here>>.
 
 
 === Sessions
 
 ==== Getting Started
 
-The http sessions in _catacumba_ are also implemented as chain handler. So, you can add sessions
-to you application just adding the handler to your routing chain:
+The HTTP sessions in _catacumba_ are also implemented as chain handler. So you can add session handling support
+to you application just by adding the handler to your routing chain:
 
 [source, clojure]
 ----
@@ -961,7 +961,7 @@ to you application just adding the handler to your routing chain:
 ----
 
 All handlers in the route pipeline that are going after the session handler will come with `:session`
-key in the context with a "atom" like object. You just treat it as atom, so for attach some data
+key in the context with a "atom" like object. You just treat it as atom, so for attaching some data
 to the session you should use the well known `swap!` function:
 
 [source, clojure]
@@ -980,9 +980,9 @@ You can clean the session just reseting to the empty map:
 (reset! session {})
 ----
 
-One of the big advantages of using the chain routing for setup session, is that you put session
-to a concrete subset of urls/resources avoiding unnecesary code execution for hendler that
-does not need sessions:
+One of the big advantages of using the routing chain for session set up, is that you can restrict session halding
+to a concrete subset of urls/resources avoiding unnecesary code execution for handlers that
+do not need sessions:
 
 [source, clojure]
 ----
@@ -999,7 +999,7 @@ does not need sessions:
 ==== Session storages
 
 Currently _catacumba_ comes with one basic session storage, the `:inmemory`. But the session
-storage system is plugable and is defined in terms of the following protocol:
+storage system is pluggable and is defined in terms of the following protocol:
 
 [source, clojure]
 ----
@@ -1009,12 +1009,12 @@ storage system is plugable and is defined in terms of the following protocol:
   (delete-session [_ key]))
 ----
 
-If you known the ring based session storages, you can observe that the _catacumba_ session
-storage abstraction is almost identical to the ring session abstracition, so migrate or
-adapt the ring session storages is really easy. The unique difference is that functions
+If you are familiar with the ring based session storages, you can observe that the _catacumba_ session
+storage abstraction is almost identical to the ring session abstraction, so migrating from or
+adapting the ring session storages is really easy. The unique difference is that functions
 should return a promise (from futura library).
 
-For use a concrete session storage, just pass a instance of it as value of the `:storage`
+To use a concrete session storage, just pass a instance of it as value of the `:storage`
 key in a session handler constructor:
 
 [source, clojure]

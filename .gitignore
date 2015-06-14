@@ -10,6 +10,7 @@ pom.xml.asc
 /.nrepl-port
 /doc/index.html
 /doc/api
+/doc/dist
 \#*\#
 *~
 .\#*

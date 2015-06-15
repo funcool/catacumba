@@ -372,8 +372,12 @@
   (send data (:catacumba/context context)))
 
 (defmulti adapter
-  "A polymorphic function for create the
-  handler adapter."
+  "A polymorphic function for adapt catacumba
+  handlers to ratpack compatible handlers.
+
+  The dispatch is done by `:handler-type` key in the
+  metadata found on the given var or anonymous
+  handler."
   (fn [handler & args]
     (let [metadata (meta handler)]
       (:handler-type metadata)))

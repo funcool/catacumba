@@ -1,6 +1,6 @@
 # Changelog #
 
-## Version 0.2.0-SNAPSHOT ##
+## Version 0.2.0 ##
 
 Date: 2015-05-30
 

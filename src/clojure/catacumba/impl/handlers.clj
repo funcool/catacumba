@@ -203,15 +203,13 @@
           (recur (rest headers)))))))
 
 (defn- cookie->map
-  [^Cookie cookie]
-  {:path (.getPath cookie)
-   :value (.getValue cookie)
-   :domain (.getDomain cookie)
+  [cookie]
+  {:path (.path cookie)
+   :value (.value cookie)
+   :domain (.domain cookie)
    :http-only (.isHttpOnly cookie)
    :secure (.isSecure cookie)
-   :max-age (.getMaxAge cookie)
-   :version (.getVersion cookie)
-   :discard (.isDiscard cookie)})
+   :max-age (.maxAge cookie)})
 
 (extend-protocol ICookies
   DefaultContext
@@ -223,8 +221,8 @@
   Request
   (get-cookies* [^Request request]
     (persistent!
-     (reduce (fn [acc ^Cookie cookie]
-               (let [name (keyword (.getName cookie))]
+     (reduce (fn [acc cookie]
+               (let [name (keyword (.name cookie))]
                  (assoc! acc name (cookie->map cookie))))
              (transient {})
              (into [] (.getCookies request)))))
@@ -239,7 +237,7 @@
   (set-cookies* [^ResponseMetaData response cookies]
     (loop [cookies (into [] cookies)]
       (when-let [[cookiename cookiedata] (first cookies)]
-        (let [^Cookie cookie (.cookie response (name cookiename) "")]
+        (let [cookie (.cookie response (name cookiename) "")]
           (reduce (fn [_ [k v]]
                     (case k
                       :path (.setPath cookie v)
@@ -247,11 +245,9 @@
                       :secure (.setSecure cookie v)
                       :http-only (.setHttpOnly cookie v)
                       :max-age (.setMaxAge cookie v)
-                      :discard (.setDiscard cookie v)
-                      :value (.setValue cookie v)
-                      :version (.setVersion cookie v)))
+                      :value (.setValue cookie v)))
                   nil
-                  (into [] (merge {:discard false} cookiedata)))
+                  (into [] cookiedata))
           (recur (rest cookies)))))))
 
 (extend-protocol io/IOFactory

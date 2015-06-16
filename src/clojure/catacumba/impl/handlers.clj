@@ -145,17 +145,24 @@
            (.stream ctx)
            (.sendStream response))))
 
+
+  ;; TODO: reimplement this as chunked stream instread of
+  ;; read all data in memory. The current approach is slightly
+  ;; awfull because it reads all inputstream firstly in a memory.
   InputStream
   (send [data ^Context ctx]
-    (let [^bytes buffer (byte-array 1024)
-          ^ByteBuf buf (Unpooled/buffer (.available data))
-          ^Response response (.getResponse ctx)]
-      (loop [index 0]
-        (let [readed (.read data buffer 0 1024)]
-          (when-not (= readed -1)
-            (.writeBytes buf buffer 0 readed)
-            (recur (+ index readed)))))
-      (.send response buf))))
+    (let [^Response response (.getResponse ctx)
+          ^Promise prom (.blocking ctx #(let [^bytes buffer (byte-array 1024)
+                                              ^ByteBuf buf (Unpooled/buffer (.available data))]
+                                          (loop [index 0]
+                                            (let [readed (.read data buffer 0 1024)]
+                                              (when-not (= readed -1)
+                                                (.writeBytes buf buffer 0 readed)
+                                                (recur (+ index readed)))))
+                                          buf))]
+      (.then prom (helpers/action
+                   (fn [buff]
+                     (.send response buff)))))))
 
 (extend-protocol IResponse
   DefaultContext

@@ -407,9 +407,8 @@
             route-params (ctx/route-params context)
             context (-> (merge context context-params)
                         (assoc :route-params route-params))
-            prom (.promise ctx (helpers/action
-                                (fn [^Fulfiller ff]
-                                  (handler context #(.success ff %)))))]
+            prom (helpers/promise ctx (fn [^Fulfiller ff]
+                                        (handler context #(.success ff %))))]
         (.then ^Promise prom
                (helpers/action
                 (fn [response]

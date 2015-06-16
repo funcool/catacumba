@@ -1,6 +1,7 @@
 (ns catacumba.impl.helpers
   (:import ratpack.func.Action
            ratpack.func.Function
+           ratpack.handling.Context
            io.netty.buffer.Unpooled))
 
 (defn action
@@ -19,6 +20,11 @@
     (apply [_ x]
       (callable x))))
 
+(defn promise
+  "A convenience function for create ratpack
+  promises from context instance."
+  [^Context ctx callback]
+  (.promise ctx (action callback)))
 
 (defprotocol IByteBuffer
   (bytebuffer [_] "Coerce to byte buffer."))

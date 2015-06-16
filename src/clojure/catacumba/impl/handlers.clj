@@ -18,6 +18,8 @@
            ratpack.http.TypedData
            ratpack.http.MutableHeaders
            ratpack.util.MultiValueMap
+           ratpack.exec.Fulfiller
+           ratpack.exec.Promise
            catacumba.impl.context.DefaultContext
            org.reactivestreams.Publisher
            java.util.concurrent.CompletableFuture
@@ -395,6 +397,23 @@
                          (handler))]
         (when (satisfies? IHandlerResponse response)
           (handle-response response context))))))
+
+(defmethod adapter :catacumba/cps
+  [handler]
+  (reify Handler
+    (^void handle [_ ^Context ctx]
+      (let [context (ctx/context ctx)
+            context-params (ctx/context-params context)
+            route-params (ctx/route-params context)
+            context (-> (merge context context-params)
+                        (assoc :route-params route-params))
+            prom (.promise ctx (helpers/action
+                                (fn [^Fulfiller ff]
+                                  (handler context #(.success ff %)))))]
+        (.then ^Promise prom
+               (helpers/action
+                (fn [response]
+                  (handle-response response context))))))))
 
 (defmethod adapter :catacumba/ring
   [handler]

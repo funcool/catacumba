@@ -1,5 +1,5 @@
 (ns catacumba.core-tests
-  (:require [clojure.core.async :refer [put! take! chan <! >! go close! go-loop onto-chan timeout]]
+  (:require [clojure.core.async :refer [put! take! chan <! >! go close! go-loop onto-chan timeout] :as a]
             [clojure.test :refer :all]
             [clojure.java.io :as io]
             [clojure.pprint :refer [pprint]]
@@ -248,6 +248,16 @@
           (is (= (:status response) 200))
           (let [bodydata (deref p 1000 nil)]
             (is (= bodydata "Hello world"))))))))
+
+(deftest cps-handler-type
+  (let [handler (fn [context next]
+                   (a/thread
+                     (a/<!! (a/timeout 500))
+                     (next "hello world cps")))]
+    (with-server (with-meta handler {:handler-type :catacumba/cps})
+      (let [response (client/get base-url)]
+        (is (= (:body response) "hello world cps"))
+        (is (= (:status response) 200))))))
 
 ;; (deftest experiments
 ;;   (letfn [(handler1 [context]

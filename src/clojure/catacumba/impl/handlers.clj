@@ -101,7 +101,8 @@
 
   CompletableFuture
   (handle-response [data ^DefaultContext context]
-    (handle-response (p/promise data) context)))
+    (set-status* context 200)
+    (send data (:catacumba/context context))))
 
 (extend-protocol ISend
   String
@@ -119,11 +120,6 @@
     (-> (stream/publisher data)
         (send ctx)))
 
-  futura.promise.Promise
-  (send [data ^Context ctx]
-    (-> (stream/publisher data)
-        (send ctx)))
-
   manifold.deferred.IDeferred
   (send [data ^Context ctx]
     (-> (stream/publisher data)
@@ -131,8 +127,15 @@
 
   CompletableFuture
   (send [data ^Context ctx]
-    (-> (stream/publisher data)
-        (send ctx)))
+    (let [prom (helpers/promise ctx (fn [^Fulfiller ff]
+                                      (.accept ff data)))]
+      (.then ^Promise prom (helpers/action
+                            (fn [response]
+                              (send response ctx))))))
+
+  futura.promise.Promise
+  (send [data ^Context ctx]
+    (send (p/future data) ctx))
 
   Publisher
   (send [data ^Context ctx]

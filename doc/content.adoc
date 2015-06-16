@@ -1022,19 +1022,19 @@ key in a session handler constructor:
 (hs/session {:storage (my-storage-constructor)})
 ----
 
-If you want implement own session storage, take a look to the :inmemory builtin one.
+If you want implement own session storage, take a look to the `:inmemory` builtin one.
 
 
 === Context as Request
 
-By default, the _catacumba_'s context allows you direct access to the request and response, that are
-instances of classes defined in Ratpack. That classes allows you access to all related properties
+By default, the _catacumba_'s context allows you direct access to the request and response, both which are
+instances of classes defined in Ratpack. These classes allows you to access all related properties
 such as headers, the request body, the request method, etc.
 
-But _catacumba_ at this moment offers a very limited set of helper functions for interacting with that
-data: get/set headers and read the body (explained in previous sections).
+But _catacumba_ additionally offers a small set of helper functions for interacting with that
+data: getting/setting headers and reading the body (explained in previous sections).
 
-For compensate this, _catacumba_ comes with special chain handler that populates the context with
+To compensate for this, _catacumba_ comes with a special chain handler that populates the context with
 basic request properties such as, headers, path and method:
 
 [source, clojure]
@@ -1053,12 +1053,12 @@ basic request properties such as, headers, path and method:
 
 ==== Cross-Origin Resource Sharing
 
-Is a mechanism that allows restricted resources (e.g. fonts, JavaScript, etc.) on a web page to be
+Cross-Origin Resource Sharing (CORS) is a mechanism that allows restricted resources (e.g. fonts, JavaScript, etc.) on a web page to be
 requested from another domain outside the domain from which the resource originated.
 
-Is often used for protect api resources to be accessed out of the domain of your web applications.
+Is often used for allowing API resources to be accessed in a web browser, out of the domain of your web applications.
 
-_Catacumba_ has builtin support for CORS, let see how you can use it:
+_Catacumba_ has builtin support for CORS, and this is how you can use it:
 
 [source, clojure]
 ----
@@ -1075,12 +1075,12 @@ _Catacumba_ has builtin support for CORS, let see how you can use it:
                [:post "foo" some-save-handler]]]))
 ----
 
-The `:origin` key can be a set of possible origins or directlly `"*"` for allow all origins.
+The `:origin` key can be a set of possible origins or simply `"*"` to allow all origins.
 
 
 ==== Content Security Policy
 
-Is a security related chain handler that appropiatelly set the `Content-Security-Policy` headers.
+Is a security related chain handler that appropriately sets the `Content-Security-Policy` headers.
 
 Content Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain
 types of attacks, including Cross Site Scripting (XSS) and data injection attacks. These attacks are
@@ -1137,7 +1137,7 @@ officially replaces this non-standard header.
 
 ==== Strict Transport Security
 
-This is a security related chain handler that adds the `Strict-Transport-Security` to the response.
+This is a security related chain handler that adds the `Strict-Transport-Security` header to the response.
 
 HTTP Strict Transport Security (often abbreviated as HSTS) is a security feature that lets a web
 site tell browsers that it should only be communicated with using HTTPS, instead of using HTTP.
@@ -1154,15 +1154,15 @@ Usage example:
                [:get your-handler]]]))
 ----
 
-You can read more about that headers here: https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security
+You can read more about that header here: https://developer.mozilla.org/en-US/docs/Web/Security/HTTP_strict_transport_security
 
 
 ==== Content Type Options
 
 This is a security related chain handler that adds the `X-Content-Type-Options` header to the
-response.It prevents resources with invalid media types being loaded as stylesheets or scripts.
+response. It prevents resources with invalid media types being loaded as stylesheets or scripts.
 
-This chain handler does not have any additional parameter. Let see an example on how you
+This chain handler does not have any additional parameters. Let see an example on how you
 can use it:
 
 [source, clojure]
@@ -1186,8 +1186,8 @@ More information:
 
 === Modular components
 
-_Catacumba_ is build from its ground with optional support for the `stuartsierra/component`, and
-exposes a `catacumba-server` component with api for add routes and handlers from other components.
+_Catacumba_ is build from its ground with optional support for the `stuartsierra/component` library, and
+exposes a `catacumba-server` component with an API for adding routes and handlers from other components.
 
 Let see a little example on how it can be used:
 
@@ -1197,7 +1197,7 @@ Let see a little example on how it can be used:
   (:require [com.stuartsierra.component :as component]
             [catacumba.components :refer (catacumba-server assoc-routes!)]))
 
-;; Define your web application component, it will be responsable to setup
+;; Define your web application component, it will be responsible to setup
 ;; the routes to the catacumba-server component of your handlers
 
 (defrecord WebApp [server]
@@ -1227,7 +1227,7 @@ Let see a little example on how it can be used:
       (component/system-using
        {:app {:server :catacumba}})))
 
-;; Just define a entry point for the application.
+;; Just define an entry point for the application.
 
 (defn -main
   "The main entry point to your application."
@@ -1235,21 +1235,21 @@ Let see a little example on how it can be used:
   (component/start (application-system)))
 ----
 
-Take care, each call to the `assoc-routes!` function, the server is reloaded. In the majority of
-circumstances this is completely irelevant because it is done in a application bootstrap time.
+Be aware that each call to the `assoc-routes!` function will cause the server to reload. In the majority of
+circumstances this is completely irrelevant because it is done at application bootstrap time.
 
-For understand it better, _catacumba_ comes with an <<sse-component-example,example>> that builds a
-multiuser char using "Server-Sent events" and component, so you can experiment with real code.
+To understand it better, _catacumba_ comes with an <<sse-component-example,example>> that builds a
+multiuser chat using "Server-Sent events" and component, so you can experiment with real code.
 See the <<examples,examples>> section for it.
 
 
 === Launching the server
 
 As you can see in the quick start section, the main entry point for start the server is
-the `run-server` function that receives a handler and a map with options.
+the `run-server` function that receives a handler chain and a map with options.
 
-At this moment, it has a very little subset of options that netty and ratpack offers but is good
-start point.
+At this moment, it has a very small subset of options that netty and ratpack offer but is a good
+starting point.
 
 .Supported options
 [options="header", cols="^1,^1,^2"]
@@ -1259,14 +1259,14 @@ start point.
 | `:threads` | (num of cores * 2) | The number of threads for handler requests.
 | `:debug` | `true` | Start in development mode.
 | `:setup` | nil    | A callback for configuration step (low level ratpack access).
-| `:basedir` | nil | The application base directory, used mainly for resolve relative paths and assets.
+| `:basedir` | nil | The application base directory, used mainly for resolving relative paths and assets.
 |===========================================================================
 
-All supported options of this function, can be overwritten on jvm startup, using environment variables
-or system properties. This allows customize the server out of source code and exists for convenience
-for make easy customizations in deployments.
+All supported options of this function, can be overwritten at JVM startup, using environment variables
+or system properties. This allows to customize the server without modifying source code and exists for convenience
+to make easy customizations in deployments.
 
-For example, you can change the default port on jvm startup using `CATACUMBA_PORT` environment variable
+For example, you can change the default port on JVM startup using the `CATACUMBA_PORT` environment variable
 or `catacumba.port` system property:
 
 .Example using enviroment variables
@@ -1300,7 +1300,7 @@ https://github.com/funcool/catacumba/tree/master/examples/website
 [[single-file-example]]
 === Single file web app
 
-This example tries to show hoy you can use _catacumba_ for build small web applications that fits
+This example tries to show how you can use _catacumba_ for building small web applications that fits
 in one file and execute them like a shell script or an executable.
 
 This example requires http://boot-clj.com/
@@ -1311,8 +1311,8 @@ https://github.com/funcool/catacumba/tree/master/examples/single-file
 [[sse-component-example]]
 === Multiuser chat with SSE
 
-This example tries to demostrate how can you build a simple chat using "Server-Sent Events" for
-communicating events to the client and using *stuartsierra/component* for the modular application
+This example tries to demonstrate how can you build a simple chat using "Server-Sent Events" for
+communicating events to the client and using *stuartsierra/component* for a modular application
 architecture.
 
 You can see the example code here:
@@ -1322,18 +1322,18 @@ https://github.com/funcool/catacumba/tree/master/examples/component-chat
 === Debugging with prone
 
 link:https://github.com/magnars/prone[Prone] is really awesome middleware for ring that shows
-a beautiful and human readable stack traces when a exception is raised in our application. It is not
-directly compatible with _catacumba_ but is relativelly easy adapt it.
+a beautiful and human readable stack traces when a exception is raised in your application. It is not
+directly compatible with _catacumba_ but it is relatively easy to adapt it.
 
 You can see the example code here: https://github.com/funcool/catacumba/tree/master/examples/debugging
 
-NOTE: Obviously, if you are using the ring type of handler, you can use prone as is, without any
-additional adaptation. This example shows how it can be used with default handler type.
+NOTE: Obviously, if you are using the ring type of handler, you can use Prone as is, without any
+additional adaptation. This example shows how it can be used with _catacimba_'s default handler type.
 
 
 === Instrumentation
 
-_Catacumba_ comes with the ability to instrument your application for take different kind of diagnosis,
+_Catacumba_ comes with the ability to instrument your application for taking different kinds of diagnosis,
 such as performance, latency, etc. This example shows how it can be done.
 
 You can see the example code here: https://github.com/funcool/catacumba/tree/master/examples/interceptor
@@ -1343,17 +1343,17 @@ You can see the example code here: https://github.com/funcool/catacumba/tree/mas
 == FAQ
 
 [[difference-with-aleph]]
-=== Differences with aleph
+=== What is the difference between _catacumba_ and Aleph?
 
-First of all, Aleph is one of the most robust libraries in clojure ecosystem for building asynchronous
+First of all, Aleph is one of the most robust libraries in the Clojure ecosystem for building asynchronous
 servers. Here is an incomplete list of differences and motivations why I wrote _catacumba_ instead
 of using _aleph_ directly in my applications:
 
-- Aleph with manifold offers good abstractions for creating async servers but they are to much
-  low level and only provide the basic building blocks. _catacumba_ intends to be a toolkit highly
-  focused on web development providing a good collection of facilities for that.
-- I wrote _catacumba_ tp have something different to ring and _Aleph_ that uses ring abstraction for
-  handle web requests.
+- Aleph with manifold offers good abstractions for creating async servers but they are much too
+  low level and only provide the basic building blocks. _catacumba_ intends to be a toolkit that is highly
+  focused on web development by providing a good collection of features that matter to web developers.
+- I wrote _catacumba_ to have an alternative to ring and _Aleph_ that uses ring's abstractions for
+  handling web requests.
 - Aleph has a good path to have an easily readable  and user friendly documentation.
 - Aleph is build on manifold streams and _catacumba_ uses reactive-streams abstractions.
 
@@ -1377,8 +1377,8 @@ All contributions to _catacumba_ should keep these important rules in mind.
 
 === Contributing
 
-**catacumba** unlike Clojure and other Clojure contrib libs, does not have many
-restrictions for contributions. Just open a issue or pull request.
+Unlike Clojure and other Clojure contributed libraries _catacumba_ does not have many
+restrictions for contributions. Just open an issue or pull request.
 
 
 === Source Code
@@ -1392,10 +1392,9 @@ You can clone the public repository with this command:
 git clone https://github.com/funcool/catacumba
 ----
 
-
 === Run tests
 
-For run tests just execute this:
+For running tests just execute this:
 
 [source, text]
 ----

@@ -46,7 +46,7 @@
 
 (defn- build-server-config
   "Given user specified options, return a `ServerConfig` instance."
-  [{:keys [port debug threads basedir keystore public-address max-body-size] :or {debug true}}]
+  [{:keys [port debug threads basedir keystore public-address max-body-size] :or {debug false}}]
   (let [port (or (:catacumba-port env) port ServerConfig/DEFAULT_PORT)
         threads (or (:catacumba-threads env) threads ServerConfig/DEFAULT_THREADS)
         basedir (or (:catacumba-basedir env) basedir)

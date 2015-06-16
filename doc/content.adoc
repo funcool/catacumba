@@ -1251,7 +1251,7 @@ start point.
 | Keyword   | Default | Description
 | `:port`   | `5050` | The port to listen on.
 | `:threads` | (num of cores * 2) | The number of threads for handler requests.
-| `:debug` | `true` | Start in development mode.
+| `:debug` | `false` | Start in development mode.
 | `:setup` | nil    | A callback for configuration step (low level ratpack access).
 | `:basedir` | nil | The application base directory, used mainly for resolve relative paths and assets.
 |===========================================================================
@@ -1274,7 +1274,7 @@ java -jar yourjarhere.jar
 .Example using enviroment variables
 [source, bash]
 ----
-java -Dcatacumba.port=8000 -Dcatacumba.debug=false -jar yourjarhere.jar
+java -Dcatacumba.port=8000 -Dcatacumba.debug=true -jar yourjarhere.jar
 ----
 
 

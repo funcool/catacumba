@@ -22,3 +22,11 @@
         [cur val])
       val)))
 
+(defn- get-arities
+  [f]
+  {:pre [(instance? clojure.lang.AFunction f)]}
+  (->> (class f)
+       (.getDeclaredMethods)
+       (filter #(= "invoke" (.getName %)))
+       (map #(-> % .getParameterTypes alength))
+       (set)))

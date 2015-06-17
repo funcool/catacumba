@@ -530,7 +530,11 @@ to the next handler in the chain. It can be done by passing an additional parame
 In the example above, the second handler prints the message found in the context.
 
 
-=== Asynchronous Handlers
+== Handler types
+
+This section intends to explain the different kind of builting handler types.
+
+=== Asynchronous
 
 Asynchronous handlers are handlers that return a value in an asynchronous way using one of the
 supported abstractions, such as core.async, reactive-streams and many others (explained below).
@@ -681,7 +685,7 @@ The reactive streams implementation in the link:https://github.com/funcool/futur
 support for different kind of coercions and with clojure 1.7 *transducers*.
 
 
-=== WebSockets
+=== Websockets
 
 One of the main goals of _catacumba_ is come with builtin, full featured and backpressure-aware
 websockets support.
@@ -751,7 +755,7 @@ Clojure offers a lot of flexibility for working with metadata so you can set the
 in the way that you prefer.
 
 
-=== Server-Sent Events
+=== SSE (Server-Sent Events)
 
 WebSockets are cool because they allow bi-directional comunication, but in some circumstances we only
 need something unidirectional, for notifying the client about some changes or any other events. For this
@@ -821,7 +825,7 @@ that everything in _catacumba_ is implemented using abstractions and to implemen
 of handler that uses manifold streams is very easy.
 
 
-=== Ring compatibility
+=== Ring (Compatibility layer)
 
 Although ring support is not first citizen in _catacumba_, the current design of it allows to create an
 handler adapter that follows the ring specification. This is a great example of extensibility of
@@ -848,6 +852,11 @@ Let see how it can be done:
 
 Ring handlers can be set as standalone handlers (mainly for using them with compojure and all related
 middlewares) or in a _catacumba_'s routing chain.
+
+
+=== CPS (Continuation-passing style)
+
+TBD
 
 
 == Built-in Handlers

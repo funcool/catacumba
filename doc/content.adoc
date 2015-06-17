@@ -486,13 +486,17 @@ Just like in ratpack, the context in _catacumba_ has following responsbibilities
 
 ==== Handler delegation
 
-In _catacumba_, the request is handled using a chain of handlers. Each concrete
-handler can decide to delegate some work to the next matching handler in the chain.
-You have probably seen the different ways of chaining handlers in the router section,
-in this section we will see how we can delegate the request
-handling to the next matching handler.
+In other words, it can be explained as "flow control" in the chain of handlers.
 
-The delegation action can be done with `delegate` multiarity function. Let see a simple example:
+In _catacumba_, the request process is an asynchronous pipeline of handlers that
+can be composed in different ways (as we previously seen in a router section). So
+the each handler in the pipeline has the ability to do some work and delegate the
+rest of processing to next handler (in the chain/pipeline).
+
+This approach allows you build different kind of modular and completelly decoupled
+handlers and compose them into a pipeline to work together.
+
+The delegation can be done with `delegate` function. Let see a simple example:
 
 [source, clojure]
 ----
@@ -532,6 +536,7 @@ to the next handler in the chain. It can be done by passing an additional parame
 In the example above, the second handler prints the message found in the context.
 
 
+[[handler-types]]
 == Handler types
 
 This section intends to explain the different kind of builting handler types.

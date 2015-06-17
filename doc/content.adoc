@@ -168,14 +168,14 @@ to explain everything related to default handlers.
 
 ==== What is a handler?
 
-As we have seen int the "<<Quick Start,quickstart>>" section, a handler mainly consists of a simple function
+As we have seen in the "<<Quick Start,quickstart>>" section, a handler mainly consists of a simple function
 that acts on the handling context.
 
 Do not worry about the context for now, it will be explained in later sections. The only thing that you
 should known about it at this time, is that is the central part of the request and response
 lifetime. It stores the current state of the http request and everything related.
 
-The hello world handler has this source code:
+The hello world handler has this aspect:
 
 [source, clojure]
 ----
@@ -184,8 +184,10 @@ The hello world handler has this source code:
   "Hello World")
 ----
 
-NOTE: I mention the "default" word because, _catacumba_ comes with different types of
-handlers out of the box and allows to be extended with used defined ones.
+
+NOTE: I mention the "default" word because, _catacumba_ comes with different <<handler-types,types of
+handlers>> out of the box. The catacumba's handlers system is fully extensible so you can easyly create
+your own handler types (adapters).
 
 
 ==== Write to response

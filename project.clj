@@ -21,6 +21,8 @@
                  [io.netty/netty-all "4.1.0.Beta5"]
                  [org.slf4j/slf4j-simple "1.7.12"]
                  [cheshire "5.5.0"]
+
+                 [ns-tracker "0.3.0" :scope "provided"]
                  [com.stuartsierra/component "0.2.3"]
                  [buddy/buddy-core "0.5.0"]
                  [buddy/buddy-auth "0.5.3"]

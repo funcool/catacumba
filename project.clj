@@ -27,7 +27,7 @@
                  [buddy/buddy-core "0.5.0"]
                  [buddy/buddy-auth "0.5.3"]
                  [funcool/cuerdas "0.4.0"]
-                 [funcool/futura "0.2.0"]
+                 [funcool/futura "0.3.0-SNAPSHOT"]
                  [environ "1.0.0"]
                  [potemkin "0.3.13" :exclusions [riddley]]]
   :profiles {:dev {:global-vars {*warn-on-reflection* true}

@@ -135,7 +135,7 @@
 
   futura.promise.Promise
   (send [data ^Context ctx]
-    (send (p/future data) ctx))
+    (send (p/promise->future data) ctx))
 
   Publisher
   (send [data ^Context ctx]

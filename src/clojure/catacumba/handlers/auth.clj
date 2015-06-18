@@ -18,12 +18,6 @@
 ;; External protocols implementation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (extend-protocol buddy-http/IRequest
-;;   DefaultContext
-;;   (get-header [request name]
-;;     ;; implementation
-;;     ))
-
 (extend-protocol buddy-http/IResponse
   Response
   (response? [_] true))

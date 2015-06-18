@@ -1,6 +1,9 @@
 (ns catacumba.impl.helpers
+  (:refer-clojure :exclusions [promise])
+  (:require [futura.promise :as p])
   (:import ratpack.func.Action
            ratpack.func.Function
+           ratpack.exec.Promise
            ratpack.handling.Context
            io.netty.buffer.Unpooled))
 
@@ -33,3 +36,10 @@
   String
   (bytebuffer [s]
     (Unpooled/wrappedBuffer (.getBytes s "UTF-8"))))
+
+(extend-protocol p/IPromise
+  ratpack.exec.Promise
+  (then* [this callback]
+    (.onYield ^Promise this ^Runnable callback))
+  (error* [this callback]
+    (.onError ^Promise this (action callback))))

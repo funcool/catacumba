@@ -118,7 +118,9 @@
   (testing "Using promise as response."
     (letfn [(handler [ctx]
               (m/mlet [x (p/promise (fn [resolve]
-                                      (async/thread (resolve "hello"))))]
+                                      (async/thread
+                                        (async/<!! (async/timeout 1000))
+                                        (resolve "hello"))))]
                 (str x " world")))]
       (with-server handler
         (let [response (client/get base-url)]

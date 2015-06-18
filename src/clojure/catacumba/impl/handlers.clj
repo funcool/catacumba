@@ -127,11 +127,9 @@
 
   CompletableFuture
   (send [data ^Context ctx]
-    (let [prom (helpers/promise ctx (fn [^Fulfiller ff]
-                                      (.accept ff data)))]
-      (.then ^Promise prom (helpers/action
-                            (fn [response]
-                              (send response ctx))))))
+    (p/then (helpers/promise ctx #(.accept % data))
+            (fn [response]
+              (send response ctx))))
 
   futura.promise.Promise
   (send [data ^Context ctx]
@@ -144,7 +142,6 @@
            (stream/transform (map helpers/bytebuffer))
            (.stream ctx)
            (.sendStream response))))
-
 
   ;; TODO: reimplement this as chunked stream instread of
   ;; read all data in memory. The current approach is slightly

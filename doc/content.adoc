@@ -1077,14 +1077,104 @@ You can see a working example using auth facilities <<website-example,here>>.
 
 ==== JWS Token
 
-TODO
+This authentication backend consists in use self contained tokens for authenticate the user. It behaves very
+similar to the session one but instead of strong the user information in a server storage, it stores it directly
+in a token, enabling so, completely stateless authentication.
+
+NOTE: The security and the implementation of cryptographic primitives for that token is relied to the
+*buddy-sign* library (an other module of buddy) that implements the JWS specification. That library
+should be used for generate JWS tokens.
+
+Let start creating a backend instance:
+
+[source, clojure]
+----
+(def secret "mysecret")
+(def auth-backend
+  (auth/jws-backend {:secret secret}))
+----
+
+Following of our new login handler:
+
+[source, clojure]
+----
+(require '[buddy.sign.jws :as jws])
+(require '[cheshire.core :as json])
+
+(defn login-handler
+  [context]
+  (let [data (:body context)
+        user (find-user (:username data)   ;; (implementation ommited)
+                        (:password data))]
+    (-> (json/encode {:token (jws/sign {:user (:id user)} secret)})
+        (http/ok {:content-type "application/json"}))))
+----
+
+And finally, put the new backend into the routing chain:
+
+[source, clojure]
+----
+(def app
+  (ct/routes [[:any (hs/auth auth-backend)]            ;; Auth backend
+              [:any (hs/body-params)]                  ;; Body parsing
+              [:get "login" login-handler]
+              [:get some-handler]]))                   ;; (implementation ommited)
+----
+
+
+WARNING: Take care that using jws for create tokens, the data is serialized using
+json + base64 and siged using strong cryptography signatures. That method ensure that
+the data can not be manipulated by third party but it not protect it from privacy. If
+you need store private data in the token, consider using JWE.
+
 
 ==== JWE Token
 
-TODO
+This authentication backend consists in using self contained tokens for authenticate the user.
+It works identically to the JWS (explained previously) with the exception that instead of
+only signing data, it also encrypts the data, so ensuring the data privacy.
+
+You can create the backend instance so:
+
+[source, clojure]
+----
+(require '[buddy.sign.jwe :as jwe])
+(require '[buddy.core.keys :as keys])
+
+(def pubkey (keys/public-key "pubkey.pem"))
+(def privkey (keys/private-key "privkey.pem" "thekeysecret"))
+
+(def auth-backend
+  (auth/jwe-backend privkey))
+----
+
+NOTE: In this example we use asymetric encryption scheme, if you want use an other encryption scheme,
+please check link:https://funcool.github.io/buddy-sign/latest/#_json_web_encryption[buddy-sign documentation]
+for the complete list of supported encryption algorithms.
+
+The login handler is almost identical:
+
+[source, clojure]
+----
+(require '[buddy.sign.jws :as jws])
+(require '[cheshire.core :as json])
+
+(defn login-handler
+  [context]
+  (let [data (:body context)
+        user (find-user (:username data)   ;; (implementation ommited)
+                        (:password data))]
+    (-> (json/encode {:token (jwe/encrypt {:user (:id user)} pubkey)})
+        (http/ok {:content-type "application/json"}))))
+----
+
+Instead of signing the content, we encrypt it using the public key. The routing chain is completelly
+identical from the JWE Token examples.
 
 
-NOTE: If you not happy with the builtin auth facilities, the _catacumba_'s handler system
+==== Other
+
+If you not happy with the builtin auth facilities, the _catacumba_'s handler system
 is very flexible and you really don't need to use _buddy_. You can write your own auth
 facilities and attach them to _catacumba_ using the routing chain.
 

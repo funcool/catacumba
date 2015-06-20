@@ -14,6 +14,7 @@
             [catacumba.core :as ct]
             [catacumba.http :as http]
             [catacumba.impl.parse :as parse]
+            [catacumba.testing :refer [with-server]]
             [catacumba.handlers.interceptor])
   (:import ratpack.registry.Registries
            ratpack.exec.Execution
@@ -21,19 +22,6 @@
            ratpack.func.Block
            ratpack.exec.ExecInterceptor
            ratpack.exec.ExecInterceptor$ExecType))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Helpers
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defmacro with-server [handler & body]
-  `(let [server# (ct/run-server ~handler {:basedir "."})]
-     (try
-       ~@body
-       (finally
-         (.stop server#)
-         (Thread/sleep 50)))))
-
 
 (def base-url "http://localhost:5050")
 
@@ -46,7 +34,7 @@
         handler (fn [context]
                   (deliver p (ct/public-address context))
                   "hello world")]
-    (with-server handler
+    (with-server {:handler handler}
       (let [response (client/get base-url)
             uri (deref p 1000 nil)]
         (is (= (str uri) "http://localhost:5050")))))
@@ -57,7 +45,7 @@
     (letfn [(handler [context]
               (ct/set-cookies! context {:foo {:value "bar" :secure true :http-only true}})
               "hello world")]
-      (with-server handler
+      (with-server {:handler handler}
         (let [response (client/get base-url)]
           (is (contains? response :cookies))
           (is (= (get-in response [:cookies "foo" :path]) "/"))
@@ -67,14 +55,14 @@
 (deftest request-response
   (testing "Using send! with context"
     (let [handler (fn [ctx] (ct/send! ctx "hello world"))]
-      (with-server handler
+      (with-server {:handler handler}
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))))))
 
   (testing "Using string as return value."
     (let [handler (fn [ctx] "hello world")]
-      (with-server handler
+      (with-server {:handler handler}
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))))))
@@ -82,7 +70,7 @@
   (testing "Using client ns functions."
     (let [handler (fn [ctx]
                     (http/ok "hello world" {:x-header "foobar"}))]
-      (with-server handler
+      (with-server {:handler handler}
         (let [response (client/get base-url)]
           (is (= (get-in response [:headers "x-header"]) "foobar"))
           (is (= (:body response) "hello world"))
@@ -100,7 +88,7 @@
                         (>! ch "world")
                         (close! ch))
                       (http/ok ch)))]
-      (with-server handler
+      (with-server {:handler handler}
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))))))
@@ -110,7 +98,7 @@
               (go
                 (<! (timeout 100))
                 "hello world"))]
-      (with-server handler
+      (with-server {:handler handler}
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))))))
@@ -122,7 +110,7 @@
                                         (async/<!! (async/timeout 1000))
                                         (resolve "hello"))))]
                 (str x " world")))]
-      (with-server handler
+      (with-server {:handler handler}
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))))))
@@ -132,7 +120,7 @@
               (let [p (stream/publisher ["hello" " " "world"])
                     p (stream/transform (map str/upper) p)]
                 (http/accepted p)))]
-      (with-server handler
+      (with-server {:handler handler}
         (let [response (client/get base-url)]
           (is (= (:body response) "HELLO WORLD"))
           (is (= (:status response) 202))))))
@@ -143,7 +131,7 @@
                 (async/thread
                   (md/success! d "hello world"))
                 (http/accepted d)))]
-      (with-server handler
+      (with-server {:handler handler}
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 202))))))
@@ -157,7 +145,7 @@
                   @(ms/put! d "world")
                   (ms/close! d))
                 (http/accepted d)))]
-      (with-server handler
+      (with-server {:handler handler}
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 202))))))
@@ -169,7 +157,7 @@
                     (let [params (:route-params ctx)]
                       (str "hello " (:name params))))
           handler (ct/routes [[:get ":name" handler]])]
-      (with-server handler
+      (with-server {:handler handler}
         (let [response (client/get (str base-url "/foo"))]
           (is (= (:body response) "hello foo"))
           (is (= (:status response) 200))))))
@@ -177,7 +165,7 @@
   (testing "Routing assets with prefix."
     (let [handler (ct/routes [[:prefix "static"
                                [:assets "resources/public"]]])]
-      (with-server handler
+      (with-server {:handler handler}
         (let [response (client/get (str base-url "/static/test.txt"))]
           (is (= (:body response) "hello world from test.txt\n"))
           (is (= (:status response) 200))))))
@@ -188,7 +176,7 @@
           handler2 (fn [ctx]
                      (str "hello " (:foo ctx)))
           router (ct/routes [[:get "" handler1 handler2]])]
-      (with-server router
+      (with-server {:handler router}
         (let [response (client/get (str base-url ""))]
           (is (= (:body response) "hello bar"))
           (is (= (:status response) 200))))))
@@ -201,7 +189,7 @@
           router (ct/routes [[:prefix "foo"
                               [:any handler1]
                               [:get handler2]]])]
-      (with-server router
+      (with-server {:handler router}
         (let [response (client/get (str base-url "/foo"))]
           (is (= (:body response) "hello bar"))
           (is (= (:status response) 200))))))
@@ -211,7 +199,7 @@
           handler (fn [ctx] (throw (Exception. "foobar")))
           router (ct/routes [[:error error-handler]
                              [:any handler]])]
-      (with-server router
+      (with-server {:handler router}
         (let [response (client/get base-url)]
           (is (= (:body response) "no error"))
           (is (= (:status response) 200))))))
@@ -226,7 +214,7 @@
                              [:prefix "bar"
                               [:error error-handler2]
                               [:any handler]]])]
-      (with-server router
+      (with-server {:handler router}
         (let [response1 (client/get (str base-url "/foo"))
               response2 (client/get (str base-url "/bar"))]
           (is (= (:body response1) "no error1"))
@@ -243,7 +231,7 @@
                     (let [body (ct/get-body ctx)]
                       (deliver p (slurp body)))
                     "hello world")]
-      (with-server handler
+      (with-server {:handler handler}
         (let [response (client/get base-url {:body "Hello world"
                                              :content-type "application/zip"})]
           (is (= (:body response) "hello world"))
@@ -256,7 +244,7 @@
                    (a/thread
                      (a/<!! (a/timeout 500))
                      (next "hello world cps")))]
-    (with-server (with-meta handler {:handler-type :catacumba/cps})
+    (with-server {:handler (with-meta handler {:handler-type :catacumba/cps})}
       (let [response (client/get base-url)]
         (is (= (:body response) "hello world cps"))
         (is (= (:status response) 200))))))

@@ -16,7 +16,8 @@
             [catacumba.handlers :as hs]
             [catacumba.handlers.session :as session]
             [catacumba.handlers.auth :as auth]
-            [catacumba.core-tests :refer [with-server base-url]]))
+            [catacumba.testing :refer [with-server]]
+            [catacumba.core-tests :refer [base-url]]))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -30,7 +31,7 @@
                     (let [form (ct/parse-formdata context)]
                       (deliver p form)
                       "hello world"))]
-      (with-server handler
+      (with-server {:handler handler}
         (let [multipart {:multipart [{:name "foo" :content "bar"}
                                      {:name "myfile"
                                       :content (-> (io/resource "public/test.txt")
@@ -54,7 +55,7 @@
                           [:any #(do
                                    (deliver p (:body %))
                                    "hello world")]])]
-      (with-server app
+      (with-server {:handler app}
         (let [response (client/post base-url {:form-params {:foo "bar"}})]
           (is (= {"foo" "bar"} (deref p 1000 nil)))))))
 
@@ -64,11 +65,11 @@
                           [:any #(do
                                    (deliver p (:body %))
                                    "hello world")]])]
-      (with-server app
+      (with-server {:handler app}
         (let [response (client/post base-url {:body (json/generate-string {:foo "bar"})
                                               :content-type "application/json"})]
           (is (= {:foo "bar"} (deref p 1000 nil)))))))
-)
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; CSRF
@@ -78,7 +79,7 @@
   (testing "Post with csrf using form param"
     (let [app (ct/routes [[:any (hs/csrf-protect)]
                           [:any (fn [context] "hello world")]])]
-      (with-server app
+      (with-server {:handler app}
         (let [response (client/get base-url {:form-params {:foo "bar"
                                                            :csrftoken "baz"}
                                              :cookies {:csrftoken {:value "baz"}}})]
@@ -87,7 +88,7 @@
   (testing "Post with csrf using header"
     (let [app (ct/routes [[:any (hs/csrf-protect)]
                           [:any (fn [context] "hello world")]])]
-      (with-server app
+      (with-server {:handler app}
         (let [response (client/get base-url {:form-params {:foo "bar"}
                                              :headers {:x-csrftoken "baz"}
                                              :cookies {:csrftoken {:value "baz"}}})]
@@ -96,7 +97,7 @@
   (testing "Post without csrf"
     (let [app (ct/routes [[:any (hs/csrf-protect)]
                           [:any (fn [context] "hello world")]])]
-      (with-server app
+      (with-server {:handler app}
         (let [response (client/get base-url)]
           (is (= (:status response) 200)))
         (try+
@@ -111,8 +112,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def cors-config1 {:origin "*"
-                  :allow-headers ["X-FooBar"]
-                  :max-age 3600})
+                   :allow-headers ["X-FooBar"]
+                   :max-age 3600})
 
 (def cors-config2 {:origin #{"http://localhost/"}})
 
@@ -121,7 +122,7 @@
     (let [handler (fn [ctx] "hello world")
           handler (ct/routes [[:any (hs/cors cors-config1)]
                               [:get handler]])]
-      (with-server handler
+      (with-server {:handler handler}
         (let [response (client/get base-url {:headers {"Origin" "http://localhost/"}})
               headers (:headers response)]
           (is (= (:body response) "hello world"))
@@ -133,7 +134,7 @@
     (let [handler (fn [ctx] "hello world")
           handler (ct/routes [[:any (hs/cors cors-config1)]
                               [:get handler]])]
-      (with-server handler
+      (with-server {:handler handler}
         (let [response (client/options base-url {:headers {"Origin" "http://localhost/"
                                                            "access-control-request-method" "post"}})
               headers (:headers response)]
@@ -146,7 +147,7 @@
     (let [handler (fn [ctx] "hello world")
           handler (ct/routes [[:any (hs/cors cors-config2)]
                               [:get handler]])]
-      (with-server handler
+      (with-server {:handler handler}
         (let [response (client/options base-url {:headers {"Origin" "http://localhast/"
                                                            "access-control-request-method" "post"}})
               headers (:headers response)]
@@ -154,7 +155,7 @@
           (is (= (:status response) 200))
           (is (= (get headers "access-control-allow-origin") nil))
           (is (= (get headers "access-control-max-age") nil))))))
-)
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Basic request in context
@@ -166,7 +167,7 @@
           handler (fn [ctx] (deliver p ctx) "hello world")
           handler (ct/routes [[:any hs/basic-request]
                               [:any handler]])]
-      (with-server handler
+      (with-server {:handler handler}
         (let [response (client/get (str base-url "/foo"))
               ctx (deref p 1000 {})]
           (is (= (:body response) "hello world"))
@@ -190,7 +191,7 @@
                       "hello"))
           handler (ct/routes [[:any (hs/session {})]
                               [:any handler]])]
-      (with-server handler
+      (with-server {:handler handler}
         (let [response (client/get (str base-url "/foo"))
               cookie (get-in response [:cookies "sessionid"])]
           (is (map? cookie))
@@ -224,7 +225,7 @@
   ;;     (is (nil? (#'session/read-session st :foo)))
   ;;     (#'session/write-session st :foo {:bar 2})
   ;;     (is (= (#'session/read-session st :foo) {:bar 2}))))
-)
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interceptors
@@ -248,9 +249,9 @@
             (handler3 [context]
               (deliver p4 (swap! counter inc))
               "hello world")]
-      (with-server (ct/routes [[:interceptor interceptor]
-                               [:any handler2]
-                               [:any handler3]])
+      (with-server {:handler (ct/routes [[:interceptor interceptor]
+                                         [:any handler2]
+                                         [:any handler3]])}
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))
@@ -276,34 +277,33 @@
               (if (:identity context)
                 (http/ok "Identified")
                 (http/unauthorized "Unauthorized")))]
-      (with-server (ct/routes [[:auth jws-backend]
-                               [:any handler]])
-      (try+
-       (let [response (client/get base-url)]
-         (is (= (:status response) 401)))
-       (catch Object e
-         (is (= (:status e) 401))))
+      (with-server {:handler (ct/routes [[:auth jws-backend]
+                                         [:any handler]])}
+        (try+
+         (let [response (client/get base-url)]
+           (is (= (:status response) 401)))
+         (catch Object e
+           (is (= (:status e) 401))))
 
-      (let [token (jws/sign {:userid 1} jws-secret)
-            headers {"Authorization" (str "Token " token)}
-            response (client/get base-url {:headers headers})]
-        (is (= (:status response) 200))))))
+        (let [token (jws/sign {:userid 1} jws-secret)
+              headers {"Authorization" (str "Token " token)}
+              response (client/get base-url {:headers headers})]
+          (is (= (:status response) 200))))))
 
   (testing "JWE"
     (letfn [(handler [context]
               (if (:identity context)
                 (http/ok "Identified")
                 (http/unauthorized "Unauthorized")))]
-      (with-server (ct/routes [[:auth jwe-backend]
-                               [:any handler]])
-      (try+
-       (let [response (client/get base-url)]
-         (is (= (:status response) 401)))
-       (catch Object e
-         (is (= (:status e) 401))))
+      (with-server {:handler (ct/routes [[:auth jwe-backend]
+                                         [:any handler]])}
+        (try+
+         (let [response (client/get base-url)]
+           (is (= (:status response) 401)))
+         (catch Object e
+           (is (= (:status e) 401))))
 
-      (let [token (jwe/encrypt {:userid 1} jwe-secret)
-            headers {"Authorization" (str "Token " token)}
-            response (client/get base-url {:headers headers})]
-        (is (= (:status response) 200)))))))
-
+        (let [token (jwe/encrypt {:userid 1} jwe-secret)
+              headers {"Authorization" (str "Token " token)}
+              response (client/get base-url {:headers headers})]
+          (is (= (:status response) 200)))))))

@@ -18,6 +18,7 @@
  [catacumba.handlers.auth
   auth]
  [catacumba.handlers.security
+  csrf-protect
   csp-headers
   frame-options-headers
   hsts-headers

@@ -1,7 +1,10 @@
 (ns catacumba.handlers.security
   (:require [catacumba.impl.context :as ct]
+            [catacumba.impl.parse :as ps]
             [catacumba.impl.handlers :as hs]
-            [cuerdas.core :as str])
+            [catacumba.http :as http]
+            [cuerdas.core :as str]
+            [clj-uuid :as uuid])
   (:import ratpack.http.Response))
 
 (defn hsts-headers
@@ -90,3 +93,43 @@
   [context]
   (hs/set-headers! {"X-Content-Type-Options" "nosniff"})
   (ct/delegate context))
+
+(defn- form-post?
+  [context]
+  (let [request (:request context)
+        method (keyword (.. request getMethod getName toLowerCase))
+        content-type (.. request getBody getContentType getType)]
+    (and (= :post method)
+         (or (= content-type "application/x-www-form-urlencoded")
+             (= content-type "multipart/form-data")))))
+
+(defn- csrf-tokens-match?
+  [context header-name field-name cookie-name]
+  (let [cookies (hs/get-cookies context)
+        headers (hs/get-headers context)
+        formdata (ps/parse-formdata context)
+        htoken (get headers header-name)
+        ctoken (get cookies cookie-name)
+        ptoken (get formdata field-name)]
+    (and (not (nil? ctoken))
+         (or (= ctoken ptoken)
+             (= ctoken htoken)))))
+
+(defn csrf-protect
+  "A chain handler that provides csrf (Cross-site request forgery)
+  protection. Also known as a one-click attack or session riding."
+  ([] (csrf-protect {}))
+  ([{:keys [on-error cookie-name field-name header-name]
+     :or {header-name "x-csrftoken"
+          field-name "csrftoken"
+          cookie-name "csrftoken"}}]
+   (fn [context]
+     (if (form-post? context)
+       (if (csrf-tokens-match? context header-name field-name cookie-name)
+         (ct/delegate context)
+         (if (fn? on-error)
+           (on-error context)
+           (http/bad-request "CSRF tokens don't match")))
+       (do
+         (hs/set-cookies! context {cookie-name {:value (str (uuid/v1))}})
+         (ct/delegate context))))))

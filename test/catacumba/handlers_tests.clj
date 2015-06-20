@@ -70,6 +70,40 @@
           (is (= {:foo "bar"} (deref p 1000 nil)))))))
 )
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; CSRF
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest csrf-protect-tests
+  (testing "Post with csrf using form param"
+    (let [app (ct/routes [[:any (hs/csrf-protect)]
+                          [:any (fn [context] "hello world")]])]
+      (with-server app
+        (let [response (client/get base-url {:form-params {:foo "bar"
+                                                           :csrftoken "baz"}
+                                             :cookies {:csrftoken {:value "baz"}}})]
+          (is (= (:status response) 200))))))
+
+  (testing "Post with csrf using header"
+    (let [app (ct/routes [[:any (hs/csrf-protect)]
+                          [:any (fn [context] "hello world")]])]
+      (with-server app
+        (let [response (client/get base-url {:form-params {:foo "bar"}
+                                             :headers {:x-csrftoken "baz"}
+                                             :cookies {:csrftoken {:value "baz"}}})]
+          (is (= (:status response) 200))))))
+
+  (testing "Post without csrf"
+    (let [app (ct/routes [[:any (hs/csrf-protect)]
+                          [:any (fn [context] "hello world")]])]
+      (with-server app
+        (let [response (client/get base-url)]
+          (is (= (:status response) 200)))
+        (try+
+         (let [response (client/post base-url {:form-params {:foo "bar"}})]
+           (is (= (:status response) 400)))
+         (catch [:status 400] {:keys [status]}
+           (is (= status 400))))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

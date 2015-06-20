@@ -924,46 +924,6 @@ implementation to the `parse` multimethod with your content-type as dispatch tag
 TBD
 
 
-=== Authentication
-
-The authentication facilites in _catacumba_ are built using the link:https://github.com/funcool/buddy[buddy]
-security library.
-
-As _catacumba_'s handler system is very flexible, you really don't need to use _buddy_. You can
-write your own auth facilities and attach them to _catacumba_ using the routing chain.
-
-In order to start using auth facilities in your application, you should add the `auth` handler
-to you routing chain. Let see an example of using session-based auth backend:
-
-[source, clojure]
-----
-(require '[catacumba.handlers :as hs])
-(require '[catacumba.handlers.auth :as auth])
-
-;; Create an instance of auth backend
-(def auth-backend
-  (auth/session-backend))
-
-(def app
-  (ct/routes [[:any (hs/session {:storage :inmemory})]
-              [:any (hs/auth auth-backend)]
-              [:get some-handler]]))
-----
-
-As we mentioned previously, behind the scenes _buddy_ is used, so almost all auth backends
-defined in buddy can be used with _catacumba_, such as JWS and JWE backens.
-
-However there are some exceptions, such as the session auth backend, because sessions work
-slightly different in _catacumba_ and the buddy session auth backend relied on a ring-like
-session behavior.
-
-The buddy access rules are not supported because, the _catacumba_ routing chain system
-fullfills that gap. You can define concrete authorization rules and attach them directly
-in a routing chain.
-
-You can see a working example using auth facilities <<website-example,here>>.
-
-
 === Sessions
 
 ==== Getting Started
@@ -1043,6 +1003,90 @@ key in a session handler constructor:
 ----
 
 If you want implement own session storage, take a look to the `:inmemory` builtin one.
+
+
+=== Authentication
+
+_Catacumba_ also comes with authentication facilites heavily inspired by *buddy-auth*.
+
+We do not have used directly *buddy-auth* because it is designed for ring based applications,
+therefore the buddy-auth abstractions are blocking, and blocking api is not well suited for
+async based applications.
+
+So, _catacumba_ defines own abstractions for handle authentication, that are very very similar
+to the _buddy-auth_, with the execption that them expose asynchronous api, so adapt existing
+_buddy-auth_ backends should be very easy.
+
+Like *buddy-auth*, _catacumba_ comes with a little set of builtin backends that can be used
+directly: *session*, *jws* (token) and *jwe* (encrypted token).
+
+
+==== Session
+
+Let start with session authentication backend. This backend is mainly used for web based
+applications and consists in verify some value on the session. So this is the easyest
+authentication scheme and fits perfectly for the first contact.
+
+Start importing some needed namespaces and create an instance
+of the authentication backend:
+[source, clojure]
+----
+(require '[catacumba.http :as http])
+(require '[catacumba.handlers :as hs])
+(require '[catacumba.handlers.auth :as auth])
+
+(def auth-backend
+  (auth/session-backend))
+----
+
+Now, continue defining a handler for the login action. It consists in receive
+credentials from the user input and verify them. In case of success verifycation,
+we just need setup the `:identity` key in the session.
+
+Let see a partially implemented example:
+
+[source, clojure]
+----
+(defn login-handler
+  [context]
+  (let [data (:body context)
+        user (find-user (:username data)   ;; (implementation ommited)
+                        (:password data))]
+    (swap! (:session context) assoc :identity user)
+    (http/ok "ok")))
+----
+
+In order to start using auth facilities in your application, you should add the
+authentication handler to the routing chain:
+
+[source, clojure]
+----
+;; The application routes definition with session, auth and body
+;; parsing chain handlers
+
+(def app
+  (ct/routes [[:any (hs/session {:storage :inmemory})] ;; Http Session
+              [:any (hs/auth auth-backend)]            ;; Auth backend
+              [:any (hs/body-params)]                  ;; Body parsing
+              [:get "login" login-handler]
+              [:get some-handler]]))                   ;; (implementation ommited)
+----
+
+You can see a working example using auth facilities <<website-example,here>>.
+
+
+==== JWS Token
+
+TODO
+
+==== JWE Token
+
+TODO
+
+
+NOTE: If you not happy with the builtin auth facilities, the _catacumba_'s handler system
+is very flexible and you really don't need to use _buddy_. You can write your own auth
+facilities and attach them to _catacumba_ using the routing chain.
 
 
 === Context as Request

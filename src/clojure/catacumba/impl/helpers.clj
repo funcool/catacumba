@@ -40,6 +40,8 @@
 (extend-protocol p/IPromise
   ratpack.exec.Promise
   (then* [this callback]
-    (.then ^Promise this (action callback)))
+    (.then ^Promise this (action callback))
+    this)
   (error* [this callback]
-    (.onError ^Promise this (action callback))))
+    (.onError ^Promise this (action callback))
+    this))

@@ -1,19 +1,21 @@
 (ns catacumba.handlers-tests
   (:require [clojure.core.async :refer [put! take! chan <! >! go close!
-                                        go-loop onto-chan timeout <!!]]
-            [clojure.test :refer :all]
+                                        go-loop onto-chan timeout <!!] :as a]
             [clojure.java.io :as io]
+            [clojure.test :refer :all]
             [clojure.pprint :refer [pprint]]
             [clojure.core.async :as async]
             [clj-http.client :as client]
-            [buddy.auth.backends.token :refer [jws-backend]]
             [buddy.sign.jws :as jws]
+            [buddy.sign.jwe :as jwe]
+            [buddy.core.hash :as hash]
             [slingshot.slingshot :refer [try+]]
             [cheshire.core :as json]
             [catacumba.core :as ct]
             [catacumba.http :as http]
             [catacumba.handlers :as hs]
             [catacumba.handlers.session :as session]
+            [catacumba.handlers.auth :as auth]
             [catacumba.core-tests :refer [with-server base-url]]))
 
 
@@ -228,24 +230,46 @@
 ;; Auth
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def auth-backend
-  (jws-backend {:secret "secret"}))
+(def jws-secret "secret")
+(def jwe-secret (hash/sha256 jws-secret))
+
+(def jws-backend (auth/jws-backend {:secret jws-secret}))
+(def jwe-backend (auth/jwe-backend {:secret jwe-secret}))
 
 (deftest auth-tests
-  (letfn [(handler [context]
-            (if (:identity context)
-              (http/ok "Identified")
-              (http/unauthorized "Unauthorized")))]
-    (with-server (ct/routes [[:auth auth-backend]
-                             [:any handler]])
+  (testing "JWS"
+    (letfn [(handler [context]
+              (if (:identity context)
+                (http/ok "Identified")
+                (http/unauthorized "Unauthorized")))]
+      (with-server (ct/routes [[:auth jws-backend]
+                               [:any handler]])
       (try+
        (let [response (client/get base-url)]
          (is (= (:status response) 401)))
        (catch Object e
          (is (= (:status e) 401))))
 
-      (let [token (jws/sign {:userid 1} "secret")
+      (let [token (jws/sign {:userid 1} jws-secret)
             headers {"Authorization" (str "Token " token)}
             response (client/get base-url {:headers headers})]
         (is (= (:status response) 200))))))
+
+  (testing "JWE"
+    (letfn [(handler [context]
+              (if (:identity context)
+                (http/ok "Identified")
+                (http/unauthorized "Unauthorized")))]
+      (with-server (ct/routes [[:auth jwe-backend]
+                               [:any handler]])
+      (try+
+       (let [response (client/get base-url)]
+         (is (= (:status response) 401)))
+       (catch Object e
+         (is (= (:status e) 401))))
+
+      (let [token (jwe/encrypt {:userid 1} jwe-secret)
+            headers {"Authorization" (str "Token " token)}
+            response (client/get base-url {:headers headers})]
+        (is (= (:status response) 200)))))))
 

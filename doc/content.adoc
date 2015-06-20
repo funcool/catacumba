@@ -921,7 +921,24 @@ implementation to the `parse` multimethod with your content-type as dispatch tag
 
 === Autoreload
 
-TBD
+The autoreload handler consist in a very simple concept: reload all modified namespaces
+on each request. If you are familiar with the ring reload middleware, this one works
+in almost identical way.
+
+For use it, just attach it to your routing chain:
+
+[source, clojure]
+----
+(require '[catacumba.handlers :as hs])
+
+(def app
+  (ct/routes [[:any (hs/autoreloader)]
+              [:get "foo" #'somens/your-handler]
+              [:get "bar" #'somens/other-handler]
+              [:post ...]]))
+----
+
+You can see a working example in the <<website-example,Website example>> code.
 
 
 === Sessions

@@ -8,21 +8,20 @@
             [clj-http.client :as http]
             [ring.middleware.params :as ring-params]
             [ring.middleware.keyword-params :as ring-kw-params]
-            [catacumba.core :as ct]))
+            [catacumba.core :as ct]
+            [catacumba.testing :refer [with-server]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helpers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmacro with-ring-server [handler & body]
+(defmacro with-ring-server
+  [handler & body]
   `(let [handler# (-> ~handler
                       ring-kw-params/wrap-keyword-params
-                      ring-params/wrap-params)
-         handler# (with-meta handler# {:handler-type :catacumba/ring})
-         server# (ct/run-server handler#)]
-     (try
-       ~@body
-       (finally (.stop server#)))))
+                      ring-params/wrap-params)]
+     (with-server {:handler (with-meta handler# {:handler-type :catacumba/ring})}
+       ~@body)))
 
 (defn echo-handler
   [request]

@@ -7,7 +7,7 @@
             [clojure.core.async :as async]
             [clj-http.client :as client]
             [catacumba.core :as ct]
-            [catacumba.core-tests :refer [with-server]]))
+            [catacumba.testing :refer [with-server]]))
 
 (deftest sse-standard-handler
   (letfn [(sse-handler [context out]
@@ -20,7 +20,7 @@
               (close! out)))
           (handler [context]
             (ct/sse context sse-handler))]
-    (with-server handler
+    (with-server {:handler handler}
       (let [p (promise)
             response (client/get "http://localhost:5050/")]
         (is (= (:status response) 200))
@@ -41,8 +41,8 @@
               (>! out {:id "foobar"})
               (>! out {:id "foobar" :data "3"})
               (close! out)))]
-    (with-server (with-meta sse-handler
-                   {:handler-type :catacumba/sse})
+    (with-server {:handler (with-meta sse-handler
+                             {:handler-type :catacumba/sse})}
       (let [p (promise)
             response (client/get "http://localhost:5050/" {:fold-chunked-response? false})]
         (is (= (:status response) 200))

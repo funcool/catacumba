@@ -5,11 +5,13 @@
 Date: Unreleased
 
 - Update to ratpack 0.9.17
-- Update to netty 4.1.0 Beta5
+- Update to netty 4.1.0 beta5
+- Update to clojure 1.7.0 rc2
+- Update to futura 0.3.0
 - Add csrf protect support (via chain handler)
 - Add autoreload support.
 - Add builtin testing facilities.
-- Reimplement the auth api for use async based api.
+- Reimplement the auth api for to be async.
 
 
 ## Version 0.2.0 ##

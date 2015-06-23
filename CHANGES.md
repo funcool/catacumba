@@ -1,8 +1,8 @@
 # Changelog #
 
-## Version 0.3.0-SNAPSHOT ##
+## Version 0.3.0 ##
 
-Date: Unreleased
+Date: 2015-06-23
 
 - Update to ratpack 0.9.17
 - Update to netty 4.1.0 beta5

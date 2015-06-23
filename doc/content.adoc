@@ -77,7 +77,7 @@ vector on your *_project.clj_* file:
 
 [source,clojure]
 ----
-[funcool/catacumba "0.2.0"]
+[funcool/catacumba "0.3.0"]
 ----
 
 *Gradle*
@@ -86,7 +86,7 @@ If you are using gradle, this is a dependency line for gradle dsl:
 
 [source, groovy]
 ----
-compile "funcool:catacumba:0.2.0"
+compile "funcool:catacumba:0.3.0"
 ----
 
 [[quickstart]]

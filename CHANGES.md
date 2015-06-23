@@ -11,6 +11,7 @@ Date: 2015-06-23
 - Add csrf protect support (via chain handler)
 - Add autoreload support.
 - Add builtin testing facilities.
+- Add cps style handlers (not documented at this moment).
 - Reimplement the auth api for to be async.
 
 

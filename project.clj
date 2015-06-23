@@ -55,7 +55,7 @@
                                        catacumba.handlers.session
                                        catacumba.handlers.interceptor]
                              :language :clojure
-                             :output-dir "doc/api"
+                             :output-dir "doc/dist/latest/api"
                              :src-dir-uri "http://github.com/funcool/catacumba/blob/master/"
                              :src-linenum-anchor-prefix "L"}
                    :plugins [[funcool/codeina "0.1.0" :exclusions [org.clojure/clojure]]

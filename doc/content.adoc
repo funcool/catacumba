@@ -1,5 +1,6 @@
 = Catacumba - Web toolkit for Clojure.
 Andrey Antukh, <niwi@niwi.be>
+v0.3.0
 :toc: left
 :!numbered:
 :idseparator: -

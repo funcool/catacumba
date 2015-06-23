@@ -49,6 +49,7 @@
                                        catacumba.handlers.core
                                        catacumba.handlers.cors
                                        catacumba.handlers.auth
+                                       catacumba.handlers.autoreload
                                        catacumba.handlers.parsing
                                        catacumba.handlers.security
                                        catacumba.handlers.session

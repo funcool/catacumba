@@ -6,6 +6,10 @@ Date: Unreleased
 
 - Update to ratpack 0.9.17
 - Update to netty 4.1.0 Beta5
+- Add csrf protect support (via chain handler)
+- Add autoreload support.
+- Add builtin testing facilities.
+- Reimplement the auth api for use async based api.
 
 
 ## Version 0.2.0 ##

@@ -1,6 +1,6 @@
 # Catacumba #
 
-The asynchronous web toolkit for clojure build on top of Ratpack
+The asynchronous web toolkit for clojure built on top of Ratpack
 
 [![Clojars Project](http://clojars.org/funcool/catacumba/latest-version.svg)](http://clojars.org/funcool/catacumba)
 

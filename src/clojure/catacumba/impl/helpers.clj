@@ -1,5 +1,5 @@
 (ns catacumba.impl.helpers
-  (:refer-clojure :exclusions [promise])
+  (:refer-clojure :exclude [promise])
   (:require [futura.promise :as p])
   (:import ratpack.func.Action
            ratpack.func.Function

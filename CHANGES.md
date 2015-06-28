@@ -5,6 +5,7 @@
 Date: 2015-06-28
 
 - Fix wrong dependency scope for ns-tracker dependency.
+- Fix wrong :exclude of clojure.core var on helpers namespace.
 
 
 ## Version 0.3.0 ##

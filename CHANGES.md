@@ -1,5 +1,12 @@
 # Changelog #
 
+## Version 0.3.1 ##
+
+Date: 2015-06-28
+
+- Fix wrong dependency scope for ns-tracker dependency.
+
+
 ## Version 0.3.0 ##
 
 Date: 2015-06-23

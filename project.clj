@@ -1,4 +1,4 @@
-(defproject funcool/catacumba "0.3.0"
+(defproject funcool/catacumba "0.3.1"
   :description "Asynchronous web toolkit for Clojure build on top of Ratpack."
   :url "http://github.com/funcool/catacumba"
   :license {:name "BSD (2-Clause)"
@@ -22,7 +22,7 @@
                  [org.slf4j/slf4j-simple "1.7.12"]
                  [cheshire "5.5.0"]
 
-                 [ns-tracker "0.3.0" :scope "provided"]
+                 [ns-tracker "0.3.0"]
                  [slingshot "0.12.2"]
                  [com.stuartsierra/component "0.2.3"]
                  [buddy/buddy-core "0.5.0"]

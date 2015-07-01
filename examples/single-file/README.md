@@ -10,7 +10,7 @@ on your system.**
 Let start with:
 
 ```bash
-$ export BOOT_CLOJURE_VERSION=1.7.0-RC1
+$ export BOOT_CLOJURE_VERSION=1.7.0
 $ ./main.clj
 [main] INFO ratpack.server.RatpackServer - Ratpack started for http://localhost:5050
 ```

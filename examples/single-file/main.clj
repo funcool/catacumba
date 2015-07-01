@@ -1,7 +1,7 @@
 #!/usr/bin/env boot
 (set-env!
- :dependencies '[[org.clojure/clojure "1.7.0-RC2"]
-                 [funcool/catacumba "0.3.1"]])
+ :dependencies '[[org.clojure/clojure "1.7.0"]
+                 [funcool/catacumba "0.3.2"]])
 
 (require '[catacumba.core :as ct])
 

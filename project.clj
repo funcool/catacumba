@@ -13,7 +13,7 @@
   ;; :mirrors {"central" {:name "central"
   ;;                      :url "http://oss.jfrog.org/artifactory/repo"}}
 
-  :dependencies [[org.clojure/clojure "1.7.0-RC2"]
+  :dependencies [[org.clojure/clojure "1.7.0" :scope "provided"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [io.ratpack/ratpack-core "0.9.17" :exclusions [io.netty/netty-codec-http
                                                                 io.netty/netty-handler

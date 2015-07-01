@@ -1,6 +1,6 @@
 = Catacumba - Web toolkit for Clojure.
 Andrey Antukh, <niwi@niwi.be>
-v0.3.1
+v0.3.2
 :toc: left
 :!numbered:
 :idseparator: -
@@ -78,7 +78,7 @@ vector on your *_project.clj_* file:
 
 [source,clojure]
 ----
-[funcool/catacumba "0.3.1"]
+[funcool/catacumba "0.3.2"]
 ----
 
 *Gradle*
@@ -87,7 +87,7 @@ If you are using gradle, this is a dependency line for gradle dsl:
 
 [source, groovy]
 ----
-compile "funcool:catacumba:0.3.1"
+compile "funcool:catacumba:0.3.2"
 ----
 
 [[quickstart]]

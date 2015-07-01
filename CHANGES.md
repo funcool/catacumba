@@ -1,5 +1,12 @@
 # Changelog #
 
+## Version 0.3.2 ##
+
+Date: 2015-07-01
+
+- Set default clojure version to 1.7
+
+
 ## Version 0.3.1 ##
 
 Date: 2015-06-28

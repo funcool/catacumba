@@ -1,5 +1,5 @@
 = Catacumba - Web toolkit for Clojure.
-Andrey Antukh, <niwi@niwi.be>
+Andrey Antukh, <niwi@niwi.nz>
 v0.3.2
 :toc: left
 :!numbered:

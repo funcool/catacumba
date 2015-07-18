@@ -165,6 +165,13 @@
       (with-server {:handler handler}
         (let [response (client/get (str base-url "/static/test.txt"))]
           (is (= (:body response) "hello world from test.txt\n"))
+          (is (= (:status response) 200)))))
+
+    (let [handler (ct/routes [[:assets "static" {:dir "resources/public"
+                                                 :indexes ["index.html"]}]])]
+      (with-server {:handler handler}
+        (let [response (client/get (str base-url "/static/"))]
+          (is (= (:body response) "hello world\n"))
           (is (= (:status response) 200))))))
 
   (testing "Chaining handlers in one route."

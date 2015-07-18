@@ -46,7 +46,7 @@
   (.files chain (helpers/action
                  (fn [^FileHandlerSpec spec]
                    (.path spec path)
-                   (when indexes (.index spec (into-array String indexes)))
+                   (when indexes (.indexFiles spec (into-array String indexes)))
                    (when dir (.dir spec dir))))))
 
 (defmethod attach-route :prefix

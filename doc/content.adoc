@@ -491,6 +491,28 @@ difference being that it receives the throwable instance as an additional parame
   (http/internal-server-error (.getMessage error)))
 ----
 
+==== Serving static files
+
+_Catacumba_ also comes with the ability to serve static files. This is can be done using
+:assets routing directive. Here an example:
+
+[source, clojure]
+----
+(ct/routes [[:assets "assets" {:dir "public/assets"}]])
+----
+
+Additionally, it has support for specify a index file, that will be returned if no
+file is requested. This is very usefull for SPA (single page applications):
+
+[source, clojure]
+----
+(ct/routes [[:assets "assets" {:dir "public/assets"
+                               :indexes ["index.html"]}]])
+----
+
+So, if you make a http request to `/assets/` the `index.html` will be automatically
+returned.
+
 
 === Context
 

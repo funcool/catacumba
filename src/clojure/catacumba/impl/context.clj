@@ -33,8 +33,7 @@
            ratpack.http.Request
            ratpack.http.Response
            ratpack.server.PublicAddress
-           ratpack.registry.Registry
-           ratpack.registry.Registries))
+           ratpack.registry.Registry))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Types
@@ -89,7 +88,7 @@
   ([^DefaultContext context data]
    (let [^Context ctx (:catacumba/context context)
          previous (context-params context)
-         ^Registry reg (Registries/just (ContextData. (merge previous data)))]
+         ^Registry reg (Registry/single (ContextData. (merge previous data)))]
      (.next ctx reg))))
 
 (defn public-address

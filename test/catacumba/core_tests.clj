@@ -16,8 +16,7 @@
             [catacumba.impl.parse :as parse]
             [catacumba.testing :refer [with-server]]
             [catacumba.handlers.interceptor])
-  (:import ratpack.registry.Registries
-           ratpack.exec.Execution
+  (:import ratpack.exec.Execution
            ratpack.func.Action
            ratpack.func.Block
            ratpack.exec.ExecInterceptor
@@ -162,8 +161,7 @@
           (is (= (:status response) 200))))))
 
   (testing "Routing assets with prefix."
-    (let [handler (ct/routes [[:prefix "static"
-                               [:assets "resources/public"]]])]
+    (let [handler (ct/routes [[:assets "static" {:dir "resources/public"}]])]
       (with-server {:handler handler}
         (let [response (client/get (str base-url "/static/test.txt"))]
           (is (= (:body response) "hello world from test.txt\n"))
@@ -220,6 +218,29 @@
           (is (= (:body response2) "no error2"))
           (is (= (:status response1) 200))
           (is (= (:status response2) 200))))))
+
+  (testing "Chaining handlers by request method"
+    (let [handler1 (fn [ctx] "from get")
+          handler2 (fn [ctx] "from post")
+          router (ct/routes [[:by-method "foo"
+                              [:get handler1]
+                              [:post handler2]]])]
+      (with-server {:handler router}
+        (let [response (client/get (str base-url "/foo"))]
+          (is (= (:body response) "from get"))
+          (is (= (:status response) 200)))
+        (let [response (client/post (str base-url "/foo"))]
+          (is (= (:body response) "from post"))
+          (is (= (:status response) 200))))))
+
+  (testing "Chaining handlers with :all"
+    (let [handler (fn [ctx] "from get")
+          router (ct/routes [[:all "foo" handler]])]
+      (with-server {:handler router}
+        (let [response (client/get (str base-url "/foo"))]
+          (is (= (:body response) "from get"))
+          (is (= (:status response) 200))))))
+
 )
 
 

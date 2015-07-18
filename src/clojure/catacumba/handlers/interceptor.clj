@@ -28,8 +28,7 @@
   (:require [catacumba.impl.routing :as routing]
             [catacumba.impl.handlers :as handlers]
             [catacumba.impl.context :as context])
-  (:import ratpack.registry.Registries
-           ratpack.handling.Chain
+  (:import ratpack.handling.Chain
            ratpack.handling.Context
            ratpack.handling.Handler
            ratpack.exec.Execution
@@ -64,4 +63,4 @@
 (defmethod routing/attach-route :interceptor
   [^Chain chain [_ interceptor']]
   (let [handler #(interceptor % interceptor')]
-    (.handler chain ^Handler (handlers/adapter handler))))
+    (.all chain ^Handler (handlers/adapter handler))))

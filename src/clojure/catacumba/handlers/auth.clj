@@ -169,4 +169,4 @@
   [^Chain chain [_ & backends]]
   (let [^Handler handler (-> (apply auth backends)
                              (handlers/adapter))]
-    (.handler chain handler)))
+    (.all chain handler)))

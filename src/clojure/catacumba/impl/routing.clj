@@ -30,6 +30,8 @@
            ratpack.handling.Chain
            ratpack.handling.Handlers
            ratpack.handling.Handler
+           ratpack.handling.ByMethodSpec
+           ratpack.file.FileHandlerSpec
            ratpack.error.ServerErrorHandler
            ratpack.registry.RegistrySpec
            ratpack.func.Action
@@ -40,9 +42,12 @@
     method))
 
 (defmethod attach-route :assets
-  [^Chain chain [_ ^String path & indexes]]
-  (let [indexes (into-array String indexes)]
-    (.assets chain path indexes)))
+  [^Chain chain [_ ^String path {:keys [dir indexes]}]]
+  (.files chain (helpers/action
+                 (fn [^FileHandlerSpec spec]
+                   (.path spec path)
+                   (when indexes (.index spec (into-array String indexes)))
+                   (when dir (.dir spec dir))))))
 
 (defmethod attach-route :prefix
   [^Chain chain [_ ^String path & handlers]]
@@ -58,14 +63,30 @@
 ;; instead on request time, for faster error detection
 ;; and performance improvements.
 
+;; TODO: reimplement this for better performance.
+;; The current implementation creates twice the
+;; DefaultContext instace from Context.
+
 (defmethod attach-route :by-method
   [^Chain chain [_ ^String path & handlers]]
-  (let [callback #(reduce attach-route % handlers)
+  (let [callback (fn [^Context ctx ^ByMethodSpec spec]
+                   (run! (fn [[method handler]]
+                           (let [handler (handlers/adapter handler)
+                                 block (reify ratpack.func.Block
+                                         (^void execute [_]
+                                           (.handle ^Handler handler ctx)))]
+                             (case method
+                               :get (.get spec block)
+                               :post (.post spec block)
+                               :put (.put spec block)
+                               :delete (.delete spec block)
+                               :patch (.patch spec block))))
+                         handlers))
         handler (fn [context]
                   (let [^Context ctx (:catacumba/context context)]
-                    (.byMethod ctx (helpers/action callback))))
+                    (.byMethod ctx (helpers/action (partial callback ctx)))))
         handler (handlers/adapter handler)]
-    (.handler chain path handler)))
+    (.prefix chain path (helpers/action #(.all % handler)))))
 
 (defmethod attach-route :error
   [^Chain chain [_ error-handler]]
@@ -83,19 +104,21 @@
   [chain [method & handlers-and-path]]
   (let [path (first handlers-and-path)]
     (if (string? path)
-      (let [^Handler handler (-> (map handlers/adapter (rest handlers-and-path))
+      (let [^Handler handler (-> (mapv handlers/adapter (rest handlers-and-path))
                                  (Handlers/chain))]
         (case method
-          :any (.handler chain path handler)
+          :any (.prefix chain path (helpers/action #(.all % handler)))
+          :all (.prefix chain path (helpers/action #(.all % handler)))
           :get (.get chain path handler)
           :post (.post chain path handler)
           :put (.put chain path handler)
           :patch (.patch chain path handler)
           :delete (.delete chain path handler)))
-      (let [^Handler handler (-> (map handlers/adapter handlers-and-path)
+      (let [^Handler handler (-> (mapv handlers/adapter handlers-and-path)
                                  (Handlers/chain))]
         (case method
-          :any (.handler chain handler)
+          :any (.all chain handler)
+          :all (.all chain handler)
           :get (.get chain handler)
           :post (.post chain handler)
           :put (.put chain handler)

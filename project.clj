@@ -12,9 +12,10 @@
 
   :dependencies [[org.clojure/clojure "1.7.0" :scope "provided"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
-                 [io.ratpack/ratpack-core "0.9.17" :exclusions [io.netty/netty-codec-http
-                                                                io.netty/netty-handler
-                                                                io.netty/netty-transport-native-epoll]]
+                 [io.ratpack/ratpack-core "0.9.17"
+                  :exclusions [io.netty/netty-codec-http
+                               io.netty/netty-handler
+                               io.netty/netty-transport-native-epoll]]
                  [io.netty/netty-all "4.1.0.Beta5"]
                  [org.slf4j/slf4j-simple "1.7.12"]
                  [cheshire "5.5.0"]

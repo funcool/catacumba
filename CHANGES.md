@@ -1,5 +1,16 @@
 # Changelog #
 
+## Version 0.4.0 ##
+
+Date: unreleased
+
+- Update to ratpack 0.9.18
+- Refactored `:assets` directive to be more flexible (breaking change).
+- Use `promissum` library instead of `futura`.
+- Import the `streams` implementation from `futura` library (`futura` library
+  is no longer used by _catacumba_)
+
+
 ## Version 0.3.2 ##
 
 Date: 2015-07-01

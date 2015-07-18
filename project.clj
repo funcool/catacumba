@@ -23,19 +23,23 @@
                  [ns-tracker "0.3.0"]
                  [slingshot "0.12.2"]
                  [com.stuartsierra/component "0.2.3"]
-                 [buddy/buddy-core "0.5.0"]
-                 [buddy/buddy-auth "0.5.3"]
+                 [buddy/buddy-sign "0.6.0"]
                  [funcool/cuerdas "0.5.0"]
                  [funcool/promissum "0.1.0"]
                  [danlentz/clj-uuid "0.1.6"]
                  [environ "1.0.0"]
-                 [potemkin "0.3.13" :exclusions [riddley]]]
-  :profiles {:dev {:global-vars {*warn-on-reflection* true}
+                 [potemkin "0.4.1"]]
+  :profiles {:dev {:global-vars {*warn-on-reflection* false}
                    :source-paths ["src"]
                    :codeina {:sources ["src/clojure"]
                              :exclude [catacumba.impl.context
                                        catacumba.impl.helpers
                                        catacumba.impl.parse
+                                       catacumba.impl.stream
+                                       catacumba.impl.stream.common
+                                       catacumba.impl.stream.channel
+                                       catacumba.impl.stream.promise
+                                       catacumba.impl.stream.pushstream
                                        catacumba.impl.handlers
                                        catacumba.impl.server
                                        catacumba.impl.http
@@ -52,17 +56,17 @@
                                        catacumba.handlers.security
                                        catacumba.handlers.session
                                        catacumba.handlers.interceptor]
-                             :language :clojure
-                             :output-dir "doc/dist/latest/api"
-                             :src-dir-uri "http://github.com/funcool/catacumba/blob/master/"
-                             :src-linenum-anchor-prefix "L"}
-                   :plugins [[funcool/codeina "0.1.0" :exclusions [org.clojure/clojure]]
+                             :reader :clojure
+                             :target "doc/dist/latest/api"
+                             :src-uri "http://github.com/funcool/catacumba/blob/master/"
+                             :src-uri-prefix "L"}
+                   :plugins [[funcool/codeina "0.2.0"]
                              [lein-ancient "0.6.7" :exclusions [org.clojure/tools.reader]]]
                    :dependencies [[clj-http "1.1.2"]
                                   [aleph "0.4.0" :exclusions [io.netty/netty-all]]
 
-                                  [org.clojure/tools.namespace "0.2.10"]
-                                  [ring/ring-core "1.3.2"
+                                  [org.clojure/tools.namespace "0.2.11"]
+                                  [ring/ring-core "1.4.0"
                                    :exclusions [javax.servlet/servlet-api
                                                 clj-time
                                                 org.clojure/clojure]]]}})

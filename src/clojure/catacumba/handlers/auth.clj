@@ -35,7 +35,7 @@
             [buddy.sign.jws :as jws]
             [buddy.sign.jwe :as jwe]
             [slingshot.slingshot :refer [try+]]
-            [futura.promise :as p])
+            [promissum.core :as p])
   (:import catacumba.impl.types.DefaultContext
            catacumba.impl.http.Response
            ratpack.exec.Fulfiller

@@ -25,10 +25,10 @@
 (ns catacumba.impl.handlers
   (:refer-clojure :exclude [send])
   (:require [clojure.java.io :as io]
-            [futura.stream :as stream]
-            [futura.promise :as p]
             [manifold.stream :as ms]
             [manifold.deferred :as md]
+            [promissum.core :as p]
+            [catacumba.stream :as stream]
             [catacumba.utils :as utils]
             [catacumba.impl.context :as ctx]
             [catacumba.impl.helpers :as helpers]
@@ -118,11 +118,6 @@
     (set-status* context 200)
     (send data (:catacumba/context context)))
 
-  futura.promise.Promise
-  (handle-response [data ^DefaultContext context]
-    (set-status* context 200)
-    (send data (:catacumba/context context)))
-
   CompletableFuture
   (handle-response [data ^DefaultContext context]
     (set-status* context 200)
@@ -154,10 +149,6 @@
     (p/then (helpers/promise ctx #(.accept % data))
             (fn [response]
               (send response ctx))))
-
-  futura.promise.Promise
-  (send [data ^Context ctx]
-    (send (p/promise->future data) ctx))
 
   Publisher
   (send [data ^Context ctx]
@@ -440,6 +431,8 @@
                         (assoc :route-params route-params))
             prom (helpers/promise ctx (fn [^Fulfiller ff]
                                         (handler context #(.success ff %))))]
+        ;; TODO: use promise composition helpers
+        ;; instead of raw interop.
         (.then ^Promise prom
                (helpers/action
                 (fn [response]

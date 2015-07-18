@@ -25,12 +25,12 @@
 (ns catacumba.impl.sse
   "Server-Sent Events handler adapter implementation."
   (:require [clojure.core.async :refer [chan go-loop close! >! <! put!] :as async]
-            [futura.stream :as stream]
-            [futura.stream.channel :as schannel]
             [catacumba.utils :as utils]
+            [catacumba.stream :as stream]
             [catacumba.impl.context :as ctx]
             [catacumba.impl.helpers :as helpers]
-            [catacumba.impl.handlers :as handlers])
+            [catacumba.impl.handlers :as handlers]
+            [catacumba.impl.stream.channel :as schannel])
   (:import ratpack.handling.Handler
            ratpack.handling.Context
            ratpack.sse.Event

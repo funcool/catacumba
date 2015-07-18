@@ -5,8 +5,8 @@
             [clojure.pprint :refer [pprint]]
             [clojure.core.async :as async]
             [clj-http.client :as client]
-            [futura.promise :as p]
-            [futura.stream :as stream]
+            [promissum.core :as p]
+            [catacumba.stream :as stream]
             [cats.core :as m]
             [cuerdas.core :as str]
             [manifold.stream :as ms]
@@ -106,10 +106,9 @@
   (testing "Using promise as response."
     (letfn [(handler [ctx]
               (m/mlet [x (p/promise (fn [resolve]
-                                      (async/thread
-                                        (async/<!! (async/timeout 1000))
-                                        (resolve "hello"))))]
-                (str x " world")))]
+                                      (async/<!! (async/timeout 1000))
+                                      (resolve "hello")))]
+                (m/return (str x " world"))))]
       (with-server {:handler handler}
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))

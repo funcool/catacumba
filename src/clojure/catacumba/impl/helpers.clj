@@ -24,7 +24,7 @@
 
 (ns catacumba.impl.helpers
   (:refer-clojure :exclude [promise])
-  (:require [futura.promise :as p])
+  (:require [promissum.protocols :as pt])
   (:import ratpack.func.Action
            ratpack.func.Function
            ratpack.exec.Promise
@@ -61,11 +61,13 @@
   (bytebuffer [s]
     (Unpooled/wrappedBuffer (.getBytes s "UTF-8"))))
 
-(extend-protocol p/IPromise
+(extend-protocol pt/IFuture
   ratpack.exec.Promise
-  (then* [this callback]
+  (map [this callback]
     (.then ^Promise this (action callback))
     this)
-  (error* [this callback]
+  (flatmap [this callback]
+    (throw (UnsupportedOperationException. "Not implemented")))
+  (error [this callback]
     (.onError ^Promise this (action callback))
     this))

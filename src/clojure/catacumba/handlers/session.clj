@@ -25,10 +25,10 @@
 (ns catacumba.handlers.session
   "Http Sessions support for Catacumba."
   (:refer-clojure :exclude [empty?])
-  (:require [futura.atomic :as atomic]
-            [futura.promise :as p]
+  (:require [promissum.core :as p]
             [buddy.core.nonce :as nonce]
             [buddy.core.codecs :as codecs]
+            [catacumba.impl.atomic :as atomic]
             [catacumba.impl.helpers :as helpers]
             [catacumba.impl.handlers :as handlers]
             [catacumba.impl.context :as context])

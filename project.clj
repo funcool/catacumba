@@ -25,7 +25,7 @@
                  [buddy/buddy-core "0.5.0"]
                  [buddy/buddy-auth "0.5.3"]
                  [funcool/cuerdas "0.5.0"]
-                 [funcool/futura "0.3.0"]
+                 [funcool/promissum "0.1.0"]
                  [danlentz/clj-uuid "0.1.6"]
                  [environ "1.0.0"]
                  [potemkin "0.3.13" :exclusions [riddley]]]

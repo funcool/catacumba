@@ -4,13 +4,14 @@
 
 Date: unreleased
 
-- Update to ratpack 0.9.18
 - Make `:assets` routing directive to be more flexible (breaking change).
 - Change the signature of the `:by-method` routing directive (breaking change).
+- Fix wrong return value on session auth backend.
 - Use `promissum` library instead of `futura`.
 - Import the `streams` implementation from `futura` library (`futura` library
   is no longer used by _catacumba_).
 - Remove `buddy-auth` dependency that is now completelly useless.
+- Update to ratpack 0.9.18
 - Update buddy dependency to 0.6.0
 - Update potemkin to 0.4.1
 

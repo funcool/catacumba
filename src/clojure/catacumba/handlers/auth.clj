@@ -125,7 +125,7 @@
     (parse [_ context]
       (:identity @(:session context)))
     (authenticate [_ context data]
-      data)))
+      (p/resolved data))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Handlers

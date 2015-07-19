@@ -26,7 +26,6 @@
   "A modular component implementation for catacumba server
   that plays in a stuartsierra/component lifecycle protocol."
   (:require [com.stuartsierra.component :as component]
-            [futura.atomic :as atomic]
             [catacumba.core :as ct]
             [catacumba.impl.routing :as routing]
             [catacumba.impl.helpers :as helpers]

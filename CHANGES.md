@@ -2,7 +2,7 @@
 
 ## Version 0.4.0 ##
 
-Date: unreleased
+Date: 2015-07-19
 
 - Make `:assets` routing directive to be more flexible (breaking change).
 - Change the signature of the `:by-method` routing directive (breaking change).

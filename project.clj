@@ -1,4 +1,4 @@
-(defproject funcool/catacumba "0.3.2"
+(defproject funcool/catacumba "0.4.0"
   :description "Asynchronous web toolkit for Clojure build on top of Ratpack."
   :url "http://github.com/funcool/catacumba"
   :license {:name "BSD (2-Clause)"
@@ -35,6 +35,8 @@
                              :exclude [catacumba.impl.context
                                        catacumba.impl.helpers
                                        catacumba.impl.parse
+                                       catacumba.impl.atomic
+                                       catacumba.impl.executor
                                        catacumba.impl.stream
                                        catacumba.impl.stream.common
                                        catacumba.impl.stream.channel

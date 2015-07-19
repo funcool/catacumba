@@ -229,9 +229,10 @@
   (testing "Chaining handlers by request method"
     (let [handler1 (fn [ctx] "from get")
           handler2 (fn [ctx] "from post")
-          router (ct/routes [[:by-method "foo"
-                              [:get handler1]
-                              [:post handler2]]])]
+          router (ct/routes [[:prefix "foo"
+                              [:by-method
+                               {:get handler1
+                                :post handler2}]]])]
       (with-server {:handler router}
         (let [response (client/get (str base-url "/foo"))]
           (is (= (:body response) "from get"))

@@ -31,6 +31,7 @@
            ratpack.handling.Handlers
            ratpack.handling.Handler
            ratpack.handling.ByMethodSpec
+           ratpack.func.Block
            ratpack.file.FileHandlerSpec
            ratpack.error.ServerErrorHandler
            ratpack.registry.RegistrySpec
@@ -59,34 +60,25 @@
   (let [callback #(reduce attach-route % handlers)]
     (.insert chain ^Action (helpers/action callback))))
 
-;; TODO: perform handlers adapter on definition time
-;; instead on request time, for faster error detection
-;; and performance improvements.
-
-;; TODO: reimplement this for better performance.
-;; The current implementation creates twice the
-;; DefaultContext instace from Context.
-
 (defmethod attach-route :by-method
-  [^Chain chain [_ ^String path & handlers]]
-  (let [callback (fn [^Context ctx ^ByMethodSpec spec]
-                   (run! (fn [[method handler]]
-                           (let [handler (handlers/adapter handler)
-                                 block (reify ratpack.func.Block
-                                         (^void execute [_]
-                                           (.handle ^Handler handler ctx)))]
-                             (case method
-                               :get (.get spec block)
-                               :post (.post spec block)
-                               :put (.put spec block)
-                               :delete (.delete spec block)
-                               :patch (.patch spec block))))
-                         handlers))
-        handler (fn [context]
-                  (let [^Context ctx (:catacumba/context context)]
-                    (.byMethod ctx (helpers/action (partial callback ctx)))))
-        handler (handlers/adapter handler)]
-    (.prefix chain path (helpers/action #(.all % handler)))))
+  [^Chain chain [_ handlersmap]]
+  {:pre [(map? handlersmap)]}
+  (letfn [(attach [^Context ctx ^ByMethodSpec spec [method handler]]
+            (let [^Handler handler (handlers/adapter handler)
+                  ^Block block (helpers/block #(.handle handler ctx))]
+              (case method
+                :get (.get spec block)
+                :post (.post spec block)
+                :put (.put spec block)
+                :delete (.delete spec block)
+                :patch (.patch spec block))))
+          (callback [ctx ^ByMethodSpec spec]
+            (let [attach' (partial attach ctx spec)]
+              (run! attach' handlersmap)))]
+    (.all chain (reify Handler
+                  (^void handle [_ ^Context ctx]
+                    (.byMethod ctx (helpers/action (partial callback ctx))))))))
+
 
 (defmethod attach-route :error
   [^Chain chain [_ error-handler]]

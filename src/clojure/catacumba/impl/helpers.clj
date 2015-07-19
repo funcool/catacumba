@@ -27,6 +27,7 @@
   (:require [promissum.protocols :as pt])
   (:import ratpack.func.Action
            ratpack.func.Function
+           ratpack.func.Block
            ratpack.exec.Promise
            ratpack.handling.Context
            io.netty.buffer.Unpooled))
@@ -46,6 +47,14 @@
   (reify Function
     (apply [_ x]
       (callable x))))
+
+(defn ^Block block
+  "Coerce a plain clojure function into
+  ratpacks's Block interface."
+  [callable]
+  (reify Block
+    (execute [_]
+      (callable))))
 
 (defn promise
   "A convenience function for create ratpack

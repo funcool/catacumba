@@ -4,7 +4,7 @@
   :license {:name "BSD (2-Clause)"
             :url "http://opensource.org/licenses/BSD-2-Clause"}
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [funcool/catacumba "0.3.2"]]
+                 [funcool/catacumba "0.4.0"]]
   :main ^:skip-aot interceptor.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})

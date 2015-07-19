@@ -21,17 +21,15 @@
 ;; function from catacumba.
 
 (def app
-  (ct/routes [[:prefix "assets"
-               [:assets "resources/public"]]
-              [:scope
-               [:any (hs/autoreloader)]
-               [:any (hs/session {:storage :inmemory})]
-               [:any (hs/auth auth-backend)]
-               [:get #'handlers/home-page]
-               [:get "logout" #'handlers/logout-page]
-               [:by-method "login"
-                [:get #'handlers/login-page]
-                [:post #'handlers/login-submit]]]]))
+  (ct/routes [[:assets "assets" {:dir "resources/public"}]
+              [:any (hs/autoreloader)]
+              [:any (hs/session {:storage :inmemory})]
+              [:any (hs/auth auth-backend)]
+              [:get #'handlers/home-page]
+              [:get "logout" #'handlers/logout-page]
+              [:prefix "login"
+               [:by-method {:get #'handlers/login-page
+                            :post #'handlers/login-submit}]]]))
 
 ;; Define the main entry point that starts the catacumba
 ;; server un the port 5051.

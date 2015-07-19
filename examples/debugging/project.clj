@@ -4,8 +4,8 @@
   :license {:name "BSD (2-Clause)"
             :url "http://opensource.org/licenses/BSD-2-Clause"}
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [funcool/catacumba "0.3.2"]
-                 [prone "0.8.1"]]
+                 [funcool/catacumba "0.4.0"]
+                 [prone "0.8.2"]]
   :main ^:skip-aot debugging.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})

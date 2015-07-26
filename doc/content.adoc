@@ -380,10 +380,10 @@ directive:
 
 [source, clojure]
 ----
-(ct/routes [:prefix "api"
-            [:by-method "users"
-             [:get list-users-handler]
-             [:post create-users-handler]]])
+(ct/routes [:prefix "api/users"
+            [:by-method
+             {:get list-users-handler
+              :post create-users-handler}]])
 ----
 
 

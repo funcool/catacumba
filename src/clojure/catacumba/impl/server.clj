@@ -78,7 +78,10 @@
         sslcontext (build-ssl-context keystore)
         config (if (string? basedir)
                  (ServerConfig/baseDir ^Path (utils/str->path basedir))
-                 (ServerConfig/noBaseDir))]
+                 (try
+                   (ServerConfig/findBaseDir ".catacumba")
+                   (catch RuntimeException e
+                     (ServerConfig/noBaseDir))))]
     (when sslcontext (.ssl config sslcontext))
     (when public-address (.publicAddress config (java.net.URI. public-address)))
     (when max-body-size (.maxContentLength config max-body-size))
@@ -108,7 +111,9 @@
 
   Additional notes:
 
-  - The `:basedir` is used mainly for resolve relative paths for assets.
+  - The `:basedir` is used mainly to resolve relative paths for assets. When you set
+    no basedir it first try to find a .catacumba file in the root of you classpath if
+    it cannot find that it will run without a basedir
   - With `:publicaddress` you can force one specific public address, in case contrary it
     will be discovered using a variety of different strategies explained in the
     `public-address` function docstring.

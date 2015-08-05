@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <header>
+    <meta charset="urf-8" />
+    <title>Server-Sent Events chat example</title>
+    <style>
+     .area {
+       margin-top: 10px;
+       padding: 5px;
+       font-family: monospace;
+       border: 1px solid #e1e1e1;
+       height: 200px;
+       overflow: auto;
+     }
+
+     .input {
+       margin-top: 10px;
+     }
+
+     .input input[type=text] {
+       width: 600px;
+     }
+
+     .input input {
+       padding: 5px;
+     }
+    </style>
+  </header>
+  <body>
+    <section class="container">
+      <div class="area"></div>
+
+      <div class="input">
+        <input type="text" placeholder="Write a message..."/>
+        <input type="button" value="Send"/>
+      </div>
+    </section>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/3.7.0/lodash.min.js"></script>
+    <script src="//code.jquery.com/jquery-2.1.3.min.js"></script>
+
+    <script type="application/javascript">
+     (function() {
+       var chatarea = $(".area");
+       var dom = $(".container");
+
+       function buildEntry(message) {
+         var chatEntry = $("<div />", {class: "entry"});
+         chatEntry.html(message);
+         return chatEntry;
+       }
+
+       function addMessage(data) {
+         var entry = buildEntry(data);
+         chatarea.append(entry);
+         chatarea.scrollTop(999999999999999);
+       }
+
+       var ws = new WebSocket("ws://localhost:5050/ws");
+       ws.onmessage = function(event) {
+         console.log(2222, event);
+         addMessage(event.data);
+       }
+
+       dom.on("keyup", ".input input[type=text]", function(event) {
+         if (event.keyCode === 13) {
+           var target = $(event.currentTarget);
+           var message = _.trim(target.val());
+
+           if (message.length > 0) {
+             ws.send(message);
+             target.val("");
+           }
+         }
+       });
+
+       dom.on("click", ".input input[type=button]", function(event) {
+         var target = $(event.currentTarget).prev();
+         var message = _.trim(target.val());
+
+         if (message.length > 0) {
+           ws.send(message);
+           target.val("");
+         }
+       });
+     }).call(this);
+    </script>
+  </body>
+</html>

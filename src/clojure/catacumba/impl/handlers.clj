@@ -31,7 +31,7 @@
             [catacumba.stream :as stream]
             [catacumba.utils :as utils]
             [catacumba.impl.context :as ctx]
-            [catacumba.impl.helpers :as helpers]
+            [catacumba.impl.helpers :as ch]
             [catacumba.impl.http :as http])
   (:import ratpack.handling.Handler
            ratpack.handling.Context
@@ -42,8 +42,9 @@
            ratpack.http.TypedData
            ratpack.http.MutableHeaders
            ratpack.util.MultiValueMap
-           ratpack.exec.Fulfiller
+           ratpack.exec.Downstream
            ratpack.exec.Promise
+           ratpack.exec.Blocking
            catacumba.impl.context.DefaultContext
            org.reactivestreams.Publisher
            java.util.concurrent.CompletableFuture
@@ -145,17 +146,16 @@
         (send ctx)))
 
   CompletableFuture
-  (send [data ^Context ctx]
-    (p/then (helpers/promise ctx #(.accept % data))
-            (fn [response]
-              (send response ctx))))
+  (send [future' ^Context ctx]
+    (-> (ch/promise (fn [resolve] (resolve future')))
+        (ch/then #(send % ctx))))
 
   Publisher
   (send [data ^Context ctx]
     (let [^Response response (.getResponse ctx)]
       (->> (stream/publisher data)
-           (stream/transform (map helpers/bytebuffer))
-           (.stream ctx)
+           (stream/transform (map ch/bytebuffer))
+           (stream/bind-exec)
            (.sendStream response))))
 
   ;; TODO: reimplement this as chunked stream instread of
@@ -164,17 +164,17 @@
   InputStream
   (send [data ^Context ctx]
     (let [^Response response (.getResponse ctx)
-          ^Promise prom (.blocking ctx #(let [^bytes buffer (byte-array 1024)
-                                              ^ByteBuf buf (Unpooled/buffer (.available data))]
-                                          (loop [index 0]
-                                            (let [readed (.read data buffer 0 1024)]
-                                              (when-not (= readed -1)
-                                                (.writeBytes buf buffer 0 readed)
-                                                (recur (+ index readed)))))
-                                          buf))]
-      (.then prom (helpers/action
-                   (fn [buff]
-                     (.send response buff)))))))
+          ^Promise prom (ch/blocking
+                         (let [^bytes buffer (byte-array 1024)
+                               ^ByteBuf buf (Unpooled/buffer (.available data))]
+                           (loop [index 0]
+                             (let [readed (.read data buffer 0 1024)]
+                               (when-not (= readed -1)
+                                 (.writeBytes buf buffer 0 readed)
+                                 (recur (+ index readed)))))
+                           buf))]
+      (ch/then prom (fn [buff]
+                      (.send response buff))))))
 
 (extend-protocol IResponse
   DefaultContext
@@ -192,7 +192,7 @@
 
   Request
   (get-body* [^Request request]
-    (.getBody request)))
+    (Blocking/on (.getBody request))))
 
 (extend-protocol IHeaders
   DefaultContext
@@ -306,23 +306,6 @@
   (make-output-stream [req opts]
     (io/make-output-stream (get-body* req) opts)))
 
-(defn build-request
-  [^Request request]
-  (let [local-address (.getLocalAddress request)
-        remote-address (.getRemoteAddress request)]
-    {:server-port (.getPort local-address)
-     :server-name (.getHostText local-address)
-     :remote-addr (.getHostText remote-address)
-     :uri (str "/" (.getPath request))
-     :query-string (.getQuery request)
-     :scheme :http
-     :request-method (keyword (.. request getMethod getName toLowerCase))
-     :headers (get-headers* request)
-     :content-type (.. request getBody getContentType getType)
-     :content-length (Integer/parseInt (.. request getHeaders (get "Content-Length")))
-     :character-encoding (.. request getBody getContentType (getCharset "utf-8"))
-     :body (.. request getBody getInputStream)}))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Public Api
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -407,6 +390,10 @@
       (:handler-type metadata)))
   :default :catacumba/default)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Adapters Implementation
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defmethod adapter :catacumba/default
   [handler]
   (reify Handler
@@ -428,22 +415,36 @@
             context-params (ctx/context-params context)
             route-params (ctx/route-params context)
             context (-> (merge context context-params)
-                        (assoc :route-params route-params))
-            prom (helpers/promise ctx (fn [^Fulfiller ff]
-                                        (handler context #(.success ff %))))]
-        ;; TODO: use promise composition helpers
-        ;; instead of raw interop.
-        (.then ^Promise prom
-               (helpers/action
-                (fn [response]
-                  (handle-response response context))))))))
+                        (assoc :route-params route-params))]
+        (-> (ch/promise (fn [resolve] (handler context #(resolve %))))
+            (ch/then #(handle-response % context)))))))
+
+(defn build-request
+  [^Request request]
+   (let [local-address (.getLocalAddress request)
+         remote-address (.getRemoteAddress request)
+         body (Blocking/on (.getBody request))]
+     {:server-port (.getPort local-address)
+      :server-name (.getHostText local-address)
+      :remote-addr (.getHostText remote-address)
+      :uri (str "/" (.getPath request))
+      :query-string (.getQuery request)
+      :scheme :http
+      :request-method (keyword (.. request getMethod getName toLowerCase))
+      :headers (get-headers* request)
+      :content-type (.. body getContentType getType)
+      :content-length (Integer/parseInt (.. request getHeaders (get "Content-Length")))
+      :character-encoding (.. body getContentType (getCharset "utf-8"))
+      :body (.. body getInputStream)}))
 
 (defmethod adapter :catacumba/ring
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]
       (let [context (ctx/context ctx)
-            request (build-request (:request context))
-            response (handler request)]
-        (when (satisfies? IHandlerResponse response)
-          (handle-response response context))))))
+            p (ch/blocking
+               (let [request (build-request (:request context))]
+                 (handler request)))]
+        (ch/then p (fn [response]
+                     (when (satisfies? IHandlerResponse response)
+                       (handle-response response context))))))))

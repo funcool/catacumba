@@ -29,7 +29,7 @@
             [buddy.core.nonce :as nonce]
             [buddy.core.codecs :as codecs]
             [catacumba.impl.atomic :as atomic]
-            [catacumba.impl.helpers :as helpers]
+            [catacumba.impl.helpers :as ch]
             [catacumba.impl.handlers :as handlers]
             [catacumba.impl.context :as context])
   (:import clojure.lang.IAtom
@@ -37,7 +37,7 @@
            clojure.lang.Counted
            clojure.lang.IFn
            clojure.lang.ISeq
-           ratpack.exec.Fulfiller
+           ratpack.exec.Downstream
            ratpack.exec.Promise
            ratpack.handling.Context
            ratpack.http.ResponseMetaData))
@@ -176,14 +176,12 @@
         cookies (handlers/get-cookies context)
         cookie (get cookies (keyword cookie-name) nil)
         sid (:value cookie)]
-    (.promise ctx (helpers/action
-                   (fn [^Fulfiller ff]
-                     (if sid
-                       (let [data (read-session storage sid)]
-                         (p/then (read-session storage sid)
-                                 #(.success ff [sid (->session sid %)])))
-                       (let [sid (codecs/bytes->safebase64 (nonce/random-nonce 48))]
-                         (.success ff [sid (->session sid)]))))))))
+    (ch/async resolve
+      (if sid
+        (-> (read-session storage sid)
+            (p/then #(resolve [sid (->session sid %)])))
+        (let [sid (codecs/bytes->safebase64 (nonce/random-nonce 48))]
+          (resolve [sid (->session sid)]))))))
 
 (defn session
   "A session chain handler constructor."
@@ -194,18 +192,17 @@
    (let [storage (lookup-storage storage)
          options (assoc options :storage storage)]
      (fn [context]
-       (let [^Promise prom (context->session context options)]
-         (.then prom (helpers/action
-                      (fn [[sid session]]
-                        (context/before-send context (fn [^ResponseMetaData response]
-                                                       (cond
-                                                         (empty? session)
-                                                         (let [cookie (-> (make-cookie sid options)
-                                                                          (assoc :max-age 0))]
-                                                           (handlers/set-cookies! context {cookie-name cookie}))
+       (-> (context->session context options)
+           (p/then (fn [[sid session]]
+                     (context/before-send context (fn [^ResponseMetaData response]
+                                                    (cond
+                                                      (empty? session)
+                                                      (let [cookie (-> (make-cookie sid options)
+                                                                         (assoc :max-age 0))]
+                                                        (handlers/set-cookies! context {cookie-name cookie}))
 
-                                                         (modified? session)
-                                                         (let [cookie (make-cookie sid options)]
-                                                           (write-session storage sid @session)
-                                                           (handlers/set-cookies! context {cookie-name cookie})))))
-                        (context/delegate context {:session session})))))))))
+                                                      (modified? session)
+                                                      (let [cookie (make-cookie sid options)]
+                                                        (write-session storage sid @session)
+                                                        (handlers/set-cookies! context {cookie-name cookie})))))
+                     (context/delegate context {:session session}))))))))

@@ -188,7 +188,7 @@
 (extend-protocol IRequest
   DefaultContext
   (get-body* [^DefaultContext context]
-    (get-body* ^Request (:request context)))
+    (get context :body))
 
   Request
   (get-body* [^Request request]
@@ -286,7 +286,7 @@
   (make-output-stream [d opts]
     (throw (UnsupportedOperationException. "Cannot open as Reader.")))
 
-  Context
+  DefaultContext
   (make-reader [ctx opts]
     (io/make-reader (get-body* ctx) opts))
   (make-writer [ctx opts]
@@ -401,11 +401,15 @@
       (let [context (ctx/context ctx)
             context-params (ctx/context-params context)
             route-params (ctx/route-params context)
-            response (-> (merge context context-params)
-                         (assoc :route-params route-params)
-                         (handler))]
-        (when (satisfies? IHandlerResponse response)
-          (handle-response response context))))))
+            bodyp (.. ctx getRequest getBody)]
+        (ch/then bodyp (fn [^TypedData body]
+                         (let [context' (-> (merge context context-params)
+                                            (assoc :route-params route-params)
+                                            (assoc :body body))
+                               response (handler context')]
+                           (when (satisfies? IHandlerResponse response)
+                             (handle-response response context)))))))))
+
 
 (defmethod adapter :catacumba/cps
   [handler]

@@ -26,7 +26,7 @@
   "Functions and helpers for work in a clojure
   way with ratpack types."
   (:require [catacumba.utils :as utils]
-            [catacumba.impl.helpers :as helpers])
+            [catacumba.impl.helpers :as ch])
   (:import ratpack.handling.Handler
            ratpack.handling.Context
            ratpack.handling.RequestOutcome
@@ -121,7 +121,7 @@
   when the connection with the client is closed."
   [^DefaultContext context callback]
   (let [^Context ctx (:catacumba/context context)]
-    (.onClose ctx (helpers/action callback))))
+    (.onClose ctx (ch/fn->action callback))))
 
 (defn before-send
   "Register a callback in the context that will be called
@@ -130,4 +130,4 @@
   response transformations."
   [^DefaultContext context callback]
   (let [^Response response (:response context)]
-    (.beforeSend response (helpers/action callback))))
+    (.beforeSend response (ch/fn->action callback))))

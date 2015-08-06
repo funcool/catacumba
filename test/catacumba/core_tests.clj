@@ -161,13 +161,13 @@
           (is (= (:status response) 200))))))
 
   (testing "Routing assets with prefix."
-    (let [handler (ct/routes [[:assets "static" {:dir "resources/public"}]])]
+    (let [handler (ct/routes [[:assets "static" {:dir "public"}]])]
       (with-server {:handler handler}
         (let [response (client/get (str base-url "/static/test.txt"))]
           (is (= (:body response) "hello world from test.txt\n"))
           (is (= (:status response) 200)))))
 
-    (let [handler (ct/routes [[:assets "static" {:dir "resources/public"
+    (let [handler (ct/routes [[:assets "static" {:dir "public"
                                                  :indexes ["index.html"]}]])]
       (with-server {:handler handler}
         (let [response (client/get (str base-url "/static/"))]

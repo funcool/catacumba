@@ -396,19 +396,20 @@
 
 (defmethod adapter :catacumba/default
   [handler]
-  (reify Handler
-    (^void handle [_ ^Context ctx]
-      (let [context (ctx/context ctx)
-            context-params (ctx/context-params context)
-            route-params (ctx/route-params context)
-            bodyp (.. ctx getRequest getBody)]
-        (ch/then bodyp (fn [^TypedData body]
-                         (let [context' (-> (merge context context-params)
-                                            (assoc :route-params route-params)
-                                            (assoc :body body))
-                               response (handler context')]
-                           (when (satisfies? IHandlerResponse response)
-                             (handle-response response context)))))))))
+  (letfn [(continuation [^Context ctx ^TypedData body]
+            (let [context (ctx/context ctx)
+                  context-params (ctx/context-params context)
+                  route-params (ctx/route-params context)
+                  context' (-> (merge context context-params)
+                               (assoc :route-params route-params)
+                               (assoc :body body))
+                  response (handler context')]
+              (when (satisfies? IHandlerResponse response)
+                (handle-response response context))))]
+    (reify Handler
+      (^void handle [_ ^Context ctx]
+        (let [bodyp (.. ctx getRequest getBody)]
+          (ch/then bodyp (partial continuation ctx)))))))
 
 (defmethod adapter :catacumba/blocking
   [handler]

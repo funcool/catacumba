@@ -28,7 +28,7 @@
             [catacumba.utils :as utils]
             [catacumba.stream :as stream]
             [catacumba.impl.context :as ctx]
-            [catacumba.impl.helpers :as helpers]
+            [catacumba.impl.helpers :as ch]
             [catacumba.impl.handlers :as handlers]
             [catacumba.impl.stream.channel :as schannel])
   (:import ratpack.handling.Handler
@@ -72,8 +72,10 @@
   (let [^Context ctx (:catacumba/context context)
         out (async/chan 1 (map event))
         pub (->> (schannel/publisher out {:close true})
-                 (.stream ctx))
-        tfm (helpers/action transform-event)]
+                 (stream/bind-exec))
+        tfm (ch/fn->action transform-event)]
+
+    ;; TODO: use own executors instead of core.async thread
     (async/thread
       (handler context out))
     (->> (ServerSentEvents/serverSentEvents pub tfm)

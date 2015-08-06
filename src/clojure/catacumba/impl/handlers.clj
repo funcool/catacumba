@@ -410,6 +410,20 @@
                            (when (satisfies? IHandlerResponse response)
                              (handle-response response context)))))))))
 
+(defmethod adapter :catacumba/blocking
+  [handler]
+  (reify Handler
+    (^void handle [_ ^Context ctx]
+      (let [context (ctx/context ctx)
+            context-params (ctx/context-params context)
+            route-params (ctx/route-params context)
+            context' (-> (merge context context-params)
+                         (assoc :route-params route-params))]
+        (-> (ch/blocking
+             (handler context'))
+            (ch/then (fn [response]
+                       (when (satisfies? IHandlerResponse response)
+                         (handle-response response context)))))))))
 
 (defmethod adapter :catacumba/cps
   [handler]

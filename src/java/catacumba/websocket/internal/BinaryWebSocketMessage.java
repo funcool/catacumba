@@ -14,12 +14,29 @@
  * limitations under the License.
  */
 
-package catacumba.websocket;
+package catacumba.websocket.internal;
 
-import ratpack.func.Action;
+import io.netty.buffer.ByteBuf;
+import catacumba.websocket.WebSocket;
+import catacumba.websocket.WebSocketMessage;
 
-public interface WebSocketConnector<T> {
 
-  void connect(Action<? super WebSocketSpec<T>> specAction) throws Exception;
+public class BinaryWebSocketMessage implements WebSocketMessage<ByteBuf> {
+  private final WebSocket webSocket;
+  private final ByteBuf data;
 
+  public BinaryWebSocketMessage(WebSocket webSocket, ByteBuf data) {
+    this.webSocket = webSocket;
+    this.data = data;
+  }
+
+  @Override
+  public WebSocket getConnection() {
+    return webSocket;
+  }
+
+  @Override
+  public ByteBuf getData() {
+    return data;
+  }
 }

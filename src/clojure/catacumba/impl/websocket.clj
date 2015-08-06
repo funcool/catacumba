@@ -25,9 +25,10 @@
 (ns catacumba.impl.websocket
   "Websocket handler adapter implementation."
   (:require [clojure.core.async :refer [chan go-loop close! >! <! put!] :as async]
+            [promissum.core :as p]
             [catacumba.utils :as utils]
             [catacumba.impl.context :as ctx]
-            [catacumba.impl.helpers :as helpers]
+            [catacumba.impl.helpers :as ch]
             [catacumba.impl.handlers :as handlers])
   (:import ratpack.handling.Handler
            ratpack.handling.Context
@@ -36,39 +37,35 @@
            java.util.concurrent.ExecutorService
            io.netty.buffer.ByteBuf
            catacumba.impl.context.DefaultContext
-           catacumba.websocket.WebSocketClose
            catacumba.websocket.WebSocketHandler
            catacumba.websocket.WebSocketMessage
            catacumba.websocket.WebSockets
            catacumba.websocket.WebSocket))
 
+;; TODO: make it polymorphic and extensible
+
 (defn- send!
-  "Helper function for send data from the netty/ratpack
-  eventloop threadpool instead from the core.async."
-  [^ExecutorService executor ^WebSocket ws data]
-  (let [ch (async/chan)
-        callback (fn [_] (async/close! ch))]
-    (.submit executor ^Runnable (fn []
-                                  (let [^ByteBuf data (helpers/bytebuffer data)]
-                                    (-> (.send ws data)
-                                        (.then (helpers/action callback))))))
-    ch))
+  [ws data]
+  (let [c (async/chan)]
+    (p/then (.send ws data)
+            (fn [_]
+              (async/close! c)))
+    c))
 
 (deftype WebSocketSession [in out ctrl context handler]
   java.io.Closeable
   (close [_]
-    (close! in)
-    (close! out)
-    (close! ctrl))
+    (async/close! in)
+    (async/close! out)
+    (async/close! ctrl))
 
   WebSocketHandler
-  (onOpen [this ^WebSocket ws]
-    (let [^Context ctx (:catacumba/context context)
-          executor (.. ctx getController getExecutor)]
-      (go-loop []
-        (if-let [value (<! out)]
+  (^void onOpen [this ^WebSocket ws]
+    (let [^Context ctx (:catacumba/context context)]
+      (async/go-loop []
+        (if-let [value (async/<! out)]
           (do
-            (<! (send! executor ws value))
+            (async/<! (send! ws (str value)))
             (recur))
           (.close ws)))
       (handler {:in in :out out :ctrl ctrl
@@ -76,11 +73,10 @@
                 :context context})))
 
   (^void onMessage [_ ^WebSocketMessage msg ^Action callback]
-    (put! in (.getText msg) (fn [_]
-                              (.execute callback nil))))
+    (async/put! in (.getData msg) (fn [_] (.execute callback nil))))
 
-  (^void onClose [this ^WebSocketClose event]
-    (put! ctrl [:close event])
+  (^void onClose [this]
+    (async/put! ctrl [:close nil])
     (.close this)))
 
 (defn websocket

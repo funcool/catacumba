@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,8 @@ package catacumba.websocket;
 
 import ratpack.func.Action;
 
-
 public interface WebSocketHandler<T> {
-
-  T onOpen(WebSocket webSocket) throws Exception;
-
-  void onClose(WebSocketClose<T> close) throws Exception;
-
-  void onMessage(WebSocketMessage<T> frame, Action<Void> ack) throws Exception;
-
+  void onOpen(WebSocket webSocket) throws Exception;
+  void onClose() throws Exception;
+  void onMessage(WebSocketMessage frame, Action<Void> callback) throws Exception;
 }

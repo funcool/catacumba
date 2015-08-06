@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,22 +21,21 @@ import ratpack.api.NonBlocking;
 import ratpack.handling.Context;
 import ratpack.exec.Promise;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+
 public interface WebSocket {
-
-  Context getContext();
+  @NonBlocking
+  void close();
 
   @NonBlocking
-  Promise<Void> close();
-
-  @NonBlocking
-  Promise<Void> close(int statusCode, String reason);
+  void close(int statusCode, String reason);
 
   boolean isOpen();
 
   @NonBlocking
-  Promise<Void> send(String text);
+  CompletionStage<Void> send(String text);
 
   @NonBlocking
-  Promise<Void> send(ByteBuf text);
-
+  CompletionStage<Void> send(ByteBuf text);
 }

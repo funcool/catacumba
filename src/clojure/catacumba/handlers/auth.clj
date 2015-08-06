@@ -29,7 +29,7 @@
             [catacumba.impl.handlers :as handlers]
             [catacumba.impl.routing :as routing]
             [catacumba.impl.context :as context]
-            [catacumba.impl.helpers :as helpers]
+            [catacumba.impl.helpers :as ch]
             [catacumba.impl.types]
             [catacumba.impl.http]
             [buddy.sign.jws :as jws]
@@ -38,7 +38,7 @@
             [promissum.core :as p])
   (:import catacumba.impl.types.DefaultContext
            catacumba.impl.http.Response
-           ratpack.exec.Fulfiller
+           ratpack.exec.Downstream
            ratpack.exec.Promise
            ratpack.handling.Chain
            ratpack.handling.Handler))
@@ -135,21 +135,19 @@
   "Perform an asynchronous recursive loop over all
   provided backends and tries to authenticate with
   all them in order."
-  [context backends ^Fulfiller ff]
+  [context backends callback]
   (if-let [backend (first backends)]
     (let [last? (empty? (rest backends))
           token (parse backend context)]
       (if (and (nil? token) last?)
-        (.success ff {})
+        (callback {})
         (-> (authenticate backend context token)
             (p/then (fn [ue]
                       (if (nil? ue)
-                        (do-auth context (rest backends) ff)
-                        (.success ff {:identity ue}))))
-            (p/catch (fn [e]
-                       ;; TODO: add error logging
-                       (.success ff {}))))))
-    (.success ff {})))
+                        (do-auth context (rest backends) callback)
+                        (callback {:identity ue}))))
+            (p/catch (fn [e] (callback {}))))))
+    (callback {})))
 
 (defn auth
   "Authentication chain handler constructor."
@@ -157,9 +155,8 @@
   {:pre [(pos? (count backends))]}
   (fn [context]
     (let [context (hydrate-context context)]
-      (-> (:catacumba/context context)
-          (helpers/promise #(do-auth context backends %))
-          (p/then #(context/delegate context %))))))
+      (-> (ch/promise #(do-auth context backends %))
+          (ch/then #(context/delegate context %))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Adapters

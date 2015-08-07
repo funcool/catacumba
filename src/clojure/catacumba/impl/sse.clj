@@ -85,11 +85,7 @@
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]
-      (let [context (ctx/context ctx)
-            context-params (ctx/context-params context)
-            route-params (ctx/route-params context)
-            context (-> (merge context context-params)
-                        (assoc :route-params route-params))]
-        (sse context handler)))))
+      (handlers/hydrate-context ctx (fn [context]
+                                      (sse context handler))))))
 
 

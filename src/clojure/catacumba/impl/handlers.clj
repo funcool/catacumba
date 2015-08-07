@@ -206,49 +206,56 @@
 ;; Adapters Implementation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; TODO: implement this in more efficient way
+;; The current approach is not bad but I personally
+;; prefer find a better one.
+
+(defn hydrate-context
+  {:internal true :no-doc true}
+  [^Context ctx callback]
+  (letfn [(continuation [^Request request ^TypedData body]
+            (let [context (ct/context ctx)
+                  params (ct/get-context-params context)
+                  extra {:body body
+                         :path (str "/" (.getPath request))
+                         :query (.getQuery request)
+                         :method (keyword (.. request getMethod getName toLowerCase))
+                         :query-params (ct/get-query-params context)
+                         :route-params (ct/get-route-params context)
+                         :cookies (ct/get-cookies context)
+                         :headers (ct/get-headers context)}]
+              (callback (merge context params extra))))]
+    (let [^Request request (.getRequest ctx)
+          ^Promise promise (.getBody request)]
+      (ch/then promise (partial continuation request)))))
+
 (defmethod adapter :catacumba/default
   [handler]
-  (letfn [(continuation [^Context ctx ^TypedData body]
-            (let [context (ctx/context ctx)
-                  context-params (ctx/context-params context)
-                  route-params (ctx/route-params context)
-                  context' (-> (merge context context-params)
-                               (assoc :route-params route-params)
-                               (assoc :body body))
-                  response (handler context')]
-              (when (satisfies? IHandlerResponse response)
-                (handle-response response context))))]
-    (reify Handler
-      (^void handle [_ ^Context ctx]
-        (let [bodyp (.. ctx getRequest getBody)]
-          (ch/then bodyp (partial continuation ctx)))))))
+  (reify Handler
+    (^void handle [_ ^Context ctx]
+      (hydrate-context ctx (fn [^DefaultContext context]
+                             (let [response (handler context)]
+                               (when (satisfies? IHandlerResponse response)
+                                 (-handle-response response context))))))))
 
 (defmethod adapter :catacumba/blocking
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]
-      (let [context (ctx/context ctx)
-            context-params (ctx/context-params context)
-            route-params (ctx/route-params context)
-            context' (-> (merge context context-params)
-                         (assoc :route-params route-params))]
-        (-> (ch/blocking
-             (handler context'))
-            (ch/then (fn [response]
-                       (when (satisfies? IHandlerResponse response)
-                         (handle-response response context)))))))))
+      (hydrate-context ctx (fn [^DefaultContext context]
+                             (-> (ch/blocking
+                                  (handler context))
+                                 (ch/then (fn [response]
+                                            (when (satisfies? IHandlerResponse response)
+                                              (-handle-response response context))))))))))
 
 (defmethod adapter :catacumba/cps
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]
-      (let [context (ctx/context ctx)
-            context-params (ctx/context-params context)
-            route-params (ctx/route-params context)
-            context (-> (merge context context-params)
-                        (assoc :route-params route-params))]
-        (-> (ch/promise (fn [resolve] (handler context #(resolve %))))
-            (ch/then #(handle-response % context)))))))
+      (hydrate-context ctx (fn [^DefaultContext context]
+                             (-> (ch/promise (fn [resolve] (handler context #(resolve %))))
+                                 (ch/then #(-handle-response % context))))))))
 
 (defn build-request
   [^Request request]

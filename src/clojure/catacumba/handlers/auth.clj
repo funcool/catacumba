@@ -30,14 +30,12 @@
             [catacumba.impl.routing :as routing]
             [catacumba.impl.context :as context]
             [catacumba.impl.helpers :as ch]
-            [catacumba.impl.types]
             [catacumba.impl.http]
             [buddy.sign.jws :as jws]
             [buddy.sign.jwe :as jwe]
             [slingshot.slingshot :refer [try+]]
             [promissum.core :as p])
-  (:import catacumba.impl.types.DefaultContext
-           catacumba.impl.http.Response
+  (:import catacumba.impl.context.DefaultContext
            ratpack.exec.Downstream
            ratpack.exec.Promise
            ratpack.handling.Chain

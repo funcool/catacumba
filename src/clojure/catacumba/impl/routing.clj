@@ -23,8 +23,8 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (ns catacumba.impl.routing
-  (:require [catacumba.impl.handlers :as handlers]
-            [catacumba.impl.context :as ctx]
+  (:require [catacumba.impl.handlers :as hs]
+            [catacumba.impl.context :as ct]
             [catacumba.impl.helpers :as ch])
   (:import ratpack.handling.Context
            ratpack.handling.Chain
@@ -64,7 +64,7 @@
   [^Chain chain [_ handlersmap]]
   {:pre [(map? handlersmap)]}
   (letfn [(attach [^Context ctx ^ByMethodSpec spec [method handler]]
-            (let [^Handler handler (handlers/adapter handler)
+            (let [^Handler handler (hs/adapter handler)
                   ^Block block (ch/fn->block #(.handle handler ctx))]
               (case method
                 :get (.get spec block)
@@ -85,10 +85,10 @@
   (letfn [(on-register [^RegistrySpec rspec]
             (let [ehandler (reify ServerErrorHandler
                              (error [_ ctx throwable]
-                               (let [context (ctx/context ctx)
+                               (let [context (ct/context ctx)
                                      response (error-handler context throwable)]
-                                 (when (satisfies? handlers/IHandlerResponse response)
-                                   (handlers/handle-response response context)))))]
+                                 (when (satisfies? hs/IHandlerResponse response)
+                                   (hs/-handle-response response context)))))]
               (.add rspec ServerErrorHandler ehandler)))]
     (.register chain ^Action (ch/fn->action on-register))))
 
@@ -96,7 +96,7 @@
   [chain [method & handlers-and-path]]
   (let [path (first handlers-and-path)]
     (if (string? path)
-      (let [^Handler handler (-> (mapv handlers/adapter (rest handlers-and-path))
+      (let [^Handler handler (-> (mapv hs/adapter (rest handlers-and-path))
                                  (Handlers/chain))]
         (case method
           :any (.prefix chain path (ch/fn->action #(.all % handler)))
@@ -106,7 +106,7 @@
           :put (.put chain path handler)
           :patch (.patch chain path handler)
           :delete (.delete chain path handler)))
-      (let [^Handler handler (-> (mapv handlers/adapter handlers-and-path)
+      (let [^Handler handler (-> (mapv hs/adapter handlers-and-path)
                                  (Handlers/chain))]
         (case method
           :any (.all chain handler)

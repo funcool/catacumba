@@ -13,7 +13,6 @@
             [manifold.deferred :as md]
             [catacumba.core :as ct]
             [catacumba.http :as http]
-            [catacumba.impl.parse :as parse]
             [catacumba.impl.helpers :as ch]
             [catacumba.testing :refer [with-server]]
             [catacumba.handlers.interceptor])
@@ -257,7 +256,7 @@
   (testing "Read body as text"
     (let [p (promise)
           handler (fn [ctx]
-                    (let [body (ct/get-body ctx)]
+                    (let [body (:body ctx)]
                       (deliver p (slurp body)))
                     "hello world")]
       (with-server {:handler handler}

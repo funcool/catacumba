@@ -23,12 +23,10 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (ns catacumba.handlers
-  (:require [catacumba.handlers core cors security interceptor session auth parsing autoreload]
+  (:require [catacumba.handlers cors security interceptor session auth parsing autoreload]
             [potemkin.namespaces :refer [import-vars]]))
 
 (import-vars
- [catacumba.handlers.core
-  basic-request]
  [catacumba.handlers.autoreload
   autoreloader]
  [catacumba.handlers.cors

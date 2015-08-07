@@ -23,9 +23,7 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (ns catacumba.handlers.parsing
-  (:require [catacumba.impl.context :as context]
-            [catacumba.impl.parse :as parse]
-            [catacumba.impl.handlers :as handlers]
+  (:require [catacumba.impl.context :as ct]
             [cheshire.core :as json])
   (:import ratpack.http.Request
            ratpack.http.TypedData
@@ -44,11 +42,11 @@
 
 (defmethod parse :multipart/form-data
   [^Context ctx ^TypedData body]
-  (parse/parse-formdata* ctx))
+  (ct/get-formdata ctx))
 
 (defmethod parse :application/x-www-form-urlencoded
   [^Context ctx ^TypedData body]
-  (parse/parse-formdata* ctx))
+  (ct/get-formdata ctx))
 
 (defmethod parse :application/json
   [^Context ctx ^TypedData body]
@@ -70,4 +68,4 @@
    (fn [context]
      (let [^Context ctx (:catacumba/context context)
            ^TypedData body (.. ctx getRequest getBody)]
-       (context/delegate context {:body (parsefn ctx body)})))))
+       (ct/delegate context {:body (parsefn ctx body)})))))

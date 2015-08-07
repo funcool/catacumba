@@ -25,8 +25,8 @@
 (ns catacumba.handlers.auth
   "Authentication and Authorization facilities for catacumba
   using funcool/buddy "
-  (:require [catacumba.handlers.core :refer [hydrate-context]]
-            [catacumba.impl.handlers :as handlers]
+  ;; TODO: rename to shorter ns aliases
+  (:require [catacumba.impl.handlers :as handlers]
             [catacumba.impl.routing :as routing]
             [catacumba.impl.context :as context]
             [catacumba.impl.helpers :as ch]
@@ -152,9 +152,8 @@
   [& backends]
   {:pre [(pos? (count backends))]}
   (fn [context]
-    (let [context (hydrate-context context)]
-      (-> (ch/promise #(do-auth context backends %))
-          (ch/then #(context/delegate context %))))))
+    (-> (ch/promise #(do-auth context backends %))
+        (ch/then #(context/delegate context %)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Adapters

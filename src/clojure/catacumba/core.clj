@@ -23,7 +23,7 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (ns catacumba.core
-  (:require [catacumba.impl server routing context handlers websocket parse sse]
+  (:require [catacumba.impl server routing context handlers websocket sse]
             [catacumba.handlers]
             [potemkin.namespaces :refer [import-vars]]))
 
@@ -36,19 +36,17 @@
   on-close
   before-send
   delegate
-  public-address]
- [catacumba.impl.handlers
-  set-cookies!
-  get-cookies
-  get-body
+  public-address
   get-headers
   set-headers!
+  set-cookies!
+  get-cookies
   set-status!
+  get-formdata
+  get-query-params]
+ [catacumba.impl.handlers
   send!]
  [catacumba.impl.websocket
   websocket]
  [catacumba.impl.sse
-  sse]
- [catacumba.impl.parse
-  parse-formdata
-  parse-queryparams])
+  sse])

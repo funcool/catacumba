@@ -23,21 +23,19 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (ns catacumba.impl.handlers
-  (:refer-clojure :exclude [send])
   (:require [clojure.java.io :as io]
             [manifold.stream :as ms]
             [manifold.deferred :as md]
             [promissum.core :as p]
             [catacumba.stream :as stream]
             [catacumba.utils :as utils]
-            [catacumba.impl.context :as ctx]
+            [catacumba.impl.context :as ct]
             [catacumba.impl.helpers :as ch]
             [catacumba.impl.http :as http])
   (:import ratpack.handling.Handler
            ratpack.handling.Context
            ratpack.http.Request
            ratpack.http.Response
-           ratpack.http.ResponseMetaData
            ratpack.http.Headers
            ratpack.http.TypedData
            ratpack.http.MutableHeaders
@@ -62,25 +60,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defprotocol ISend
-  "A low level send abstraction."
-  (send [data ctx] "Send data."))
+  (-send [data ctx] "Send data."))
 
 (defprotocol IHandlerResponse
-  (handle-response [_ context] "Handle the ratpack handler response."))
-
-(defprotocol IHeaders
-  (get-headers* [_] "Get headers.")
-  (set-headers* [_ headers] "Set the headers."))
-
-(defprotocol ICookies
-  (get-cookies* [_] "Get cookies.")
-  (set-cookies* [_ cookies] "Set cookies."))
-
-(defprotocol IResponse
-  (set-status* [_ status] "Set the status code."))
-
-(defprotocol IRequest
-  (get-body* [_] "Get the body."))
+  (-handle-response [_ context] "Handle the ratpack handler response."))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Protocol Implementations
@@ -88,70 +71,70 @@
 
 (extend-protocol IHandlerResponse
   String
-  (handle-response [data ^DefaultContext context]
-    (send data (:catacumba/context context)))
+  (-handle-response [data ^DefaultContext context]
+    (-send data (:catacumba/context context)))
 
   clojure.lang.IPersistentMap
-  (handle-response [data ^DefaultContext context]
+  (-handle-response [data ^DefaultContext context]
     (let [{:keys [status headers body]} data]
-      (when status (set-status* context status))
-      (when headers (set-headers* context headers))
-      (send body (:catacumba/context context))))
+      (when status (ct/set-status! context status))
+      (when headers (ct/set-headers! context headers))
+      (-send body (:catacumba/context context))))
 
   catacumba.impl.http.Response
-  (handle-response [data ^DefaultContext context]
-    (set-status* context (:status data))
-    (set-headers* context (:headers data))
-    (send (:body data) (:catacumba/context context)))
+  (-handle-response [data ^DefaultContext context]
+    (ct/set-status! context (:status data))
+    (ct/set-headers! context (:headers data))
+    (-send (:body data) (:catacumba/context context)))
 
   clojure.core.async.impl.channels.ManyToManyChannel
-  (handle-response [data ^DefaultContext context]
-    (set-status* context 200)
-    (send data (:catacumba/context context)))
+  (-handle-response [data ^DefaultContext context]
+    (ct/set-status! context 200)
+    (-send data (:catacumba/context context)))
 
   manifold.stream.default.Stream
-  (handle-response [data ^DefaultContext context]
-    (set-status* context 200)
-    (send data (:catacumba/context context)))
+  (-handle-response [data ^DefaultContext context]
+    (ct/set-status! context 200)
+    (-send data (:catacumba/context context)))
 
   Publisher
-  (handle-response [data ^DefaultContext context]
-    (set-status* context 200)
-    (send data (:catacumba/context context)))
+  (-handle-response [data ^DefaultContext context]
+    (ct/set-status! context 200)
+    (-send data (:catacumba/context context)))
 
   CompletableFuture
-  (handle-response [data ^DefaultContext context]
-    (set-status* context 200)
-    (send data (:catacumba/context context))))
+  (-handle-response [data ^DefaultContext context]
+    (ct/set-status! context 200)
+    (-send data (:catacumba/context context))))
 
 (extend-protocol ISend
   String
-  (send [data ^Context ctx]
+  (-send [data ^Context ctx]
     (let [^Response response (.getResponse ctx)]
       (.send response data)))
 
   clojure.core.async.impl.channels.ManyToManyChannel
-  (send [data ^Context ctx]
+  (-send [data ^Context ctx]
     (-> (stream/publisher data)
-        (send ctx)))
+        (-send ctx)))
 
   manifold.stream.default.Stream
-  (send [data ^Context ctx]
+  (-send [data ^Context ctx]
     (-> (stream/publisher data)
-        (send ctx)))
+        (-send ctx)))
 
   manifold.deferred.IDeferred
-  (send [data ^Context ctx]
+  (-send [data ^Context ctx]
     (-> (stream/publisher data)
-        (send ctx)))
+        (-send ctx)))
 
   CompletableFuture
-  (send [future' ^Context ctx]
+  (-send [future' ^Context ctx]
     (-> (ch/promise (fn [resolve] (resolve future')))
-        (ch/then #(send % ctx))))
+        (ch/then #(-send % ctx))))
 
   Publisher
-  (send [data ^Context ctx]
+  (-send [data ^Context ctx]
     (let [^Response response (.getResponse ctx)]
       (->> (stream/publisher data)
            (stream/transform (map ch/bytebuffer))
@@ -162,7 +145,7 @@
   ;; read all data in memory. The current approach is slightly
   ;; awfull because it reads all inputstream firstly in a memory.
   InputStream
-  (send [data ^Context ctx]
+  (-send [data ^Context ctx]
     (let [^Response response (.getResponse ctx)
           ^Promise prom (ch/blocking
                          (let [^bytes buffer (byte-array 1024)
@@ -175,104 +158,6 @@
                            buf))]
       (ch/then prom (fn [buff]
                       (.send response buff))))))
-
-(extend-protocol IResponse
-  DefaultContext
-  (set-status* [^DefaultContext ctx ^long status]
-    (set-status* (:response ctx) status))
-
-  ResponseMetaData
-  (set-status* [^ResponseMetaData response ^long status]
-    (.status response status)))
-
-(extend-protocol IRequest
-  DefaultContext
-  (get-body* [^DefaultContext context]
-    (get context :body))
-
-  Request
-  (get-body* [^Request request]
-    (Blocking/on (.getBody request))))
-
-(extend-protocol IHeaders
-  DefaultContext
-  (get-headers* [^DefaultContext ctx]
-    (get-headers* ^Request (:request ctx)))
-  (set-headers* [^DefaultContext ctx headers]
-    (set-headers* ^ResponseMetaData (:response ctx) headers))
-
-  Request
-  (get-headers* [^Request request]
-    (let [^Headers headers (.getHeaders request)
-          ^MultiValueMap headers (.asMultiValueMap headers)]
-      (persistent!
-       (reduce (fn [acc ^String key]
-                 (let [values (.getAll headers key)
-                       key (.toLowerCase key)]
-                   (reduce #(utils/assoc-conj! %1 key %2) acc values)))
-               (transient {})
-               (.keySet headers)))))
-  (set-headers* [_ _]
-    (throw (UnsupportedOperationException.)))
-
-  ResponseMetaData
-  (get-headers* [_]
-    (throw (UnsupportedOperationException.)))
-
-  (set-headers* [^ResponseMetaData response headers]
-    (let [^MutableHeaders headersmap (.getHeaders response)]
-      (loop [headers headers]
-        (when-let [[key vals] (first headers)]
-          (.set headersmap (name key) vals)
-          (recur (rest headers)))))))
-
-(defn- cookie->map
-  [cookie]
-  {:path (.path cookie)
-   :value (.value cookie)
-   :domain (.domain cookie)
-   :http-only (.isHttpOnly cookie)
-   :secure (.isSecure cookie)
-   :max-age (.maxAge cookie)})
-
-(extend-protocol ICookies
-  DefaultContext
-  (get-cookies* [^DefaultContext ctx]
-    (get-cookies* ^Request (:request ctx)))
-  (set-cookies* [^DefaultContext ctx cookies]
-    (set-cookies* ^Response (:response ctx) cookies))
-
-  Request
-  (get-cookies* [^Request request]
-    (persistent!
-     (reduce (fn [acc cookie]
-               (let [name (keyword (.name cookie))]
-                 (assoc! acc name (cookie->map cookie))))
-             (transient {})
-             (into [] (.getCookies request)))))
-
-  (set-cookies* [_ _]
-    (throw (UnsupportedOperationException.)))
-
-  ResponseMetaData
-  (get-cookies* [_]
-    (throw (UnsupportedOperationException.)))
-
-  (set-cookies* [^ResponseMetaData response cookies]
-    (loop [cookies (into [] cookies)]
-      (when-let [[cookiename cookiedata] (first cookies)]
-        (let [cookie (.cookie response (name cookiename) "")]
-          (reduce (fn [_ [k v]]
-                    (case k
-                      :path (.setPath cookie v)
-                      :domain (.setDomain cookie v)
-                      :secure (.setSecure cookie v)
-                      :http-only (.setHttpOnly cookie v)
-                      :max-age (.setMaxAge cookie v)
-                      :value (.setValue cookie v)))
-                  nil
-                  (into [] cookiedata))
-          (recur (rest cookies)))))))
 
 (extend-protocol io/IOFactory
   TypedData
@@ -288,95 +173,17 @@
 
   DefaultContext
   (make-reader [ctx opts]
-    (io/make-reader (get-body* ctx) opts))
+    (io/make-reader (:body ctx) opts))
   (make-writer [ctx opts]
-    (io/make-writer (get-body* ctx) opts))
+    (io/make-writer (:body ctx) opts))
   (make-input-stream [ctx opts]
-    (io/make-input-stream (get-body* ctx) opts))
+    (io/make-input-stream (:body ctx) opts))
   (make-output-stream [ctx opts]
-    (io/make-output-stream (get-body* ctx) opts))
-
-  Request
-  (make-reader [req opts]
-    (io/make-reader (get-body* req) opts))
-  (make-writer [req opts]
-    (io/make-writer (get-body* req) opts))
-  (make-input-stream [req opts]
-    (io/make-input-stream (get-body* req) opts))
-  (make-output-stream [req opts]
-    (io/make-output-stream (get-body* req) opts)))
+    (io/make-output-stream (:body ctx) opts)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Public Api
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn get-body
-  "Helper for obtain a object that represents a request
-  body. The returned object implements the IOFactory
-  protocol that allows use it with `clojure.java.io`
-  functions and `slurp`."
-  [context]
-  (get-body* context))
-
-(defn get-headers
-  "Get request headers.
-
-  This is a polymorphic function and accepts
-  Context instances as request."
-  [request]
-  (get-headers* request))
-
-(defn set-headers!
-  "Set response headers.
-
-  This is a polymorphic function and accepts
-  Context instances as response."
-  [response headers]
-  (set-headers* response headers))
-
-(defn set-status!
-  "Set response status code."
-  [response status]
-  (set-status* response status))
-
-(defn get-cookies
-  "Get the incoming cookies.
-
-  This is a polymorphic function and accepts
-  Context instances as request."
-  [request]
-  (get-cookies* request))
-
-(defn set-cookies!
-  "Set the outgoing cookies.
-
-      (set-cookies! ctx {:cookiename {:value \"value\"}})
-
-  As well as setting the value of the cookie,
-  you can also set additional attributes:
-
-  - `:domain` - restrict the cookie to a specific domain
-  - `:path` - restrict the cookie to a specific path
-  - `:secure` - restrict the cookie to HTTPS URLs if true
-  - `:http-only` - restrict the cookie to HTTP if true
-                   (not accessible via e.g. JavaScript)
-  - `:max-age` - the number of seconds until the cookie expires
-
-  As you can observe is almost identical hash map structure
-  as used in the ring especification.
-
-  This is a polymorphic function and accepts
-  Context instances as response."
-  [response cookies]
-  (set-cookies* response cookies))
-
-(defmulti send!
-  "Send data to the client."
-  (fn [response data] (class response)))
-
-(defmethod send! DefaultContext
-  [^DefaultContext context data]
-  (send data (:catacumba/context context)))
 
 (defmulti adapter
   "A polymorphic function for adapt catacumba
@@ -389,6 +196,11 @@
     (let [metadata (meta handler)]
       (:handler-type metadata)))
   :default :catacumba/default)
+
+(defn send!
+  [context data]
+  (->> (:catacumba/context context)
+       (-send data)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Adapters Implementation

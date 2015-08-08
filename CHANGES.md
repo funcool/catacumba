@@ -1,5 +1,21 @@
 # Changelog #
 
+## Version 0.5.0 ##
+
+Date: unreleased
+
+- Removed `get-body` function.
+- The context is rich by default with keyword access to all most used
+  request attributes such as body, http method, headers, cookies, params, etc...
+- Websocket internals are rewritten (now they uses completable futures for
+  backpressure control).
+- The `parse-queryparams` is replaced by `get-query-params`, and is should
+  not be used directly by the user because the parsed query params are directly
+  available in context through the `:query-params` entry.
+- Update to ratpack 0.9.19 and prepare code to up coming ratpack 1.0.0 (that
+  implies a lot of changes in the catacumba internals and performance
+  improvements).
+
 ## Version 0.4.0 ##
 
 Date: 2015-07-19

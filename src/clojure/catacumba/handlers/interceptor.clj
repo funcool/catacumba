@@ -53,8 +53,9 @@
   continuation (as a cloure function) that must be called in
   order for processing to proceed."
   [context interceptor]
-  (let [^Context ctx (:catacumba/context context)]
-    (.addInterceptor ctx
+  (let [^Context ctx (:catacumba/context context)
+        ^Execution exec (.getExecution ctx)]
+    (.addInterceptor exec
                      (exec-interceptor interceptor)
                      (reify Block
                        (^void execute [_]

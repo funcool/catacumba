@@ -24,11 +24,11 @@
 
 (ns catacumba.impl.sse
   "Server-Sent Events handler adapter implementation."
+  ;; TODO: replace direct var usage to fully namespaced calls of core.async
   (:require [clojure.core.async :refer [chan go-loop close! >! <! put!] :as async]
             [catacumba.utils :as utils]
             [catacumba.stream :as stream]
-            [catacumba.impl.context :as ctx]
-            [catacumba.impl.helpers :as helpers]
+            [catacumba.impl.helpers :as ch]
             [catacumba.impl.handlers :as handlers]
             [catacumba.impl.stream.channel :as schannel])
   (:import ratpack.handling.Handler
@@ -72,8 +72,10 @@
   (let [^Context ctx (:catacumba/context context)
         out (async/chan 1 (map event))
         pub (->> (schannel/publisher out {:close true})
-                 (.stream ctx))
-        tfm (helpers/action transform-event)]
+                 (stream/bind-exec))
+        tfm (ch/fn->action transform-event)]
+
+    ;; TODO: use own executors instead of core.async thread
     (async/thread
       (handler context out))
     (->> (ServerSentEvents/serverSentEvents pub tfm)
@@ -83,11 +85,7 @@
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]
-      (let [context (ctx/context ctx)
-            context-params (ctx/context-params context)
-            route-params (ctx/route-params context)
-            context (-> (merge context context-params)
-                        (assoc :route-params route-params))]
-        (sse context handler)))))
+      (handlers/hydrate-context ctx (fn [context]
+                                      (sse context handler))))))
 
 

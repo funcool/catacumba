@@ -26,22 +26,28 @@
   "Functions and helpers for work in a clojure
   way with ratpack types."
   (:require [catacumba.utils :as utils]
-            [catacumba.impl.helpers :as helpers])
+            [catacumba.impl.helpers :as ch])
   (:import ratpack.handling.Handler
            ratpack.handling.Context
            ratpack.handling.RequestOutcome
+           ratpack.form.Form
+           ratpack.parse.Parse
            ratpack.http.Request
            ratpack.http.Response
+           ratpack.http.Headers
+           ratpack.http.TypedData
+           ratpack.http.MutableHeaders
+           ratpack.http.ResponseMetaData
+           ratpack.util.MultiValueMap
            ratpack.server.PublicAddress
-           ratpack.registry.Registry))
+           ratpack.registry.Registry
+           java.util.Optional))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Types
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defrecord DefaultContext [^ratpack.http.Request request
-                           ^ratpack.http.Response response])
-
+(defrecord DefaultContext [])
 (defrecord ContextData [payload])
 
 (alter-meta! #'->DefaultContext assoc :private true)
@@ -55,25 +61,26 @@
 
 (defn context
   "A catacumba context constructor."
-  [^Context context']
-  (map->DefaultContext {:catacumba/context context'
-                        :request (.getRequest context')
-                        :response (.getResponse context')}))
+  {:internal true :no-doc true}
+  [data]
+  (map->DefaultContext data))
 
+(defn get-context-params*
+  {:internal true :no-doc true}
+  [^Context ctx]
+  (let [^Optional odata (.maybeGet ctx ContextData)]
+    (if (.isPresent odata)
+      @(:payload (.get odata))
+      {})))
 
-(defn context-params
+(defn get-context-params
   "Get the current context params.
 
   The current params can be passed to the next
   handler using the `delegate` function. Is a simple
   way to communicate the handlers chain."
   [^DefaultContext context]
-  (let [^Context ctx (:catacumba/context context)]
-    (try
-      (let [cdata (.get ctx ContextData)]
-        (:payload cdata))
-      (catch ratpack.registry.NotInRegistryException e
-        {}))))
+  (get-context-params* (:catacumba/context context)))
 
 (defn delegate
   "Delegate handling to the next handler in line.
@@ -87,9 +94,13 @@
      (.next ctx)))
   ([^DefaultContext context data]
    (let [^Context ctx (:catacumba/context context)
-         previous (context-params context)
-         ^Registry reg (Registry/single (ContextData. (merge previous data)))]
-     (.next ctx reg))))
+         ^Optional odata (.maybeGet ctx ContextData)]
+     (if (.isPresent odata)
+       (do
+         (vswap! (:payload (.get odata)) merge data)
+         (.next ctx))
+       (let [^Registry reg (Registry/single (ContextData. (volatile! data)))]
+         (.next ctx reg))))))
 
 (defn public-address
   "Get the current public address as URI instance.
@@ -109,19 +120,12 @@
         ^PublicAddress addr (.get ctx PublicAddress)]
     (.getAddress addr ctx)))
 
-(defn route-params
-  "Return a hash-map with parameters extracted from
-  routing patterns."
-  [^DefaultContext context]
-  (let [^Context ctx (:catacumba/context context)]
-    (into {} utils/keywordice-keys-t (.getPathTokens ctx))))
-
 (defn on-close
   "Register a callback in the context that will be called
   when the connection with the client is closed."
   [^DefaultContext context callback]
   (let [^Context ctx (:catacumba/context context)]
-    (.onClose ctx (helpers/action callback))))
+    (.onClose ctx (ch/fn->action callback))))
 
 (defn before-send
   "Register a callback in the context that will be called
@@ -129,5 +133,160 @@
   hook for set some additional cookies, headers or similar
   response transformations."
   [^DefaultContext context callback]
-  (let [^Response response (:response context)]
-    (.beforeSend response (helpers/action callback))))
+  (let [^Response response (:catacumba/response context)]
+    (.beforeSend response (ch/fn->action callback))))
+
+;; Implementation notes:
+;; Reflection is used for access to private field of Form instance
+;; because ratpack does not allows an other way for iter over
+;; all parameters (including files) in an uniform way.
+
+(defn- extract-files
+  [^Form form]
+  (let [field (.. form getClass (getDeclaredField "files"))]
+    (.setAccessible field true)
+    (.get field form)))
+
+(defn get-query-params*
+  "Parse query params from request and return a
+  maybe multivalue map."
+  {:internal :true :no-doc true}
+  [^Request request]
+  (let [^MultiValueMap params (.getQueryParams request)]
+    (persistent!
+     (reduce (fn [acc key]
+               (let [values (.getAll params key)]
+                 (reduce #(utils/assoc-conj! %1 key %2) acc values)))
+             (transient {})
+             (.keySet params)))))
+
+(defn get-query-params
+  "Parse query params from context and return a
+  maybe multivalue map."
+  [^DefaultContext context]
+  (get-query-params* (:catacumba/request context)))
+
+(defn get-route-params*
+  "Return a hash-map with parameters extracted from
+  routing patterns."
+  [^Context ctx]
+  (into {} utils/keywordice-keys-t (.getPathTokens ctx)))
+
+(defn get-route-params
+  "Return a hash-map with parameters extracted from
+  routing patterns."
+  [^DefaultContext context]
+  (get-route-params* (:catacumba/context context)))
+
+(defn get-headers*
+  [^Request request]
+  (let [^Headers headers (.getHeaders request)
+        ^MultiValueMap headers (.asMultiValueMap headers)]
+    (persistent!
+     (reduce (fn [acc ^String key]
+               (let [values (.getAll headers key)
+                     key (.toLowerCase key)]
+                 (reduce #(utils/assoc-conj! %1 key %2) acc values)))
+             (transient {})
+             (.keySet headers)))))
+
+(defn get-headers
+  [^DefaultContext context]
+  (get-headers* (:catacumba/request context)))
+
+(defn set-headers!
+  [^DefaultContext context headers]
+  (let [^Response response (:catacumba/response context)
+        ^MutableHeaders headersmap (.getHeaders response)]
+    (loop [headers headers]
+      (when-let [[key vals] (first headers)]
+        (.set headersmap (name key) vals)
+        (recur (rest headers))))))
+
+(defn- cookie->map
+  [cookie]
+  {:path (.path cookie)
+   :value (.value cookie)
+   :domain (.domain cookie)
+   :http-only (.isHttpOnly cookie)
+   :secure (.isSecure cookie)
+   :max-age (.maxAge cookie)})
+
+(defn get-cookies*
+  "Get the incoming cookies."
+  {:internal true :no-doc true}
+  [^Request request]
+  (persistent!
+   (reduce (fn [acc cookie]
+             (let [name (keyword (.name cookie))]
+               (assoc! acc name (cookie->map cookie))))
+           (transient {})
+           (into [] (.getCookies request)))))
+
+(defn get-cookies
+  "Get the incoming cookies."
+  [^DefaultContext context]
+  (get-cookies* (:catacumba/request context)))
+
+(defn set-status!
+  "Set the response http status."
+  [context status]
+  (let [^ResponseMetaData response (:catacumba/response context)]
+    (.status response status)))
+
+(defn set-cookies!
+  "Set the outgoing cookies.
+
+      (set-cookies! ctx {:cookiename {:value \"value\"}})
+
+  As well as setting the value of the cookie,
+  you can also set additional attributes:
+
+  - `:domain` - restrict the cookie to a specific domain
+  - `:path` - restrict the cookie to a specific path
+  - `:secure` - restrict the cookie to HTTPS URLs if true
+  - `:http-only` - restrict the cookie to HTTP if true
+                   (not accessible via e.g. JavaScript)
+  - `:max-age` - the number of seconds until the cookie expires
+
+  As you can observe is almost identical hash map structure
+  as used in the ring especification."
+  [^DefaultContext context cookies]
+  ;; TODO: remove nesed blocks using properly the reduce.
+  (let [^Response response (:catacumba/response context)]
+    (loop [cookies (into [] cookies)]
+      (when-let [[cookiename cookiedata] (first cookies)]
+        (let [cookie (.cookie response (name cookiename) "")]
+          (reduce (fn [_ [k v]]
+                    (case k
+                      :path (.setPath cookie v)
+                      :domain (.setDomain cookie v)
+                      :secure (.setSecure cookie v)
+                      :http-only (.setHttpOnly cookie v)
+                      :max-age (.setMaxAge cookie v)
+                      :value (.setValue cookie v)))
+                  nil
+                (into [] cookiedata))
+          (recur (rest cookies)))))))
+
+(defn get-formdata*
+  [^Context ctx ^TypedData body]
+  (let [^Form form (.parse ctx body (Parse/of Form))
+        ^MultiValueMap files (.files form)
+        result (transient {})]
+    (reduce (fn [acc key]
+              (let [values (.getAll files key)]
+                (reduce #(utils/assoc-conj! %1 key %2) acc values)))
+            result
+            (.keySet files))
+    (reduce (fn [acc key]
+              (let [values (.getAll form key)]
+                (reduce #(utils/assoc-conj! %1 key %2) acc values)))
+            result
+            (.keySet form))
+      (persistent! result)))
+
+(defn get-formdata
+  [^DefaultContext context]
+  (get-formdata* (:catacumba/context context)
+                 (:body context)))

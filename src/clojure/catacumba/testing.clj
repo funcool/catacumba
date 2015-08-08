@@ -29,8 +29,7 @@
 (defmacro with-server
   "Evaluate code in context of running catacumba server."
   [{:keys [handler sleep] :or {sleep 50} :as options} & body]
-  `(let [options# (merge {:basedir "."} ~options)
-         server# (ct/run-server ~handler options#)]
+  `(let [server# (ct/run-server ~handler (merge ~options {:debug true}))]
      (try
        ~@body
        (finally

@@ -27,6 +27,7 @@
             [catacumba.impl.stream.common :as stream.common])
   (:import org.reactivestreams.Publisher
            org.reactivestreams.Subscriber
+           ratpack.stream.Streams
            catacumba.impl.stream.pushstream.IPushStream
            catacumba.impl.stream.common.IPullStream
            clojure.lang.Seqable))
@@ -35,6 +36,10 @@
   "A polymorphic publisher constructor."
   [source]
   (stream/publisher source))
+
+(defn bind-exec
+  [source]
+  (Streams/bindExec source))
 
 (defn transform
   "A polymorphic publisher transformer."

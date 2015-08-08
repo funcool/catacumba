@@ -24,13 +24,14 @@
 
 (ns catacumba.impl.server
   (:require [catacumba.utils :as utils]
-            [catacumba.impl.helpers :as helpers]
+            [catacumba.impl.helpers :as ch]
             [catacumba.impl.websocket :as websocket]
             [catacumba.impl.handlers :as handlers]
             [clojure.java.io :as io]
             [environ.core :refer [env]])
   (:import ratpack.server.RatpackServer
            ratpack.server.ServerConfig
+           ratpack.server.BaseDir
            ratpack.server.RatpackServerSpec
            ratpack.registry.RegistrySpec
            ratpack.ssl.SSLContexts
@@ -46,13 +47,14 @@
       (:handler-type metadata))))
 
 (defmethod setup-handler :catacumba/router
-  [handler ^RatpackServerSpec spec]
-  (.handlers spec ^Action (helpers/action handler)))
+  [factory ^RatpackServerSpec spec]
+  (.handlers spec ^Action (ch/fn->action factory)))
 
 (defmethod setup-handler :default
   [handler ^RatpackServerSpec spec]
-  (letfn [(rhandler [_] (handlers/adapter handler))]
-    (.handler spec ^Function (helpers/function rhandler))))
+  (.handler spec (reify Function
+                   (apply [_ _]
+                     (handlers/adapter handler)))))
 
 (defn- bootstrap-registry
   "A bootstrap server hook for setup initial
@@ -76,9 +78,15 @@
         basedir (or (:catacumba-basedir env) basedir)
         debug (or (:catacumba-debug env) debug)
         sslcontext (build-ssl-context keystore)
-        config (if (string? basedir)
-                 (ServerConfig/baseDir ^Path (utils/str->path basedir))
-                 (ServerConfig/noBaseDir))]
+        config (ServerConfig/builder)]
+    (if (string? basedir)
+      (.baseDir config ^Path (utils/str->path basedir))
+      (try
+        (let [^Path path (BaseDir/find ".catacumba")]
+          (.baseDir config path))
+        (catch IllegalStateException e
+          ;; Do Nothing explicitly
+          )))
     (when sslcontext (.ssl config sslcontext))
     (when public-address (.publicAddress config (java.net.URI. public-address)))
     (when max-body-size (.maxContentLength config max-body-size))
@@ -91,7 +99,7 @@
   "The ratpack server configuration callback."
   [^RatpackServerSpec spec handler {:keys [setup] :as options}]
   (.serverConfig spec ^ServerConfig (build-server-config options))
-  (.registryOf spec (helpers/action #(bootstrap-registry % options)))
+  (.registryOf spec (ch/fn->action #(bootstrap-registry % options)))
   (setup-handler handler spec))
 
 (defn run-server
@@ -108,7 +116,9 @@
 
   Additional notes:
 
-  - The `:basedir` is used mainly for resolve relative paths for assets.
+  - The `:basedir` is used mainly to resolve relative paths for assets. When you set
+    no basedir it first try to find a .catacumba file in the root of you classpath if
+    it cannot find that it will run without a basedir
   - With `:publicaddress` you can force one specific public address, in case contrary it
     will be discovered using a variety of different strategies explained in the
     `public-address` function docstring.
@@ -122,7 +132,7 @@
   "
   ([handler] (run-server handler {}))
   ([handler options]
-   (let [^Action callback (helpers/action #(configure-server % handler options))
+   (let [^Action callback (ch/fn->action #(configure-server % handler options))
          ^RatpackServer server (RatpackServer/of callback)]
      (.start server)
     server)))

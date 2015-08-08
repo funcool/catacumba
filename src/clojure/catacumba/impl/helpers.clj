@@ -29,10 +29,13 @@
            ratpack.func.Function
            ratpack.func.Block
            ratpack.exec.Promise
+           ratpack.exec.Upstream
+           ratpack.exec.Downstream
            ratpack.handling.Context
+           java.util.concurrent.CompletableFuture
            io.netty.buffer.Unpooled))
 
-(defn action
+(defn ^Action fn->action
   "Coerce a plain clojure function into
   ratpacks's Action interface."
   [callable]
@@ -40,15 +43,7 @@
     (^void execute [_ x]
       (callable x))))
 
-(defn function
-  "Coerce a plain clojure function into
-  ratpacks's Function interface."
-  [callable]
-  (reify Function
-    (apply [_ x]
-      (callable x))))
-
-(defn ^Block block
+(defn ^Block fn->block
   "Coerce a plain clojure function into
   ratpacks's Block interface."
   [callable]
@@ -56,11 +51,60 @@
     (execute [_]
       (callable))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Promise & Async blocks
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defprotocol IPromiseAcceptor
+  (-accept [v ds]))
+
+(extend-protocol IPromiseAcceptor
+  CompletableFuture
+  (-accept [f ^Downstream ds]
+    (.accept ds f))
+
+  Throwable
+  (-accept [e ^Downstream ds]
+    (.error ds e))
+
+  Object
+  (-accept [o ^Downstream ds]
+    (.success ds o)))
+
 (defn promise
-  "A convenience function for create ratpack
-  promises from context instance."
-  [^Context ctx callback]
-  (.promise ctx (action callback)))
+  "A convenience function for create ratpack promises."
+  [callback]
+  (Promise/of (reify Upstream
+                (^void connect [_ ^Downstream ds]
+                  (let [continuation #(-accept % ds)]
+                    (callback continuation))))))
+
+(defmacro blocking
+  "Performs a blocking operation on a separate thread,
+  returning a promise for its value."
+  [& body]
+  `(Blocking/get
+    (reify ratpack.func.Factory
+      (create [_]
+        ~@body))))
+
+(defmacro async
+  "Perform a async operation and return a promise.
+
+  Warning: this function does not launch any additional
+  thread, so is the user responsability does not
+  call any blocking call inside the async block."
+  [name & body]
+  `(promise (fn [~name]
+              ~@body)))
+
+(defn then
+  [^Promise promise callback]
+  (.then promise (fn->action callback)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Bytebuffer coersions.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defprotocol IByteBuffer
   (bytebuffer [_] "Coerce to byte buffer."))
@@ -70,13 +114,19 @@
   (bytebuffer [s]
     (Unpooled/wrappedBuffer (.getBytes s "UTF-8"))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Promissum IFuture protocol implementation
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; TODO: deprecate this because the implementation is wrong.
+
 (extend-protocol pt/IFuture
   ratpack.exec.Promise
   (map [this callback]
-    (.then ^Promise this (action callback))
+    (.then ^Promise this (fn->action callback))
     this)
   (flatmap [this callback]
     (throw (UnsupportedOperationException. "Not implemented")))
   (error [this callback]
-    (.onError ^Promise this (action callback))
+    (.onError ^Promise this (fn->action callback))
     this))

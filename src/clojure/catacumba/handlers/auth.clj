@@ -25,20 +25,18 @@
 (ns catacumba.handlers.auth
   "Authentication and Authorization facilities for catacumba
   using funcool/buddy "
-  (:require [catacumba.handlers.core :refer [hydrate-context]]
-            [catacumba.impl.handlers :as handlers]
+  ;; TODO: rename to shorter ns aliases
+  (:require [catacumba.impl.handlers :as handlers]
             [catacumba.impl.routing :as routing]
             [catacumba.impl.context :as context]
-            [catacumba.impl.helpers :as helpers]
-            [catacumba.impl.types]
+            [catacumba.impl.helpers :as ch]
             [catacumba.impl.http]
             [buddy.sign.jws :as jws]
             [buddy.sign.jwe :as jwe]
             [slingshot.slingshot :refer [try+]]
             [promissum.core :as p])
-  (:import catacumba.impl.types.DefaultContext
-           catacumba.impl.http.Response
-           ratpack.exec.Fulfiller
+  (:import catacumba.impl.context.DefaultContext
+           ratpack.exec.Downstream
            ratpack.exec.Promise
            ratpack.handling.Chain
            ratpack.handling.Handler))
@@ -135,31 +133,27 @@
   "Perform an asynchronous recursive loop over all
   provided backends and tries to authenticate with
   all them in order."
-  [context backends ^Fulfiller ff]
+  [context backends callback]
   (if-let [backend (first backends)]
     (let [last? (empty? (rest backends))
           token (parse backend context)]
       (if (and (nil? token) last?)
-        (.success ff {})
+        (callback {})
         (-> (authenticate backend context token)
             (p/then (fn [ue]
                       (if (nil? ue)
-                        (do-auth context (rest backends) ff)
-                        (.success ff {:identity ue}))))
-            (p/catch (fn [e]
-                       ;; TODO: add error logging
-                       (.success ff {}))))))
-    (.success ff {})))
+                        (do-auth context (rest backends) callback)
+                        (callback {:identity ue}))))
+            (p/catch (fn [e] (callback {}))))))
+    (callback {})))
 
 (defn auth
   "Authentication chain handler constructor."
   [& backends]
   {:pre [(pos? (count backends))]}
   (fn [context]
-    (let [context (hydrate-context context)]
-      (-> (:catacumba/context context)
-          (helpers/promise #(do-auth context backends %))
-          (p/then #(context/delegate context %))))))
+    (-> (ch/promise #(do-auth context backends %))
+        (ch/then #(context/delegate context %)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Adapters

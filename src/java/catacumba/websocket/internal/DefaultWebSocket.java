@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 the original author or authors.
+ * Copyright 2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,50 +21,36 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import catacumba.websocket.WebSocket;
-import ratpack.handling.Context;
-import ratpack.exec.Promise;
-import ratpack.exec.Fulfiller;
-import ratpack.func.Action;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class DefaultWebSocket implements WebSocket {
 
-  private final Context context;
+public class DefaultWebSocket implements WebSocket {
+  // private static final Logger LOGGER = LoggerFactory.getLogger(WebSocket.class);
   private final Channel channel;
   private final Runnable onClose;
   private final AtomicBoolean open;
 
-  public DefaultWebSocket(Context context, Channel channel, AtomicBoolean open, Runnable onClose) {
-    this.context = context;
+  public DefaultWebSocket(Channel channel, AtomicBoolean open, Runnable onClose) {
     this.channel = channel;
     this.onClose = onClose;
     this.open = open;
   }
 
   @Override
-  public Context getContext() {
-    return this.context;
+  public void close() {
+    close(1000, null);
   }
 
   @Override
-  public Promise close() {
-    return close(1000, null);
-  }
-
-  @Override
-  public Promise<Void> close(int statusCode, String reason) {
+  public void close(int statusCode, String reason) {
     open.set(false);
     channel.writeAndFlush(new CloseWebSocketFrame(statusCode, reason));
-    final ChannelFuture future = channel.close();
-    future.addListener(f -> onClose.run());
-
-    return this.context.promise(new Action<Fulfiller<Void>>() {
-        public void execute(Fulfiller<Void> f) {
-          future.addListener(future -> f.success(null));
-        }
-      });
+    channel.close().addListener(future -> onClose.run());
   }
 
   @Override
@@ -73,23 +59,30 @@ public class DefaultWebSocket implements WebSocket {
   }
 
   @Override
-  public Promise<Void> send(String text) {
-    final ChannelFuture future = channel.writeAndFlush(new TextWebSocketFrame(text));
-    return this.context.promise(new Action<Fulfiller<Void>>() {
-        public void execute(Fulfiller<Void> f) {
-          future.addListener(future -> f.success(null));
+  public CompletionStage<Void> send(String text) {
+    final CompletableFuture<Void> f = new CompletableFuture<Void>();
+    channel.writeAndFlush(new TextWebSocketFrame(text)).addListener(future -> {
+        if (future.isSuccess()) {
+          f.complete(null);
+        } else {
+          f.completeExceptionally(future.cause());
         }
       });
+
+    return f;
   }
 
   @Override
-  public Promise<Void> send(ByteBuf text) {
-    final ChannelFuture future = channel.writeAndFlush(new TextWebSocketFrame(text));
-    return this.context.promise(new Action<Fulfiller<Void>>() {
-        public void execute(Fulfiller<Void> f) {
-          future.addListener(future -> f.success(null));
+  public CompletionStage<Void> send(ByteBuf data) {
+    final CompletableFuture<Void> f = new CompletableFuture<Void>();
+    channel.writeAndFlush(new BinaryWebSocketFrame(data)).addListener(future -> {
+        if (future.isSuccess()) {
+          f.complete(null);
+        } else {
+          f.completeExceptionally(future.cause());
         }
       });
-  }
 
+    return f;
+  }
 }

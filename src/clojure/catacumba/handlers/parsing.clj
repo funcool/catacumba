@@ -23,9 +23,7 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (ns catacumba.handlers.parsing
-  (:require [catacumba.impl.context :as context]
-            [catacumba.impl.parse :as parse]
-            [catacumba.impl.handlers :as handlers]
+  (:require [catacumba.impl.context :as ct]
             [cheshire.core :as json])
   (:import ratpack.http.Request
            ratpack.http.TypedData
@@ -35,8 +33,7 @@
   "A polymorophic method for parse body into clojure
   friendly data structure."
   (fn [^Context ctx ^TypedData body]
-    (let [^Request request (.getRequest ctx)
-          ^String contenttype (.. request getBody getContentType getType)]
+    (let [^String contenttype (.. body getContentType getType)]
       (if contenttype
         (keyword (.toLowerCase contenttype))
         :application/octet-stream)))
@@ -44,11 +41,11 @@
 
 (defmethod parse :multipart/form-data
   [^Context ctx ^TypedData body]
-  (parse/parse-formdata* ctx))
+  (ct/get-formdata* ctx body))
 
 (defmethod parse :application/x-www-form-urlencoded
   [^Context ctx ^TypedData body]
-  (parse/parse-formdata* ctx))
+  (ct/get-formdata* ctx body))
 
 (defmethod parse :application/json
   [^Context ctx ^TypedData body]
@@ -69,5 +66,5 @@
   ([parsefn]
    (fn [context]
      (let [^Context ctx (:catacumba/context context)
-           ^TypedData body (.. ctx getRequest getBody)]
-       (context/delegate context {:body (parsefn ctx body)})))))
+           ^TypedData body (:body context)]
+       (ct/delegate context {:data (parsefn ctx body)})))))

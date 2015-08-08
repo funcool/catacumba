@@ -206,28 +206,33 @@
 ;; Adapters Implementation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; TODO: implement this in more efficient way
-;; The current approach is not bad but I personally
-;; prefer find a better one.
+;; TODO: Remove repeated context building accross handlers
+;; delegation process.
+;; (defrecord InternalCache [payload])
+;; (alter-meta! #'->InternalCache assoc :private true)
+;; (alter-meta! #'map->InternalCache assoc :private true)
 
 (defn hydrate-context
   {:internal true :no-doc true}
   [^Context ctx callback]
-  (letfn [(continuation [^Request request ^TypedData body]
-            (let [context (ct/context ctx)
-                  params (ct/get-context-params context)
-                  extra {:body body
-                         :path (str "/" (.getPath request))
-                         :query (.getQuery request)
-                         :method (keyword (.. request getMethod getName toLowerCase))
-                         :query-params (ct/get-query-params context)
-                         :route-params (ct/get-route-params context)
-                         :cookies (ct/get-cookies context)
-                         :headers (ct/get-headers context)}]
-              (callback (merge context params extra))))]
+  (letfn [(continuation [^DefaultContext context ^TypedData body]
+            (let [context (assoc context :body body)]
+              (callback (merge context (ct/get-context-params* ctx)))))]
     (let [^Request request (.getRequest ctx)
-          ^Promise promise (.getBody request)]
-      (ch/then promise (partial continuation request)))))
+          ^Response response (.getResponse ctx)
+          ^Promise promise (.getBody request)
+          contextdata {:catacumba/context ctx
+                       :catacumba/request request
+                       :catacumba/response response
+                       :path (str "/" (.getPath request))
+                       :query (.getQuery request)
+                       :method (keyword (.. request getMethod getName toLowerCase))
+                       :query-params (ct/get-query-params* request)
+                       :route-params (ct/get-route-params* ctx)
+                       :cookies (ct/get-cookies* request)
+                       :headers (ct/get-headers* request)}
+          context (ct/context contextdata)]
+      (ch/then promise (partial continuation context)))))
 
 (defmethod adapter :catacumba/default
   [handler]

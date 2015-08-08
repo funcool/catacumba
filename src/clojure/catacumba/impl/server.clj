@@ -47,8 +47,8 @@
       (:handler-type metadata))))
 
 (defmethod setup-handler :catacumba/router
-  [handler ^RatpackServerSpec spec]
-  (.handlers spec ^Action (ch/fn->action handler)))
+  [factory ^RatpackServerSpec spec]
+  (.handlers spec ^Action (ch/fn->action factory)))
 
 (defmethod setup-handler :default
   [handler ^RatpackServerSpec spec]

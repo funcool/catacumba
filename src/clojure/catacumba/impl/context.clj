@@ -31,14 +31,17 @@
            ratpack.handling.Context
            ratpack.handling.RequestOutcome
            ratpack.form.Form
+           ratpack.parse.Parse
            ratpack.http.Request
            ratpack.http.Response
            ratpack.http.Headers
+           ratpack.http.TypedData
            ratpack.http.MutableHeaders
            ratpack.http.ResponseMetaData
            ratpack.util.MultiValueMap
            ratpack.server.PublicAddress
-           ratpack.registry.Registry))
+           ratpack.registry.Registry
+           java.util.Optional))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Types
@@ -59,10 +62,16 @@
 (defn context
   "A catacumba context constructor."
   {:internal true :no-doc true}
+  [data]
+  (map->DefaultContext data))
+
+(defn get-context-params*
+  {:internal true :no-doc true}
   [^Context ctx]
-  (map->DefaultContext {:catacumba/context ctx
-                        :catacumba/request (.getRequest ctx)
-                        :catacumba/response (.getResponse ctx)}))
+  (let [^Optional odata (.maybeGet ctx ContextData)]
+    (if (.isPresent odata)
+      @(:payload (.get odata))
+      {})))
 
 (defn get-context-params
   "Get the current context params.
@@ -71,12 +80,7 @@
   handler using the `delegate` function. Is a simple
   way to communicate the handlers chain."
   [^DefaultContext context]
-  (let [^Context ctx (:catacumba/context context)]
-    (try
-      (let [cdata (.get ctx ContextData)]
-        (:payload cdata))
-      (catch ratpack.registry.NotInRegistryException e
-        {}))))
+  (get-context-params* (:catacumba/context context)))
 
 (defn delegate
   "Delegate handling to the next handler in line.
@@ -90,9 +94,13 @@
      (.next ctx)))
   ([^DefaultContext context data]
    (let [^Context ctx (:catacumba/context context)
-         previous (get-context-params context)
-         ^Registry reg (Registry/single (ContextData. (merge previous data)))]
-     (.next ctx reg))))
+         ^Optional odata (.maybeGet ctx ContextData)]
+     (if (.isPresent odata)
+       (do
+         (vswap! (:payload (.get odata)) merge data)
+         (.next ctx))
+       (let [^Registry reg (Registry/single (ContextData. (volatile! data)))]
+         (.next ctx reg))))))
 
 (defn public-address
   "Get the current public address as URI instance.
@@ -139,12 +147,12 @@
     (.setAccessible field true)
     (.get field form)))
 
-(defn get-query-params
+(defn get-query-params*
   "Parse query params from request and return a
   maybe multivalue map."
-  [^DefaultContext context]
-  (let [^Request request (:catacumba/request context)
-        ^MultiValueMap params (.getQueryParams request)]
+  {:internal :true :no-doc true}
+  [^Request request]
+  (let [^MultiValueMap params (.getQueryParams request)]
     (persistent!
      (reduce (fn [acc key]
                (let [values (.getAll params key)]
@@ -152,18 +160,28 @@
              (transient {})
              (.keySet params)))))
 
+(defn get-query-params
+  "Parse query params from context and return a
+  maybe multivalue map."
+  [^DefaultContext context]
+  (get-query-params* (:catacumba/request context)))
+
+(defn get-route-params*
+  "Return a hash-map with parameters extracted from
+  routing patterns."
+  [^Context ctx]
+  (into {} utils/keywordice-keys-t (.getPathTokens ctx)))
+
 (defn get-route-params
   "Return a hash-map with parameters extracted from
   routing patterns."
   [^DefaultContext context]
-  (let [^Context ctx (:catacumba/context context)]
-    (into {} utils/keywordice-keys-t (.getPathTokens ctx))))
+  (get-route-params* (:catacumba/context context)))
 
-(defn get-headers
-  [^DefaultContext context]
-  (let [^Request request (:catacumba/request context)
-        ^Headers headers (.getHeaders request)
-          ^MultiValueMap headers (.asMultiValueMap headers)]
+(defn get-headers*
+  [^Request request]
+  (let [^Headers headers (.getHeaders request)
+        ^MultiValueMap headers (.asMultiValueMap headers)]
     (persistent!
      (reduce (fn [acc ^String key]
                (let [values (.getAll headers key)
@@ -171,6 +189,10 @@
                  (reduce #(utils/assoc-conj! %1 key %2) acc values)))
              (transient {})
              (.keySet headers)))))
+
+(defn get-headers
+  [^DefaultContext context]
+  (get-headers* (:catacumba/request context)))
 
 (defn set-headers!
   [^DefaultContext context headers]
@@ -190,16 +212,21 @@
    :secure (.isSecure cookie)
    :max-age (.maxAge cookie)})
 
+(defn get-cookies*
+  "Get the incoming cookies."
+  {:internal true :no-doc true}
+  [^Request request]
+  (persistent!
+   (reduce (fn [acc cookie]
+             (let [name (keyword (.name cookie))]
+               (assoc! acc name (cookie->map cookie))))
+           (transient {})
+           (into [] (.getCookies request)))))
+
 (defn get-cookies
   "Get the incoming cookies."
   [^DefaultContext context]
-  (let [^Request request (:catacumba/request context)]
-    (persistent!
-     (reduce (fn [acc cookie]
-               (let [name (keyword (.name cookie))]
-                 (assoc! acc name (cookie->map cookie))))
-             (transient {})
-             (into [] (.getCookies request))))))
+  (get-cookies* (:catacumba/request context)))
 
 (defn set-status!
   "Set the response http status."
@@ -242,30 +269,24 @@
                 (into [] cookiedata))
           (recur (rest cookies)))))))
 
-(defprotocol IFormDataGetter
-  (get-formdata [_]
-    "Get form encoded or multipart request data and return
-    it as multivalue map."))
+(defn get-formdata*
+  [^Context ctx ^TypedData body]
+  (let [^Form form (.parse ctx body (Parse/of Form))
+        ^MultiValueMap files (.files form)
+        result (transient {})]
+    (reduce (fn [acc key]
+              (let [values (.getAll files key)]
+                (reduce #(utils/assoc-conj! %1 key %2) acc values)))
+            result
+            (.keySet files))
+    (reduce (fn [acc key]
+              (let [values (.getAll form key)]
+                (reduce #(utils/assoc-conj! %1 key %2) acc values)))
+            result
+            (.keySet form))
+      (persistent! result)))
 
-(extend-protocol IFormDataGetter
-  DefaultContext
-  (get-formdata [^DefaultContext context]
-    (let [^Context ctx (:catacumba/context context)]
-      (get-formdata ctx)))
-
-  Context
-  (get-formdata [^Context ctx]
-    (let [^MultiValueMap form (.parse ctx Form)
-          ^MultiValueMap files (extract-files form)
-          result (transient {})]
-      (reduce (fn [acc key]
-                (let [values (.getAll files key)]
-                  (reduce #(utils/assoc-conj! %1 key %2) acc values)))
-              result
-              (.keySet files))
-      (reduce (fn [acc key]
-                (let [values (.getAll form key)]
-                  (reduce #(utils/assoc-conj! %1 key %2) acc values)))
-              result
-              (.keySet form))
-      (persistent! result))))
+(defn get-formdata
+  [^DefaultContext context]
+  (get-formdata* (:catacumba/context context)
+                 (:body context)))

@@ -1,6 +1,6 @@
 = Catacumba - Web toolkit for Clojure.
 Andrey Antukh, <niwi@niwi.nz>
-v0.4.0
+v0.5.0
 :toc: left
 :!numbered:
 :idseparator: -
@@ -13,18 +13,51 @@ v0.4.0
 == Introduction
 
 _Catacumba_ is an asynchronous and non-blocking web toolkit for Clojure built on top of
-ratpack and netty. Is highly inspired by ratpack handlers approach with a little ideas
-from the well known ring.
+ratpack and netty and with design influenced by ring, pedestal and ratpack.
 
 
 === Rationale
 
-I start writting this library as a research project to provide a simple an non obstructive
-(a la ring) way to build asynchronous and non-blocking web services.
+I start writting this library as a research project to provide a simple, non
+obstructive (a la ring) but without constrains of the existing spec (ring spec),
+web toolkit for build asynchronous and non-blocking web services.
 
+In the Clojure ecosystem there are several existing solutions for that purpose. For
+mention some of them, we have Pedestal, Aleph, Jet, Immutant, etc. With the exception of
+Pedestal, the rest are build on top of the ring spec, that something I want exclude from
+the equation. And Pedestal is to much high level and opinionated, so it not
+fits very well with the initial constraints.
+
+Some detailed explanation of differencies with few of them are explained in the FAQ
+section of this documentation.
+
+Here a incomplete list of things that _catacumba_ aims to archieve:
+
+* Have a flexible and extensible way to setup different kind of handlers
+* Provide a simple and lightweight approach for defining asynchronous web services with
+  support for different abstractions, such as promises, futures, core.async, manifold,
+  reactive-streams, ...
+* Build almost everything up on abstractions for simple and easy extensibility.
+* Provide a built-in, data-based routing.
+* To be flexible and not very opinionated.
+* Have backpressure support out of the box.
+
+And _catacumba_ goals are not:
+
+* To be a fully integrated full stack solution like immutant or pedestal.
+* To provide an opinionated way to structure your "bussines logic"
+* To provide all possible features that you might need.
+* To be a low level, ring based library.
+
+The result of this research project is an powerfull, lightweight, and fully extensible
+asynchronous web toolkit built on top of existing and well designed components such as
+Ratpack, Netty, Rective-Streams and core.async.
+
+////
+TODO: move this into FAQ section
 In the Clojure ecosystem there are several solutions for that purpose: Pedestal, Aleph,
-and Jet. All them are good Clojure libraries/frameworks but none of them satisfies me for
-different reasons:
+Jet and Immutant. All them are good Clojure libraries/frameworks but none of them
+satisfies me for different reasons (some of them explained in the FAQ section).
 
 * The pedestal approach is very opinionated and too much high level and I prefer something
   simple, lightweight and maybe less opinionated.
@@ -36,27 +69,8 @@ different reasons:
   drawbacks, it is build as ring adapter having all the good and all the bad of ring and
   it is using Jetty (Jetty is a servlet server that comes with optional async support, it
   isn't asynchronous from the ground up).
+////
 
-
-=== Goals
-
-Here a incomplete list of things that _catacumba_ aims to achieve:
-
-* Have a flexible and extensible way to setup different kind of handlers
-* Provide a simple and lightweight approach for defining asynchronous web services with
-  support for different abstractions, such as promises, futures, core.async, manifold,
-  reactive-streams, ...
-* Build almost everything up on abstractions for simple and easy extensibility.
-* Provide a built-in, data-based routing.
-* To be flexible and not very opinionated.
-* Have backpressure support out of the box.
-
-_Catacumba_ goals are not:
-
-* To be a fully integrated full stack solution like immutant or pedestal.
-* To provide an opinionated way to structure your "bussines logic"
-* To provide all possible features that you might need.
-* To be a low level, ring based library.
 
 
 === Project Maturity
@@ -81,7 +95,7 @@ dependency vector on your *_project.clj_* file:
 
 [source,clojure]
 ----
-[funcool/catacumba "0.4.0"]
+[funcool/catacumba "0.5.0"]
 ----
 
 *Gradle*
@@ -90,7 +104,7 @@ If you are using gradle, this is a dependency line for gradle dsl:
 
 [source, groovy]
 ----
-compile "funcool:catacumba:0.4.0"
+compile "funcool:catacumba:0.5.0"
 ----
 
 [[quickstart]]
@@ -133,7 +147,7 @@ handler as first parameter:
 ----
 
 TIP: The `run-server` function does not block and you can execute it in a repl without
-problems. It uses jvm not daemon threads for avoid shutdown the jvm.
+problems.
 
 
 === Complete example
@@ -155,8 +169,7 @@ This is what the complete source code of the example looks like:
   (ct/run-server my-hello-world-handler))
 ----
 
-
-_Catacumba_ comes with a little collection of <<examples,Examples>> that may help you
+_Catacumba_ also comes with a little collection of <<examples,Examples>> that may help you
 setup your first project.
 
 
@@ -194,7 +207,8 @@ The hello world handler has this aspect:
 
 NOTE: I mention the "default" word because, _catacumba_ comes with different
 <<handler-types,types of handlers>> out of the box. The catacumba's handlers system is
-fully extensible so you can easyly create your own handler types (adapters).
+fully extensible so you can easyly create your own handler types (also called adapters
+the internal terminology).
 
 
 ==== Write to response
@@ -252,26 +266,29 @@ context is the main protagonist in IO operations.
 
 ==== Reading the request
 
-As we mentioned previously, the request can also be retrieved from the context instance.
-But in our case, _catacumba_ provides helpers functions to access the most essential data
-such as the request body, request headers, cookies and routing tokens.
+As we mentioned previously, the `context` is the central part of the IO operations, so
+you can treat it as request and response in the same time.
 
-You can access to the request object using the `get-request` function. But, in almost all
-situations you do not need it because the _catacumba_ api is polymorphic and you can get
-access to almost all basic properties from request using a context as parameter, so you
-don't need to extract the request from context repeatedly.
-
+A context behaves identical to the clojure map and contains the basic request related
+attributes such as `:body`, `:query` and `:headers`, among others (explained in other
+sections).
 
 ===== Body
 
-For access to the request body, _catacumba_ exposes a `get-body` function. This function
-returns a ratpack link:http://ratpack.io/manual/current/api/ratpack/http/TypedData.html[internal type]
-that represents a body.
+The request body can retrieved with the `:body` keyword from the `context`.
+
+[source, clojure]
+----
+(:body request)
+;; => <TypedData>
+----
+
+The `TypedData` is a ratpack link:http://ratpack.io/manual/current/api/ratpack/http/TypedData.html[internal type]
+that represents the http request body.
 
 That object exposes through Java interop methods to access the content type and the raw
-data of the request body. For convenience sake, it also implements the necesarry protocols
-of the `clojure.java.io` namespace to make it compatible with Clojure's native facilities
-for reading data.
+data of the request body. For convenience, it implements the `clojure.java.io` protocols
+for make it compatible with Clojure's native facilities for reading data.
 
 A good demostration of this is using the clojure `slurp` function. It uses
 `clojure.java.io` abstractions behind the scenes and serves as helper for reading a
@@ -281,12 +298,12 @@ resource as a string:
 ----
 (def myechohandler
   [context]
-  (let [^String body (slurp (ct/get-body context))]
+  (let [^String body (slurp (:body context))]
     (http/ok body)))
 ----
 
-If you don't know the behavior of slurp, it reads the content of the provided resource as
-string and return it.
+The `slurp` function uses the abstractions defined on the `clojure.java.io` namespace
+for read the content of the provided resourse as string and return it.
 
 Furthermore, _catacumba_ offers a more flexible way to parsing body data based on the
 incoming content type, but it is explained with more details in the
@@ -295,17 +312,15 @@ incoming content type, but it is explained with more details in the
 
 ===== Headers
 
-In order to extract headers you should use the `get-headers` function. As usual, it is a
-polymorphic function and you could use it with a context instance without problems. The
-return value is a clojure map.
-
-If a header has multiple values, the value will be a vector.
+Like the http request body, the http headers are available through the `:headers` key
+entry. In order to extract some header, just perform the apropiate lookup:
 
 [source, clojure]
 ----
-(ct/get-headers context)
-;; => {:content-type ...}
-----
+(get-in context [:headers :origin])
+;; => "https://github.com"
+
+If a header has multiple values, the value will be a vector.
 
 
 ===== Cookies

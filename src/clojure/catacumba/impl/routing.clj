@@ -26,7 +26,8 @@
   (:require [catacumba.impl.handlers :as hs]
             [catacumba.impl.context :as ct]
             [catacumba.impl.helpers :as ch])
-  (:import ratpack.handling.Context
+  (:import catacumba.impl.context.DefaultContext
+           ratpack.handling.Context
            ratpack.handling.Chain
            ratpack.handling.Handlers
            ratpack.handling.Handler
@@ -85,10 +86,10 @@
   (letfn [(on-register [^RegistrySpec rspec]
             (let [ehandler (reify ServerErrorHandler
                              (error [_ ctx throwable]
-                               (let [context (ct/context ctx)
-                                     response (error-handler context throwable)]
-                                 (when (satisfies? hs/IHandlerResponse response)
-                                   (hs/-handle-response response context)))))]
+                               (hs/hydrate-context ctx (fn [^DefaultContext context]
+                                                         (let [response (error-handler context throwable)]
+                                                           (when (satisfies? hs/IHandlerResponse response)
+                                                             (hs/-handle-response response context)))))))]
               (.add rspec ServerErrorHandler ehandler)))]
     (.register chain ^Action (ch/fn->action on-register))))
 

@@ -29,7 +29,7 @@
             [catacumba.utils :as utils]
             [catacumba.impl.context :as ctx]
             [catacumba.impl.helpers :as ch]
-            [catacumba.impl.handlers :as handlers])
+            [catacumba.impl.handlers :as hs])
   (:import ratpack.handling.Handler
            ratpack.handling.Context
            ratpack.func.Action
@@ -87,9 +87,9 @@
     (->> (WebSocketSession. in out ctrl context handler)
          (WebSockets/websocket ^Context (:catacumba/context context)))))
 
-(defmethod handlers/adapter :catacumba/websocket
+(defmethod hs/adapter :catacumba/websocket
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]
-      (let [context (ctx/context ctx)]
-        (websocket context handler)))))
+      (hs/hydrate-context ctx (fn [^DefaultContext context]
+                             (websocket context handler))))))

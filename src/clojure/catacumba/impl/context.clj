@@ -26,7 +26,7 @@
   "Functions and helpers for work in a clojure
   way with ratpack types."
   (:require [catacumba.utils :as utils]
-            [catacumba.impl.helpers :as ch])
+            [catacumba.helpers :as hp])
   (:import ratpack.handling.Handler
            ratpack.handling.Context
            ratpack.handling.RequestOutcome
@@ -125,7 +125,7 @@
   when the connection with the client is closed."
   [^DefaultContext context callback]
   (let [^Context ctx (:catacumba/context context)]
-    (.onClose ctx (ch/fn->action callback))))
+    (.onClose ctx (hp/fn->action callback))))
 
 (defn before-send
   "Register a callback in the context that will be called
@@ -134,7 +134,7 @@
   response transformations."
   [^DefaultContext context callback]
   (let [^Response response (:catacumba/response context)]
-    (.beforeSend response (ch/fn->action callback))))
+    (.beforeSend response (hp/fn->action callback))))
 
 ;; Implementation notes:
 ;; Reflection is used for access to private field of Form instance

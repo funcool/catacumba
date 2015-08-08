@@ -13,7 +13,6 @@
             [manifold.deferred :as md]
             [catacumba.core :as ct]
             [catacumba.http :as http]
-            [catacumba.impl.helpers :as ch]
             [catacumba.testing :refer [with-server]]
             [catacumba.handlers.interceptor])
   (:import ratpack.exec.Execution

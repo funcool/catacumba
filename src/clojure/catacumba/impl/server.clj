@@ -24,7 +24,7 @@
 
 (ns catacumba.impl.server
   (:require [catacumba.utils :as utils]
-            [catacumba.impl.helpers :as ch]
+            [catacumba.helpers :as hp]
             [catacumba.impl.websocket :as websocket]
             [catacumba.impl.handlers :as handlers]
             [clojure.java.io :as io]
@@ -48,7 +48,7 @@
 
 (defmethod setup-handler :catacumba/router
   [factory ^RatpackServerSpec spec]
-  (.handlers spec ^Action (ch/fn->action factory)))
+  (.handlers spec ^Action (hp/fn->action factory)))
 
 (defmethod setup-handler :default
   [handler ^RatpackServerSpec spec]
@@ -99,7 +99,7 @@
   "The ratpack server configuration callback."
   [^RatpackServerSpec spec handler {:keys [setup] :as options}]
   (.serverConfig spec ^ServerConfig (build-server-config options))
-  (.registryOf spec (ch/fn->action #(bootstrap-registry % options)))
+  (.registryOf spec (hp/fn->action #(bootstrap-registry % options)))
   (setup-handler handler spec))
 
 (defn run-server
@@ -132,7 +132,7 @@
   "
   ([handler] (run-server handler {}))
   ([handler options]
-   (let [^Action callback (ch/fn->action #(configure-server % handler options))
+   (let [^Action callback (hp/fn->action #(configure-server % handler options))
          ^RatpackServer server (RatpackServer/of callback)]
      (.start server)
     server)))

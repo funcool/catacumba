@@ -22,7 +22,7 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(ns catacumba.impl.helpers
+(ns catacumba.helpers
   (:refer-clojure :exclude [promise])
   (:require [promissum.protocols :as pt])
   (:import ratpack.func.Action
@@ -38,6 +38,7 @@
 (defn ^Action fn->action
   "Coerce a plain clojure function into
   ratpacks's Action interface."
+  {:no-doc true}
   [callable]
   (reify Action
     (^void execute [_ x]
@@ -46,6 +47,7 @@
 (defn ^Block fn->block
   "Coerce a plain clojure function into
   ratpacks's Block interface."
+  {:no-doc true}
   [callable]
   (reify Block
     (execute [_]
@@ -56,7 +58,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defprotocol IPromiseAcceptor
-  (-accept [v ds]))
+  (^:private -accept [v ds]))
 
 (extend-protocol IPromiseAcceptor
   CompletableFuture
@@ -99,6 +101,7 @@
               ~@body)))
 
 (defn then
+  "A ratpack promise chain helper."
   [^Promise promise callback]
   (.then promise (fn->action callback)))
 
@@ -114,19 +117,3 @@
   (bytebuffer [s]
     (Unpooled/wrappedBuffer (.getBytes s "UTF-8"))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Promissum IFuture protocol implementation
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; TODO: deprecate this because the implementation is wrong.
-
-(extend-protocol pt/IFuture
-  ratpack.exec.Promise
-  (map [this callback]
-    (.then ^Promise this (fn->action callback))
-    this)
-  (flatmap [this callback]
-    (throw (UnsupportedOperationException. "Not implemented")))
-  (error [this callback]
-    (.onError ^Promise this (fn->action callback))
-    this))

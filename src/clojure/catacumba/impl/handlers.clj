@@ -29,8 +29,8 @@
             [promissum.core :as p]
             [catacumba.stream :as stream]
             [catacumba.utils :as utils]
+            [catacumba.helpers :as hp]
             [catacumba.impl.context :as ct]
-            [catacumba.impl.helpers :as ch]
             [catacumba.impl.http :as http])
   (:import ratpack.handling.Handler
            ratpack.handling.Context
@@ -130,14 +130,14 @@
 
   CompletableFuture
   (-send [future' ^Context ctx]
-    (-> (ch/promise (fn [resolve] (resolve future')))
-        (ch/then #(-send % ctx))))
+    (-> (hp/promise (fn [resolve] (resolve future')))
+        (hp/then #(-send % ctx))))
 
   Publisher
   (-send [data ^Context ctx]
     (let [^Response response (.getResponse ctx)]
       (->> (stream/publisher data)
-           (stream/transform (map ch/bytebuffer))
+           (stream/transform (map hp/bytebuffer))
            (stream/bind-exec)
            (.sendStream response))))
 
@@ -147,7 +147,7 @@
   InputStream
   (-send [data ^Context ctx]
     (let [^Response response (.getResponse ctx)
-          ^Promise prom (ch/blocking
+          ^Promise prom (hp/blocking
                          (let [^bytes buffer (byte-array 1024)
                                ^ByteBuf buf (Unpooled/buffer (.available data))]
                            (loop [index 0]
@@ -156,7 +156,7 @@
                                  (.writeBytes buf buffer 0 readed)
                                  (recur (+ index readed)))))
                            buf))]
-      (ch/then prom (fn [buff]
+      (hp/then prom (fn [buff]
                       (.send response buff))))))
 
 (extend-protocol io/IOFactory
@@ -232,7 +232,7 @@
                        :cookies (ct/get-cookies* request)
                        :headers (ct/get-headers* request)}
           context (ct/context contextdata)]
-      (ch/then promise (partial continuation context)))))
+      (hp/then promise (partial continuation context)))))
 
 (defmethod adapter :catacumba/default
   [handler]
@@ -248,9 +248,9 @@
   (reify Handler
     (^void handle [_ ^Context ctx]
       (hydrate-context ctx (fn [^DefaultContext context]
-                             (-> (ch/blocking
+                             (-> (hp/blocking
                                   (handler context))
-                                 (ch/then (fn [response]
+                                 (hp/then (fn [response]
                                             (when (satisfies? IHandlerResponse response)
                                               (-handle-response response context))))))))))
 
@@ -259,8 +259,8 @@
   (reify Handler
     (^void handle [_ ^Context ctx]
       (hydrate-context ctx (fn [^DefaultContext context]
-                             (-> (ch/promise (fn [resolve] (handler context #(resolve %))))
-                                 (ch/then #(-handle-response % context))))))))
+                             (-> (hp/promise (fn [resolve] (handler context #(resolve %))))
+                                 (hp/then #(-handle-response % context))))))))
 
 (defn- build-request
   [^Request request]
@@ -291,10 +291,10 @@
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]
-      (let [promise (ch/blocking
+      (let [promise (hp/blocking
                      (let [request (build-request (.getRequest ctx))]
                        (handler request)))]
-        (ch/then promise (fn [response]
+        (hp/then promise (fn [response]
                            (when (satisfies? IHandlerResponse response)
                              (let [context (basic-context ctx)]
                                (-handle-response response context)))))))))

@@ -29,8 +29,8 @@
   (:require [catacumba.impl.handlers :as handlers]
             [catacumba.impl.routing :as routing]
             [catacumba.impl.context :as context]
-            [catacumba.impl.helpers :as ch]
             [catacumba.impl.http]
+            [catacumba.helpers :as hp]
             [buddy.sign.jws :as jws]
             [buddy.sign.jwe :as jwe]
             [slingshot.slingshot :refer [try+]]
@@ -152,8 +152,8 @@
   [& backends]
   {:pre [(pos? (count backends))]}
   (fn [context]
-    (-> (ch/promise #(do-auth context backends %))
-        (ch/then #(context/delegate context %)))))
+    (-> (hp/promise #(do-auth context backends %))
+        (hp/then #(context/delegate context %)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Adapters

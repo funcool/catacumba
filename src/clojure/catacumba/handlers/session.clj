@@ -29,9 +29,9 @@
             [buddy.core.nonce :as nonce]
             [buddy.core.codecs :as codecs]
             [catacumba.impl.atomic :as atomic]
-            [catacumba.impl.helpers :as ch]
             [catacumba.impl.handlers :as hs]
-            [catacumba.impl.context :as ct])
+            [catacumba.impl.context :as ct]
+            [catacumba.helpers :as hp])
   (:import clojure.lang.IAtom
            clojure.lang.IDeref
            clojure.lang.Counted
@@ -176,7 +176,7 @@
         cookies (ct/get-cookies context)
         cookie (get cookies (keyword cookie-name) nil)
         sid (:value cookie)]
-    (ch/async resolve
+    (hp/async resolve
       (if sid
         (-> (read-session storage sid)
             (p/then #(resolve [sid (->session sid %)])))
@@ -193,16 +193,16 @@
          options (assoc options :storage storage)]
      (fn [context]
        (-> (context->session context options)
-           (p/then (fn [[sid session]]
-                     (ct/before-send context (fn [^ResponseMetaData response]
-                                               (cond
-                                                 (empty? session)
-                                                 (let [cookie (-> (make-cookie sid options)
-                                                                  (assoc :max-age 0))]
+           (hp/then (fn [[sid session]]
+                      (ct/before-send context (fn [^ResponseMetaData response]
+                                                (cond
+                                                  (empty? session)
+                                                  (let [cookie (-> (make-cookie sid options)
+                                                                   (assoc :max-age 0))]
                                                    (ct/set-cookies! context {cookie-name cookie}))
 
-                                                 (modified? session)
-                                                 (let [cookie (make-cookie sid options)]
-                                                   (write-session storage sid @session)
-                                                   (ct/set-cookies! context {cookie-name cookie})))))
-                     (ct/delegate context {:session session}))))))))
+                                                  (modified? session)
+                                                  (let [cookie (make-cookie sid options)]
+                                                    (write-session storage sid @session)
+                                                    (ct/set-cookies! context {cookie-name cookie})))))
+                      (ct/delegate context {:session session}))))))))

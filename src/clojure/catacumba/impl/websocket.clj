@@ -28,7 +28,6 @@
             [promissum.core :as p]
             [catacumba.utils :as utils]
             [catacumba.impl.context :as ctx]
-            [catacumba.impl.helpers :as ch]
             [catacumba.impl.handlers :as hs])
   (:import ratpack.handling.Handler
            ratpack.handling.Context

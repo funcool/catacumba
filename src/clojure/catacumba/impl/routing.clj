@@ -25,7 +25,7 @@
 (ns catacumba.impl.routing
   (:require [catacumba.impl.handlers :as hs]
             [catacumba.impl.context :as ct]
-            [catacumba.impl.helpers :as ch])
+            [catacumba.helpers :as hp])
   (:import catacumba.impl.context.DefaultContext
            ratpack.handling.Context
            ratpack.handling.Chain
@@ -45,7 +45,7 @@
 
 (defmethod attach-route :assets
   [^Chain chain [_ ^String path {:keys [dir indexes]}]]
-  (.files chain (ch/fn->action
+  (.files chain (hp/fn->action
                  (fn [^FileHandlerSpec spec]
                    (.path spec path)
                    (when indexes (.indexFiles spec (into-array String indexes)))
@@ -54,19 +54,19 @@
 (defmethod attach-route :prefix
   [^Chain chain [_ ^String path & handlers]]
   (let [callback #(reduce attach-route % handlers)]
-    (.prefix chain path ^Action (ch/fn->action callback))))
+    (.prefix chain path ^Action (hp/fn->action callback))))
 
 (defmethod attach-route :scope
   [^Chain chain [_ & handlers]]
   (let [callback #(reduce attach-route % handlers)]
-    (.insert chain ^Action (ch/fn->action callback))))
+    (.insert chain ^Action (hp/fn->action callback))))
 
 (defmethod attach-route :by-method
   [^Chain chain [_ handlersmap]]
   {:pre [(map? handlersmap)]}
   (letfn [(attach [^Context ctx ^ByMethodSpec spec [method handler]]
             (let [^Handler handler (hs/adapter handler)
-                  ^Block block (ch/fn->block #(.handle handler ctx))]
+                  ^Block block (hp/fn->block #(.handle handler ctx))]
               (case method
                 :get (.get spec block)
                 :post (.post spec block)
@@ -78,7 +78,7 @@
               (run! attach' handlersmap)))]
     (.all chain (reify Handler
                   (^void handle [_ ^Context ctx]
-                    (.byMethod ctx (ch/fn->action (partial callback ctx))))))))
+                    (.byMethod ctx (hp/fn->action (partial callback ctx))))))))
 
 
 (defmethod attach-route :error
@@ -91,7 +91,7 @@
                                                            (when (satisfies? hs/IHandlerResponse response)
                                                              (hs/-handle-response response context)))))))]
               (.add rspec ServerErrorHandler ehandler)))]
-    (.register chain ^Action (ch/fn->action on-register))))
+    (.register chain ^Action (hp/fn->action on-register))))
 
 (defmethod attach-route :default
   [chain [method & handlers-and-path]]
@@ -100,8 +100,8 @@
       (let [^Handler handler (-> (mapv hs/adapter (rest handlers-and-path))
                                  (Handlers/chain))]
         (case method
-          :any (.prefix chain path (ch/fn->action #(.all % handler)))
-          :all (.prefix chain path (ch/fn->action #(.all % handler)))
+          :any (.prefix chain path (hp/fn->action #(.all % handler)))
+          :all (.prefix chain path (hp/fn->action #(.all % handler)))
           :get (.get chain path handler)
           :post (.post chain path handler)
           :put (.put chain path handler)

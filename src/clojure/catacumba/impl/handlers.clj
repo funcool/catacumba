@@ -262,7 +262,7 @@
                              (-> (ch/promise (fn [resolve] (handler context #(resolve %))))
                                  (ch/then #(-handle-response % context))))))))
 
-(defn build-request
+(defn- build-request
   [^Request request]
    (let [local-address (.getLocalAddress request)
          remote-address (.getRemoteAddress request)
@@ -274,20 +274,27 @@
       :query-string (.getQuery request)
       :scheme :http
       :request-method (keyword (.. request getMethod getName toLowerCase))
-      :headers (ct/get-headers request)
+      :headers (ct/get-headers* request)
       :content-type (.. body getContentType getType)
       :content-length (Integer/parseInt (.. request getHeaders (get "Content-Length")))
       :character-encoding (.. body getContentType (getCharset "utf-8"))
       :body (.. body getInputStream)}))
 
+(defn- basic-context
+  {:internal true :no-doc true}
+  [^Context ctx]
+  (ct/context {:catacumba/context ctx
+               :catacumba/request (.getRequest ctx)
+               :catacumba/response (.getResponse ctx)}))
+
 (defmethod adapter :catacumba/ring
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]
-      (let [context (ct/context ctx)
-            p (ch/blocking
-               (let [request (build-request (:request context))]
-                 (handler request)))]
-        (ch/then p (fn [response]
-                     (when (satisfies? IHandlerResponse response)
-                       (-handle-response response context))))))))
+      (let [promise (ch/blocking
+                     (let [request (build-request (.getRequest ctx))]
+                       (handler request)))]
+        (ch/then promise (fn [response]
+                           (when (satisfies? IHandlerResponse response)
+                             (let [context (basic-context ctx)]
+                               (-handle-response response context)))))))))

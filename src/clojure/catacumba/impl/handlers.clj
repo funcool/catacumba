@@ -28,7 +28,6 @@
             [manifold.deferred :as md]
             [promissum.core :as p]
             [catacumba.stream :as stream]
-            [catacumba.utils :as utils]
             [catacumba.helpers :as hp]
             [catacumba.impl.context :as ct]
             [catacumba.impl.http :as http])

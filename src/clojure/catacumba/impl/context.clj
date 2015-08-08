@@ -25,8 +25,7 @@
 (ns catacumba.impl.context
   "Functions and helpers for work in a clojure
   way with ratpack types."
-  (:require [catacumba.utils :as utils]
-            [catacumba.helpers :as hp])
+  (:require [catacumba.helpers :as hp])
   (:import ratpack.handling.Handler
            ratpack.handling.Context
            ratpack.handling.RequestOutcome
@@ -156,7 +155,7 @@
     (persistent!
      (reduce (fn [acc key]
                (let [values (.getAll params key)]
-                 (reduce #(utils/assoc-conj! %1 key %2) acc values)))
+                 (reduce #(hp/assoc-conj! %1 key %2) acc values)))
              (transient {})
              (.keySet params)))))
 
@@ -170,7 +169,7 @@
   "Return a hash-map with parameters extracted from
   routing patterns."
   [^Context ctx]
-  (into {} utils/keywordice-keys-t (.getPathTokens ctx)))
+  (into {} hp/keywordice-keys-t (.getPathTokens ctx)))
 
 (defn get-route-params
   "Return a hash-map with parameters extracted from
@@ -186,7 +185,7 @@
      (reduce (fn [acc ^String key]
                (let [values (.getAll headers key)
                      key (.toLowerCase key)]
-                 (reduce #(utils/assoc-conj! %1 key %2) acc values)))
+                 (reduce #(hp/assoc-conj! %1 key %2) acc values)))
              (transient {})
              (.keySet headers)))))
 
@@ -276,12 +275,12 @@
         result (transient {})]
     (reduce (fn [acc key]
               (let [values (.getAll files key)]
-                (reduce #(utils/assoc-conj! %1 key %2) acc values)))
+                (reduce #(hp/assoc-conj! %1 key %2) acc values)))
             result
             (.keySet files))
     (reduce (fn [acc key]
               (let [values (.getAll form key)]
-                (reduce #(utils/assoc-conj! %1 key %2) acc values)))
+                (reduce #(hp/assoc-conj! %1 key %2) acc values)))
             result
             (.keySet form))
       (persistent! result)))

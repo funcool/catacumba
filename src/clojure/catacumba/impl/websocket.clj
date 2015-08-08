@@ -26,7 +26,6 @@
   "Websocket handler adapter implementation."
   (:require [clojure.core.async :refer [chan go-loop close! >! <! put!] :as async]
             [promissum.core :as p]
-            [catacumba.utils :as utils]
             [catacumba.impl.context :as ctx]
             [catacumba.impl.handlers :as hs])
   (:import ratpack.handling.Handler

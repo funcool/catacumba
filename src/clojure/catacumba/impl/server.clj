@@ -23,8 +23,7 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (ns catacumba.impl.server
-  (:require [catacumba.utils :as utils]
-            [catacumba.helpers :as hp]
+  (:require [catacumba.helpers :as hp]
             [catacumba.impl.websocket :as websocket]
             [catacumba.impl.handlers :as handlers]
             [clojure.java.io :as io]
@@ -80,7 +79,7 @@
         sslcontext (build-ssl-context keystore)
         config (ServerConfig/builder)]
     (if (string? basedir)
-      (.baseDir config ^Path (utils/str->path basedir))
+      (.baseDir config ^Path (hp/str->path basedir))
       (try
         (let [^Path path (BaseDir/find ".catacumba")]
           (.baseDir config path))

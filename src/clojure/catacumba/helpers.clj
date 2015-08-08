@@ -32,6 +32,7 @@
            ratpack.exec.Upstream
            ratpack.exec.Downstream
            ratpack.handling.Context
+           java.nio.file.Paths
            java.util.concurrent.CompletableFuture
            io.netty.buffer.Unpooled))
 
@@ -117,3 +118,42 @@
   (bytebuffer [s]
     (Unpooled/wrappedBuffer (.getBytes s "UTF-8"))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Internal usage transducers
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def ^:no-doc
+  lowercase-keys-t (map (fn [[^String key value]]
+                          [(.toLowerCase key) value])))
+
+(def ^:no-doc
+  keywordice-keys-t (map (fn [[^String key value]]
+                           [(keyword key) value])))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Misc
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn str->path
+  {:internal true :no-doc true}
+  [^String path]
+  (Paths/get path (into-array String [])))
+
+(defn assoc-conj!
+  {:internal true :no-doc true}
+  [map key val]
+  (assoc! map key
+    (if-let [cur (get map key)]
+      (if (vector? cur)
+        (conj cur val)
+        [cur val])
+      val)))
+
+(defn- get-arities
+  [f]
+  {:pre [(instance? clojure.lang.AFunction f)]}
+  (->> (class f)
+       (.getDeclaredMethods)
+       (filter #(= "invoke" (.getName %)))
+       (map #(-> % .getParameterTypes alength))
+       (set)))

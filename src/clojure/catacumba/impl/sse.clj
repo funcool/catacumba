@@ -26,7 +26,6 @@
   "Server-Sent Events handler adapter implementation."
   ;; TODO: replace direct var usage to fully namespaced calls of core.async
   (:require [clojure.core.async :refer [chan go-loop close! >! <! put!] :as async]
-            [catacumba.utils :as utils]
             [catacumba.stream :as stream]
             [catacumba.helpers :as hp]
             [catacumba.impl.handlers :as handlers]

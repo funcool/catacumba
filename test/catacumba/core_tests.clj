@@ -277,6 +277,29 @@
         (is (= (:body response) "hello world cps"))
         (is (= (:status response) 200))))))
 
+(deftest context-data-forwarding
+  (letfn [(handler1 [context]
+            (ct/delegate context {:foo 1}))
+          (handler2 [context]
+            (ct/delegate context {:bar 2}))
+          (handler3 [context]
+            (ct/delegate context {:baz (+ (:foo context)
+                                          (:bar context))}))
+          (handler4 [p context]
+            (deliver p (select-keys context [:foo :bar :baz]))
+            "hello world")]
+    (let [p (promise)]
+      (with-server {:handler (ct/routes [[:any handler1]
+                                              [:any handler2]
+                                              [:any handler3]
+                                              [:any (partial handler4 p)]])}
+      (let [response (client/get base-url)]
+        (is (= (:body response) "hello world"))
+        (is (= (:status response) 200))
+        (is (= (deref p 1000 nil)
+               {:foo 1 :bar 2 :baz 3})))))))
+
+
 ;; (deftest experiments
 ;;   (letfn [(handler1 [context]
 ;;             (println 1111)

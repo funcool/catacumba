@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 the original author or authors.
+ * Copyright 2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,28 @@
  * limitations under the License.
  */
 
-package catacumba.websocket;
+package catacumba.websocket.internal;
 
-import ratpack.func.Action;
+import catacumba.websocket.WebSocket;
+import catacumba.websocket.WebSocketMessage;
 
-public interface WebSocketSpec<T> {
 
-  WebSocketSpec<T> maxLength(int maxLength);
+public class TextWebSocketMessage implements WebSocketMessage<String> {
+  private final WebSocket webSocket;
+  private final String text;
 
-  WebSocketSpec<T> path(String path);
+  public TextWebSocketMessage(WebSocket webSocket, String text) {
+    this.webSocket = webSocket;
+    this.text = text;
+  }
 
-  WebSocketSpec<T> onClose(Action<WebSocketClose<T>> action);
+  @Override
+  public WebSocket getConnection() {
+    return webSocket;
+  }
 
-  WebSocketSpec<T> onMessage(Action<WebSocketMessage<T>> action);
-
+  @Override
+  public String getData() {
+    return text;
+  }
 }

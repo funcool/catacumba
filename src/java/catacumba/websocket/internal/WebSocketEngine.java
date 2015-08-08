@@ -24,13 +24,13 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.websocketx.*;
-import ratpack.func.Action;
 import ratpack.handling.Context;
 import ratpack.handling.direct.DirectChannelAccess;
 import ratpack.http.Request;
+import ratpack.func.Action;
 import ratpack.server.PublicAddress;
+
 import catacumba.websocket.WebSocket;
-import catacumba.websocket.WebSocketMessage;
 import catacumba.websocket.WebSocketHandler;
 
 import java.net.URI;
@@ -75,12 +75,9 @@ public class WebSocketEngine {
   }
 
   private static class HandshakeFutureListener<T> implements ChannelFutureListener {
-
     private final Context context;
     private final WebSocketServerHandshaker handshaker;
     private final WebSocketHandler<T> handler;
-
-    private volatile T openResult;
     private final CountDownLatch openLatch = new CountDownLatch(1);
 
     public HandshakeFutureListener(Context context, WebSocketServerHandshaker handshaker, WebSocketHandler<T> handler) {
@@ -92,49 +89,71 @@ public class WebSocketEngine {
     public void operationComplete(ChannelFuture future) throws Exception {
       if (future.isSuccess()) {
         final AtomicBoolean open = new AtomicBoolean(true);
-        final Channel channel = context.getDirectChannelAccess().getChannel();
-        final WebSocket webSocket = new DefaultWebSocket(context, channel, open, () -> {
-          try {
-            handler.onClose(new DefaultWebSocketClose<>(false, openResult));
-          } catch (Exception e) {
-            throw uncheck(e);
-          }
-        });
+        final DirectChannelAccess directChannelAccess = context.getDirectChannelAccess();
+        final Channel channel = directChannelAccess.getChannel();
 
-        context.getDirectChannelAccess().takeOwnership(msg -> {
-          openLatch.await();
-          // Channel channel = context.getDirectChannelAccess().getChannel();
-          if (channel.isOpen()) {
+        final WebSocket webSocket = new DefaultWebSocket(channel, open, () -> {
+            try {
+              handler.onClose();
+            } catch (Exception e) {
+              throw uncheck(e);
+            }
+          });
+
+        directChannelAccess.takeOwnership(msg -> {
+            openLatch.await();
+            if (!channel.isOpen()) {
+              return;
+            }
+
             if (msg instanceof WebSocketFrame) {
               WebSocketFrame frame = (WebSocketFrame) msg;
               if (frame instanceof CloseWebSocketFrame) {
                 open.set(false);
-                handshaker.close(channel, (CloseWebSocketFrame) frame.retain()).addListener(future1 -> handler.onClose(new DefaultWebSocketClose<>(true, openResult)));
+                handshaker.close(channel, (CloseWebSocketFrame) frame.retain()).addListener(future1 -> handler.onClose());
                 return;
               }
               if (frame instanceof PingWebSocketFrame) {
                 channel.write(new PongWebSocketFrame(frame.content().retain()));
                 return;
               }
-              if (frame instanceof TextWebSocketFrame) {
+
+              if (frame instanceof BinaryWebSocketFrame) {
                 channel.config().setAutoRead(false);
+
                 final Action<Void> callback = new Action<Void>() {
                     public void execute(Void input) {
-                      // channel.read();
                       channel.config().setAutoRead(true);
                     }
                   };
 
-                final TextWebSocketFrame textWebSocketFrame = (TextWebSocketFrame) frame;
-                final WebSocketMessage message = new DefaultWebSocketMessage<>(webSocket, textWebSocketFrame.text(), openResult);
+                final BinaryWebSocketFrame bframe = (BinaryWebSocketFrame) frame;
+                final BinaryWebSocketMessage message = new BinaryWebSocketMessage(webSocket, bframe.content());
+
                 handler.onMessage(message, callback);
+                return;
+              }
+
+              if (frame instanceof TextWebSocketFrame) {
+                channel.config().setAutoRead(false);
+
+                final Action<Void> callback = new Action<Void>() {
+                    public void execute(Void input) {
+                      channel.config().setAutoRead(true);
+                    }
+                  };
+
+                final TextWebSocketFrame tframe = (TextWebSocketFrame) frame;
+                final TextWebSocketMessage message = new TextWebSocketMessage(webSocket, tframe.text());
+
+                handler.onMessage(message, callback);
+                return;
               }
             }
-          }
-        });
+          });
 
         try {
-          openResult = handler.onOpen(webSocket);
+          handler.onOpen(webSocket);
         } catch (Exception e) {
           handshaker.close(channel, new CloseWebSocketFrame(1011, e.getMessage()));
         }

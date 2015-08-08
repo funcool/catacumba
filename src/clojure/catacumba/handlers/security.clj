@@ -24,7 +24,6 @@
 
 (ns catacumba.handlers.security
   (:require [catacumba.impl.context :as ct]
-            [catacumba.impl.parse :as ps]
             [catacumba.impl.handlers :as hs]
             [catacumba.http :as http]
             [cuerdas.core :as str]
@@ -43,7 +42,7 @@
   ([{:keys [max-age subdomains] :or {max-age 31536000 subdomains true}}]
    (fn [context]
      (let [header-value (str "max-age=" max-age (when subdomains "; includeSubDomains"))]
-       (hs/set-headers! context {"Strict-Transport-Security" header-value})
+       (ct/set-headers! context {"Strict-Transport-Security" header-value})
        (ct/delegate context)))))
 
 (defn frame-options-headers
@@ -66,7 +65,7 @@
               (= policy :deny))]}
    (let [header-value (str/upper (name policy))]
      (fn [context]
-       (hs/set-headers! context {"X-Frame-Options" header-value})
+       (ct/set-headers! context {"X-Frame-Options" header-value})
        (ct/delegate context)))))
 
 (defn csp-headers
@@ -101,7 +100,7 @@
                        [] (seq options'))]
      (assert (pos? (count value)))
      (fn [context]
-       (hs/set-headers! context {"Content-Security-Policy" (str/join "; " value)})
+       (ct/set-headers! context {"Content-Security-Policy" (str/join "; " value)})
        (ct/delegate context)))))
 
 (defn content-type-options-headers
@@ -115,23 +114,22 @@
   http://msdn.microsoft.com/en-us/library/ie/gg622941(v=vs.85).aspx
   https://www.owasp.org/index.php/List_of_useful_HTTP_headers"
   [context]
-  (hs/set-headers! {"X-Content-Type-Options" "nosniff"})
+  (ct/set-headers! {"X-Content-Type-Options" "nosniff"})
   (ct/delegate context))
 
 (defn- form-post?
   [context]
-  (let [request (:request context)
-        method (keyword (.. request getMethod getName toLowerCase))
-        content-type (.. request getBody getContentType getType)]
+  (let [method (:method context)
+        content-type (.getType (.getContentType (:body context)))]
     (and (= :post method)
          (or (= content-type "application/x-www-form-urlencoded")
              (= content-type "multipart/form-data")))))
 
 (defn- csrf-tokens-match?
   [context header-name field-name cookie-name]
-  (let [cookies (hs/get-cookies context)
-        headers (hs/get-headers context)
-        formdata (ps/parse-formdata context)
+  (let [cookies (ct/get-cookies context)
+        formdata (ct/get-formdata context)
+        headers (:headers context)
         htoken (get headers header-name)
         ctoken (get cookies cookie-name)
         ptoken (get formdata field-name)]
@@ -155,5 +153,5 @@
            (on-error context)
            (http/bad-request "CSRF tokens don't match")))
        (do
-         (hs/set-cookies! context {cookie-name {:value (str (uuid/v1))}})
+         (ct/set-cookies! context {cookie-name {:value (str (uuid/v1))}})
          (ct/delegate context))))))

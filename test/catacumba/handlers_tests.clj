@@ -28,7 +28,7 @@
   (testing "Explicit body parsing with multipart request with multiple files."
     (let [p (promise)
           handler (fn [context]
-                    (let [form (ct/parse-formdata context)]
+                    (let [form (ct/get-formdata context)]
                       (deliver p form)
                       "hello world"))]
       (with-server {:handler handler}
@@ -53,7 +53,7 @@
     (let [p (promise)
           app (ct/routes [[:any (hs/body-params)]
                           [:any #(do
-                                   (deliver p (:body %))
+                                   (deliver p (:data %))
                                    "hello world")]])]
       (with-server {:handler app}
         (let [response (client/post base-url {:form-params {:foo "bar"}})]
@@ -63,7 +63,7 @@
     (let [p (promise)
           app (ct/routes [[:any (hs/body-params)]
                           [:any #(do
-                                   (deliver p (:body %))
+                                   (deliver p (:data %))
                                    "hello world")]])]
       (with-server {:handler app}
         (let [response (client/post base-url {:body (json/generate-string {:foo "bar"})
@@ -165,15 +165,22 @@
   (testing "Simple cors request"
     (let [p (promise)
           handler (fn [ctx] (deliver p ctx) "hello world")
-          handler (ct/routes [[:any hs/basic-request]
-                              [:any handler]])]
+          handler (ct/routes [[:any handler]])]
       (with-server {:handler handler}
         (let [response (client/get (str base-url "/foo"))
               ctx (deref p 1000 {})]
+          (is (contains? ctx :body))
+          (is (contains? ctx :query))
+          (is (contains? ctx :query-params))
+          (is (contains? ctx :route-params))
+          (is (contains? ctx :headers))
+          (is (contains? ctx :cookies))
+          (is (contains? ctx :path))
+          (is (contains? ctx :catacumba/request))
+          (is (contains? ctx :catacumba/context))
+          (is (contains? ctx :catacumba/response))
           (is (= (:body response) "hello world"))
-          (is (= (:status response) 200))
-          (is (= (:method ctx) :get))
-          (is (= (:path ctx) "/foo")))))))
+          (is (= (:status response) 200)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Session tests
@@ -233,32 +240,25 @@
 
 (deftest interceptors-tests
   (let [counter (atom 0)
-        p1 (promise)
-        p2 (promise)
-        p3 (promise)
-        p4 (promise)]
+        p1 (promise)]
     (letfn [(interceptor [_ type continuation]
-              (deliver p1 (swap! counter inc))
+              ;; (println "interceptor:init", type)
+              (swap! counter inc)
               (continuation)
-              (deliver p2 (swap! counter inc)))
-
+              (swap! counter inc))
             (handler2 [context]
-              (deliver p3 (swap! counter inc))
               (ct/delegate context))
-
             (handler3 [context]
-              (deliver p4 (swap! counter inc))
+              (deliver p1 nil)
               "hello world")]
       (with-server {:handler (ct/routes [[:interceptor interceptor]
                                          [:any handler2]
                                          [:any handler3]])}
         (let [response (client/get base-url)]
+          (is (nil? (deref p1 1000 nil)))
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))
-          (is (= (deref p1 1000 nil) 1))
-          (is (= (deref p2 1000 nil) 4))
-          (is (= (deref p3 1000 nil) 2))
-          (is (= (deref p4 1000 nil) 3)))))))
+          (is (= @counter 6)))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

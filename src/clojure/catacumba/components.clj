@@ -28,7 +28,6 @@
   (:require [com.stuartsierra.component :as component]
             [catacumba.core :as ct]
             [catacumba.impl.routing :as routing]
-            [catacumba.impl.helpers :as helpers]
             [catacumba.impl.server :refer [run-server]])
   (:import ratpack.handling.Chain
            ratpack.server.RatpackServer))

@@ -25,10 +25,9 @@
 (ns catacumba.handlers.auth
   "Authentication and Authorization facilities for catacumba
   using funcool/buddy "
-  ;; TODO: rename to shorter ns aliases
-  (:require [catacumba.impl.handlers :as handlers]
-            [catacumba.impl.routing :as routing]
-            [catacumba.impl.context :as context]
+  (:require [catacumba.impl.handlers :as hs]
+            [catacumba.impl.routing :as rt]
+            [catacumba.impl.context :as ct]
             [catacumba.impl.http]
             [catacumba.helpers :as hp]
             [buddy.sign.jws :as jws]
@@ -153,14 +152,14 @@
   {:pre [(pos? (count backends))]}
   (fn [context]
     (-> (hp/promise #(do-auth context backends %))
-        (hp/then #(context/delegate context %)))))
+        (hp/then #(ct/delegate context %)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Adapters
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmethod routing/attach-route :auth
+(defmethod rt/attach-route :auth
   [^Chain chain [_ & backends]]
   (let [^Handler handler (-> (apply auth backends)
-                             (handlers/adapter))]
+                             (hs/adapter))]
     (.all chain handler)))

@@ -53,25 +53,6 @@ The result of this research project is an powerfull, lightweight, and fully exte
 asynchronous web toolkit built on top of existing and well designed components such as
 Ratpack, Netty, Rective-Streams and core.async.
 
-////
-TODO: move this into FAQ section
-In the Clojure ecosystem there are several solutions for that purpose: Pedestal, Aleph,
-Jet and Immutant. All them are good Clojure libraries/frameworks but none of them
-satisfies me for different reasons (some of them explained in the FAQ section).
-
-* The pedestal approach is very opinionated and too much high level and I prefer something
-  simple, lightweight and maybe less opinionated.
-* Aleph, seems like a great library but lacks good, readable, user friendly documentation
-  and its generic approach (not only http) does not help much. If you want read more about
-  differences with aleph, see <<difference-with-aleph,this>> faq entry.
-* Jet is a asynchronous ring addapter for Jetty 9. It is really great library that I have
-  used in some projects, and fits very well on my idea of web toolkit but it has two
-  drawbacks, it is build as ring adapter having all the good and all the bad of ring and
-  it is using Jetty (Jetty is a servlet server that comes with optional async support, it
-  isn't asynchronous from the ground up).
-////
-
-
 
 === Project Maturity
 
@@ -181,14 +162,11 @@ playing together.
 
 === Handlers
 
-The idea of handlers is a fundamental piece of the _catacumba_ library and this chapter
-intends to explain everything related to default handlers.
+The idea of handlers is a fundamental piece of the _catacumba_ library. Is a main
+building block for create web services.
 
-
-==== What is a handler?
-
-As we have seen in the "<<Quick Start,quickstart>>" section, a handler mainly consists of
-a simple function that acts on the handling context.
+As we have seen in the "<<Quick Start,quickstart>>" section, the default handler mainly
+consists of a simple function that acts on the handling context.
 
 Do not worry about the context for now, it will be explained in later sections. The only
 thing that you should known about it at this time, is that is the central part of the
@@ -211,11 +189,17 @@ fully extensible so you can easyly create your own handler types (also called ad
 the internal terminology).
 
 
-==== Write to response
+=== Context
+
+The second thing most important in the catacumba terminology is a *context*. It can be
+considered a central part of both: IO and the execution flow control (will be explained
+in advanced section).
+
+
+==== Send a response
 
 As you can observe from the previous example, no status code is being provided, only the
-body of the response. To send a complete response you can use a builtin response type or
-a ring-like hashmap:
+body of the response. To send a complete response you can use a builtin response type:
 
 [source, clojure]
 ----
@@ -226,17 +210,8 @@ a ring-like hashmap:
   (http/ok "Hello World"))
 ----
 
-Following output data types are supported for a handler function:
-
-- a *string*, will result in a response with status code 200 and "text/plain" as content
-  type.
-- a *ring style* hash map.
-- a *response* type (very similar to ring one).
-
-The handler's return value is implemented using clojure protocols and its behavior can be
-extended easily with user defined types.
-
-Let see an other example, using _catacumba_'s response type with additional header:
+The response types exposed under the `catacumba.http` namespace also accepts additional
+parameters such as response http headers:
 
 [source, clojure]
 ----
@@ -249,7 +224,7 @@ Let see an other example, using _catacumba_'s response type with additional head
 
 In the previous examples, we have seen how the return value is handled, but behind the
 scenes the context is the responsible of interactions with the request and the response.
-Let see the same example but interacti directly with the context:
+Let see the same example but interacting directly with the context:
 
 [source, clojure]
 ----
@@ -263,19 +238,25 @@ Let see the same example but interacti directly with the context:
 The return value handling is really a helper for people coming from ring. Internally, the
 context is the main protagonist in IO operations.
 
+So, the handler response is can be:
+
+- a *string*, will result in a response with status code 200 and "text/plain" as content
+  type.
+- a *ring style* hash map.
+- a *response* type (previous example).
+
+The return value handling is implemented using clojure protocols, so its behavior can be
+extended easily with user defined types.
+
 
 ==== Reading the request
 
-As we mentioned previously, the `context` is the central part of the IO operations, so
-you can treat it as request and response in the same time.
+In the catacumba the closest thing to the request concept is a context. In fact, catacumba
+does not has request and responses. Just a central object that handles the IO (Input and Output).
 
-A context behaves identical to the clojure map and contains the basic request related
-attributes such as `:body`, `:query` and `:headers`, among others (explained in other
-sections).
-
-===== Body
-
-The request body can retrieved with the `:body` keyword from the `context`.
+The most important thing here is that the context in a user end acts like a request object
+and allows access to the most used part of the request such as the `:body`, `:method`,
+`:query`, `:path`, `:headers` and `:cookies`. All them are accessible with keyword lookups:
 
 [source, clojure]
 ----
@@ -309,9 +290,6 @@ Furthermore, _catacumba_ offers a more flexible way to parsing body data based o
 incoming content type, but it is explained with more details in the
 <<Body parsing section,body-parsing>> of this document.
 
-
-===== Headers
-
 Like the http request body, the http headers are available through the `:headers` key
 entry. In order to extract some header, just perform the apropiate lookup:
 
@@ -319,27 +297,68 @@ entry. In order to extract some header, just perform the apropiate lookup:
 ----
 (get-in context [:headers :origin])
 ;; => "https://github.com"
+----
 
 If a header has multiple values, the value will be a vector.
 
+Here a complete reference of the available attributes of the context object:
 
-===== Cookies
+[cols="1,1,3,2", options="header"]
+|===
+|Key
+|Type
+|Description
+|Example
 
-The cookies CRUD operations works very similiar to the headers one. It consists in two
-polymorphic functions (`get-cookies` and `set-cookies!`) that can be used directly with
-context or with request or response instances.
+|`:body`
+|link:http://ratpack.io/manual/current/api/ratpack/http/TypedData.html[`TypedData`]
+|A object that represents a request body.
+|
 
-.Get cookies from request example
+|`:method`
+| `Keyword`
+| A request method.
+| `:head`, `:trace`, `:get`, `:options`, `:put`, `:post`, `:patch` and `:delete`
+
+|`:query`
+|`String`
+|A raw string representation of the uri querystring.
+| `"foo=bar&baz=1"`
+
+|`:path`
+|`String`
+|A raw string representation of the uri path.
+|`/auth/client`
+
+|`:headers`
+|`PersistentMap`
+|A optionally multi value hash map of the request headers.
+|`{:host "funcool.org" :pragma "no-cache" ...}`
+
+|`:cookies`
+|`PersistentMap`
+|A optionally multivalue hash map of request cookies (explained in details in its own section).
+|
+
+|`:query-params`
+|`PersistentMap`
+|A optionally multivalue hash map of the parsed `:query` string.
+|`{:foo "bar" :bar 1}`
+
+|===
+
+The `context` also contains other keys but them will explain in its corresponding section.
+
+
+=== Cookies
+
+The cookies CRUD operations works very similiar to the headers one. You can access to the
+request cookies through direct keyword lookup on context object:
+
 [source, clojure]
 ----
-(ct/get-cookies context)
-;; => {:cookiename {:value "value" :path "/" :secure false}}
-----
-
-.Set cookies in the response
-[source, clojure]
-----
-(ct/set-cookies context {:cookiename {:value "foobar" :max-age 3600}})
+(get-in context [:cookies :somecookie])
+;; => {:value "foo" :path "/" ...}
 ----
 
 The cookies map is almost identical to the one that you can find in ring, and has the
@@ -351,6 +370,14 @@ following possible properties:
 * `:http-only` - restrict the cookie to HTTP if true
                  (not accessible via e.g. JavaScript)
 * `:max-age` - the number of seconds until the cookie expires
+
+For set cookies, you should use the `set-cookies!` function as you can see in the
+following example:
+
+[source, clojure]
+----
+(ct/set-cookies! context {:cookiename {:value "foobar" :max-age 3600}})
+----
 
 
 === Routing
@@ -401,13 +428,16 @@ directive:
               :post create-users-handler}]])
 ----
 
+Behind the scehenes, the `:by-method` directive will create a handler that in runtime
+will dispatch the request to the corresponding handler by method.
+
 
 ==== Routing params
 
 _catacumba_'s routing also allows to capture URL values encoded in the URL or as URL
 parameters using special symbols. For example, the path string "foo/:val" will match paths
 such as "foo/bar", "foo/123".  The matched parameters are automatically populated to the
-context under the `:route-params` keys.
+context under the `:route-params` key:
 
 [source, clojure]
 ----
@@ -451,7 +481,7 @@ Chaining handlers inline follows this pattern:
 (ct/routes [[:get "users" permission-check-handler get-users-handler]])
 ----
 
-Additionally, you can setup "catch all" handlers at the start of a routing definition and
+Additionally, you can setup "match all" handlers at the start of a routing definition and
 use them as interceptors:
 
 [source, clojure]
@@ -462,14 +492,14 @@ use them as interceptors:
                [:get "users" users-handler]]]))
 ----
 
-For a better understanding of how the handler delegation chain works, see the *Context*
-chapter.
+For a better understanding of how the handler delegation chain works, see the *Handlers delegation*
+section in advanced guide chapter.
 
 
 ==== Error handling
 
 The _catacumba_ router chain allows to setup user defined error handling functions. This
-requires a very, very simple setup, you only have to add another route entry with using
+requires a very simple setup, you only have to add another route entry with using
 `:error` route directive:
 
 [source, clojure]
@@ -506,6 +536,7 @@ difference being that it receives the throwable instance as an additional parame
   (http/internal-server-error (.getMessage error)))
 ----
 
+
 ==== Serving static files
 
 _Catacumba_ also comes with the ability to serve static files. This is can be done using
@@ -528,70 +559,8 @@ file is requested. This is very usefull for SPA (single page applications):
 So, if you make a http request to `/assets/` the `index.html` will be automatically
 returned.
 
-
-=== Context
-
-Another core part of _catacumba_ is the *Context*.
-
-Just like in ratpack, the context in _catacumba_ has following responsbibilities:
-
-* Provide direct access to the request and response objects.
-* Access to the contextual objects (called registry).
-* Flow control in handler chaining.
-* Convenience helpers for common handlers operation.
-
-
-==== Handler delegation
-
-In other words, it can be explained as "flow control" in the chain of handlers.
-
-In _catacumba_, the request process is an asynchronous pipeline of handlers that can be
-composed in different ways (as we previously seen in a router section). So the each
-handler in the pipeline has the ability to do some work and delegate the rest of
-processing to next handler (in the chain/pipeline).
-
-This approach allows you build different kind of modular and completelly decoupled
-handlers and compose them into a pipeline to work together.
-
-The delegation can be done with `delegate` function. Let see a simple example:
-
-[source, clojure]
-----
-(defn handler1
-  [context]
-  (do-something context)
-  (ct/delegate context))
-
-(defn handler2
-  [context]
-  (http/ok "hello world"))
-
-(def router
-  (ct/routes [[:get "foo" handler1 handler2]]))
-----
-
-In this example, when the request arrives at `handler1`, it delegates the execution to
-the next handler in the chain. It do not need to know about next handler, it just
-delegates to the routing chain to find a next handler or raise a corresponding error.
-
-In addition to the simple handler delegation, _catacumba_ offers a simple way to pass
-context data to the next handler in the chain. It can be done by passing an additional
-parameter to the `delegate` function:
-
-[source, clojure]
-----
-(defn handler1
-  [context]
-  (do-something context)
-  (ct/delegate context {:message "foobar"}))
-
-(defn handler2
-  [context]
-  (let [message (:message context)]
-    (http/ok message)))
-----
-
-In the example above, the second handler prints the message found in the context.
+NOTE: the assets are resolved using the `:basedir` parameter of the server
+constructor; for more details see the <<launching-the-server,Launching the server>> section.
 
 
 [[handler-types]]
@@ -606,7 +575,7 @@ of the supported abstractions, such as core.async, reactive-streams and many oth
 (explained below).
 
 
-==== Channels
+==== Body as channel
 
 The `core.async` channel is one of the supported abstractions that comes with _catacumba_
 out of the box. It consists of a handler that returns a body as a channel or response as
@@ -649,7 +618,7 @@ consume it. This technique is also called backpressure, and is fully supported f
 chunked responses.
 
 
-==== Promises
+==== Body as promise (CompletableFuture)
 
 Promises are another abstraction supported out of the box in _catacumba_. It comes from
 the link:https://github.com/funcool/promissum[promissum library] and is build on top of
@@ -689,7 +658,7 @@ The result of `mlet` macro expression will be a *promise* with the eventually av
 result from `(do-other-thing-with b)` expression.
 
 
-==== Manifold
+==== Body as deferred (manifold)
 
 The link:https://github.com/ztellman/manifold[manifold] library offers different kind of
 deferred and stream abstractions for Clojure and you can use both them as response or body
@@ -706,7 +675,7 @@ of the response for sending data to the client asynchronously.
 ----
 
 
-==== Reactive Streams
+==== Body as reactive-stream
 
 This is the core of all abstractions, and support for it comes out of the box from
 *ratpack*. All other abstractions that we have seen are always coerced to a *Publisher*
@@ -725,14 +694,14 @@ Let see an example:
 (defn my-async-handler
   [context]
   (let [pub (->> (stream/publisher ["hello" " " "world"])
-                 (stream/publisher (map str/upper)))]
+                 (stream/transform (map str/upper)))]
     (http/ok pub)))
 
 ;; It will return a chunked response to the client with "HELLO WORLD" string.
 ----
 
 
-=== Websockets
+=== WebSockets
 
 One of the main goals of _catacumba_ is come with builtin, full featured and
 backpressure-aware websockets support.
@@ -762,8 +731,8 @@ websockets. Let see an example:
 ----
 
 
-Additionally, _catacumba_ offers a a way to set up a websocket handler directly, without
-an additional step in the default handler:
+Additionally, _catacumba_ offers a way to set up a websocket handler directly, without
+an additional step:
 
 [source, clojure]
 ----
@@ -784,11 +753,9 @@ an additional step in the default handler:
                [:any #'echo-handler]]]))
 ----
 
-As you can observe, for any function has additional metadata that indicates to _catacumba_
-that this function is a websocket type handler, _catacumba_ will bootstrap the websocket
-connection for you.
+As you can observe, the var metadata is used for properly choice the right adapter.
 
-Is very important pass a var reference to the router instead of the function directly,
+NOTE: Is very important pass a var reference to the router instead of the function directly,
 because the metadata defined in the function is bound to the var and not to the function.
 
 Also, you can attach metadata inline, using the `with-meta` Clojure built-in function:
@@ -812,8 +779,9 @@ changes or any other events. For this purpose exists
 link:https://developer.mozilla.org/en-US/docs/Server-sent_events[Server-Sent Events] (SSE)
 and _catacumba_ also has support for it.
 
-The handler for SSE does not differs a lot from websockets that we have seen in the
-previous section. The main difference is that the reception of the data is not allowed.
+The handler for SSE does not differs much from websockets (that we have seen in the
+previous section). The main difference is that server-sent events are unidirectional
+and they only can send data in the server to client direction.
 
 [source, clojure]
 ----
@@ -907,7 +875,22 @@ all related middlewares) or in a _catacumba_'s routing chain.
 
 === CPS (Continuation-passing style)
 
-TBD
+Is a low level handler type that works in a cps style (in other words, they works with
+callbacks). This is not general purpose handler type but you maybe found it usefull for
+integrate catacumba with other scenarios that it is not initialy designed to work.
+
+This is the aspect ot the cps style handler:
+
+[source]
+----
+(defn my-cps-handler
+  "Some usefull docstring."
+  {:handler-type :catacumba/cps}
+  [context callback]
+  (future
+    (Thread/sleep 1000)
+    (callback "hello world")))
+----
 
 
 == Built-in Handlers
@@ -964,6 +947,7 @@ implementation to the `parse` multimethod with your content-type as dispatch tag
   ;; your parsing logic here
   )
 ----
+
 
 === Autoreload
 
@@ -1245,31 +1229,6 @@ very flexible and you really don't need to use _buddy_. You can write your own a
 facilities and attach them to _catacumba_ using the routing chain.
 
 
-=== Context as Request
-
-By default, the _catacumba_'s context allows you direct access to the request and
-response, both which are instances of classes defined in Ratpack. These classes allows
-you to access all related properties such as headers, the request body, the request
-method, etc.
-
-But _catacumba_ additionally offers a small set of helper functions for interacting with
-that data: getting/setting headers and reading the body (explained in previous sections).
-
-To compensate for this, _catacumba_ comes with a special chain handler that populates the
-context with basic request properties such as, headers, path and method:
-
-[source, clojure]
-----
-(require '[catacumba.handlers :refer [basic-request]])
-
-(def app
-  (ct/routes [[:prefix "api/v1"
-               [:any basic-request]
-               [:get "foo" some-handler]
-               [:post "foo" some-save-handler]]]))
-----
-
-
 === Security
 
 ==== Cross-Origin Resource Sharing
@@ -1417,6 +1376,71 @@ More information:
 
 == Advanced topics
 
+=== Handler delegation
+
+A part of the obvious (and previously explained) responsability of the `context`
+object in catacubla. It has some others responsabilities. Just a summary of them:
+
+* Provide direct access to the request and response objects.
+* Access to the contextual objects (called registry).
+* Flow control in handler chaining.
+* Convenience helpers for common handlers operation.
+
+In a catacumba design (inherited from ratpack), a handler is a unit of work in
+an asynchronous handler and the context is a execution controler and local storage
+for the current request state.
+
+In other words it can be explained as "flow control" in the chain of handlers.
+
+The request process is an asynchronous pipeline of handlers that can be
+composed in different ways (as we previously seen in a router section). So the each
+handler in the pipeline has the ability to do some work and delegate the rest of
+processing to next handler in the chain.
+
+This approach allows you build different kind of modular and completelly decoupled
+handlers and compose them into a pipeline to work together.
+
+The delegation action can be done with `delegate` function. Let see a simple example:
+
+[source, clojure]
+----
+(defn handler1
+  [context]
+  (do-something context)
+  (ct/delegate context))
+
+(defn handler2
+  [context]
+  (http/ok "hello world"))
+
+(def router
+  (ct/routes [[:get "foo" handler1 handler2]]))
+----
+
+In this example, when the request arrives at `handler1`, it delegates the execution to
+the next handler in the chain. It do not need to know about next handler, it just
+delegates to the routing chain to find a next handler or raise a corresponding error.
+
+In addition to the simple handler delegation, _catacumba_ offers a simple way to pass
+context data to the next handler in the chain. It can be done by passing an additional
+parameter to the `delegate` function:
+
+[source, clojure]
+----
+(defn handler1
+  [context]
+  (do-something context)
+  (ct/delegate context {:message "foobar"}))
+
+(defn handler2
+  [context]
+  (let [message (:message context)]
+    (http/ok message)))
+----
+
+In the example above, the second handler prints the message found in the context.
+
+
 === Modular components
 
 _Catacumba_ is build from its ground with optional support for the
@@ -1477,16 +1501,24 @@ To understand it better, _catacumba_ comes with an <<sse-component-example,examp
 builds a multiuser chat using "Server-Sent events" and component, so you can experiment
 with real code. See the <<examples,examples>> section for it.
 
-
+[[launching-the-server]]
 === Launching the server
 
 As you can see in the quick start section, the main entry point for start the server is
 the `run-server` function that receives a handler chain and a map with options.
 
-At this moment, it has a very small subset of options that netty and ratpack offer but is
-a good starting point.
+[source, clojure]
+----
+(require '[catacumba.core :as ct])
 
-.Supported options
+;; ... handler definition
+
+(ct/run-server #'my-handler {:port 4040 :debug true})
+----
+
+Here a complete reference of the currently supported options that can be passed
+to the `run-server` function:
+
 [options="header", cols="^1,^1,^2"]
 |===========================================================================
 | Keyword   | Default | Description
@@ -1518,6 +1550,14 @@ java -jar yourjarhere.jar
 ----
 java -Dcatacumba.port=8000 -Dcatacumba.debug=true -jar yourjarhere.jar
 ----
+
+NOTE: if no `:basedir` is specified, catacumba will try to find a `.catacumba` file
+in the classpath and will set a base dir to its directory.
+
+
+=== Instrumentation
+
+TODO
 
 
 [[examples]]

@@ -80,7 +80,7 @@
 <h1>Catacumba - Web toolkit for Clojure.</h1>
 <div class="details">
 <span id="author" class="author">Andrey Antukh, &lt;niwi@niwi.nz&gt;</span><br>
-<span id="revdate">v0.4.0</span>
+<span id="revdate">v0.5.0</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -88,7 +88,6 @@
 <li><a href="#introduction">Introduction</a>
 <ul class="sectlevel2">
 <li><a href="#rationale">Rationale</a></li>
-<li><a href="#goals">Goals</a></li>
 <li><a href="#project-maturity">Project Maturity</a></li>
 <li><a href="#requirements">Requirements</a></li>
 <li><a href="#install">Install</a></li>
@@ -104,14 +103,15 @@
 <li><a href="#user-guide">User Guide</a>
 <ul class="sectlevel2">
 <li><a href="#handlers">Handlers</a></li>
-<li><a href="#routing">Routing</a></li>
 <li><a href="#context">Context</a></li>
+<li><a href="#cookies">Cookies</a></li>
+<li><a href="#routing">Routing</a></li>
 </ul>
 </li>
 <li><a href="#handler-types">Handler types</a>
 <ul class="sectlevel2">
 <li><a href="#asynchronous">Asynchronous</a></li>
-<li><a href="#websockets">Websockets</a></li>
+<li><a href="#websockets">WebSockets</a></li>
 <li><a href="#sse-server-sent-events">SSE (Server-Sent Events)</a></li>
 <li><a href="#ring-compatibility-layer">Ring (Compatibility layer)</a></li>
 <li><a href="#cps-continuation-passing-style">CPS (Continuation-passing style)</a></li>
@@ -123,23 +123,25 @@
 <li><a href="#autoreload">Autoreload</a></li>
 <li><a href="#sessions">Sessions</a></li>
 <li><a href="#authentication">Authentication</a></li>
-<li><a href="#context-as-request">Context as Request</a></li>
 <li><a href="#security">Security</a></li>
 </ul>
 </li>
 <li><a href="#advanced-topics">Advanced topics</a>
 <ul class="sectlevel2">
+<li><a href="#handler-delegation">Handler delegation</a></li>
 <li><a href="#modular-components">Modular components</a></li>
 <li><a href="#launching-the-server">Launching the server</a></li>
+<li><a href="#instrumentation">Instrumentation</a></li>
 </ul>
 </li>
 <li><a href="#examples">Examples</a>
 <ul class="sectlevel2">
 <li><a href="#website-example">Website and Auth</a></li>
-<li><a href="#single-file-example">Single file web app</a></li>
+<li><a href="#websocket-echo-example">WebSocket Echo</a></li>
 <li><a href="#sse-component-example">Multiuser chat with SSE</a></li>
 <li><a href="#debugging-with-prone">Debugging with prone</a></li>
-<li><a href="#instrumentation">Instrumentation</a></li>
+<li><a href="#instrumentation-2">Instrumentation</a></li>
+<li><a href="#single-file-example">Single file web app</a></li>
 </ul>
 </li>
 <li><a href="#faq">FAQ</a>
@@ -165,45 +167,28 @@
 <div class="sectionbody">
 <div class="paragraph">
 <p><em>Catacumba</em> is an asynchronous and non-blocking web toolkit for Clojure built on top of
-ratpack and netty. Is highly inspired by ratpack handlers approach with a little ideas
-from the well known ring.</p>
+ratpack and netty and with design influenced by ring, pedestal and ratpack.</p>
 </div>
 <div class="sect2">
 <h3 id="rationale"><a class="link" href="#rationale">Rationale</a></h3>
 <div class="paragraph">
-<p>I start writting this library as a research project to provide a simple an non obstructive
-(a la ring) way to build asynchronous and non-blocking web services.</p>
+<p>I start writting this library as a research project to provide a simple, non
+obstructive (a la ring) but without constrains of the existing spec (ring spec),
+web toolkit for build asynchronous and non-blocking web services.</p>
 </div>
 <div class="paragraph">
-<p>In the Clojure ecosystem there are several solutions for that purpose: Pedestal, Aleph,
-and Jet. All them are good Clojure libraries/frameworks but none of them satisfies me for
-different reasons:</p>
+<p>In the Clojure ecosystem there are several existing solutions for that purpose. For
+mention some of them, we have Pedestal, Aleph, Jet, Immutant, etc. With the exception of
+Pedestal, the rest are build on top of the ring spec, that something I want exclude from
+the equation. And Pedestal is to much high level and opinionated, so it not
+fits very well with the initial constraints.</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p>The pedestal approach is very opinionated and too much high level and I prefer something
-simple, lightweight and maybe less opinionated.</p>
-</li>
-<li>
-<p>Aleph, seems like a great library but lacks good, readable, user friendly documentation
-and its generic approach (not only http) does not help much. If you want read more about
-differences with aleph, see <a href="#difference-with-aleph">this</a> faq entry.</p>
-</li>
-<li>
-<p>Jet is a asynchronous ring addapter for Jetty 9. It is really great library that I have
-used in some projects, and fits very well on my idea of web toolkit but it has two
-drawbacks, it is build as ring adapter having all the good and all the bad of ring and
-it is using Jetty (Jetty is a servlet server that comes with optional async support, it
-isn&#8217;t asynchronous from the ground up).</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="goals"><a class="link" href="#goals">Goals</a></h3>
 <div class="paragraph">
-<p>Here a incomplete list of things that <em>catacumba</em> aims to achieve:</p>
+<p>Some detailed explanation of differencies with few of them are explained in the FAQ
+section of this documentation.</p>
+</div>
+<div class="paragraph">
+<p>Here a incomplete list of things that <em>catacumba</em> aims to archieve:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -230,7 +215,7 @@ reactive-streams, &#8230;&#8203;</p>
 </ul>
 </div>
 <div class="paragraph">
-<p><em>Catacumba</em> goals are not:</p>
+<p>And <em>catacumba</em> goals are not:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -247,6 +232,11 @@ reactive-streams, &#8230;&#8203;</p>
 <p>To be a low level, ring based library.</p>
 </li>
 </ul>
+</div>
+<div class="paragraph">
+<p>The result of this research project is an powerfull, lightweight, and fully extensible
+asynchronous web toolkit built on top of existing and well designed components such as
+Ratpack, Netty, Rective-Streams and core.async.</p>
 </div>
 </div>
 <div class="sect2">
@@ -276,7 +266,7 @@ dependency vector on your <strong><em>project.clj</em></strong> file:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">funcool/catacumba</span> <span class="tok-s">&quot;0.4.0&quot;</span><span class="tok-p">]</span></code></pre>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">funcool/catacumba</span> <span class="tok-s">&quot;0.5.0&quot;</span><span class="tok-p">]</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -287,7 +277,7 @@ dependency vector on your <strong><em>project.clj</em></strong> file:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="groovy"><span class="tok-n">compile</span> <span class="tok-s2">&quot;funcool:catacumba:0.4.0&quot;</span></code></pre>
+<pre class="pygments highlight"><code data-lang="groovy"><span class="tok-n">compile</span> <span class="tok-s2">&quot;funcool:catacumba:0.5.0&quot;</span></code></pre>
 </div>
 </div>
 </div>
@@ -344,7 +334,7 @@ handler as first parameter:</p>
 </td>
 <td class="content">
 The <code>run-server</code> function does not block and you can execute it in a repl without
-problems. It uses jvm not daemon threads for avoid shutdown the jvm.
+problems.
 </td>
 </tr>
 </table>
@@ -371,7 +361,7 @@ problems. It uses jvm not daemon threads for avoid shutdown the jvm.
 </div>
 </div>
 <div class="paragraph">
-<p><em>Catacumba</em> comes with a little collection of <a href="#examples">Examples</a> that may help you
+<p><em>Catacumba</em> also comes with a little collection of <a href="#examples">Examples</a> that may help you
 setup your first project.</p>
 </div>
 </div>
@@ -387,14 +377,12 @@ playing together.</p>
 <div class="sect2">
 <h3 id="handlers"><a class="link" href="#handlers">Handlers</a></h3>
 <div class="paragraph">
-<p>The idea of handlers is a fundamental piece of the <em>catacumba</em> library and this chapter
-intends to explain everything related to default handlers.</p>
+<p>The idea of handlers is a fundamental piece of the <em>catacumba</em> library. Is a main
+building block for create web services.</p>
 </div>
-<div class="sect3">
-<h4 id="what-is-a-handler"><a class="link" href="#what-is-a-handler">What is a handler?</a></h4>
 <div class="paragraph">
-<p>As we have seen in the "<a href="#quickstart">quickstart</a>" section, a handler mainly consists of
-a simple function that acts on the handling context.</p>
+<p>As we have seen in the "<a href="#quickstart">quickstart</a>" section, the default handler mainly
+consists of a simple function that acts on the handling context.</p>
 </div>
 <div class="paragraph">
 <p>Do not worry about the context for now, it will be explained in later sections. The only
@@ -421,18 +409,25 @@ everything related.</p>
 <td class="content">
 I mention the "default" word because, <em>catacumba</em> comes with different
 <a href="#handler-types">types of handlers</a> out of the box. The catacumba&#8217;s handlers system is
-fully extensible so you can easyly create your own handler types (adapters).
+fully extensible so you can easyly create your own handler types (also called adapters
+the internal terminology).
 </td>
 </tr>
 </table>
 </div>
 </div>
+<div class="sect2">
+<h3 id="context"><a class="link" href="#context">Context</a></h3>
+<div class="paragraph">
+<p>The second thing most important in the catacumba terminology is a <strong>context</strong>. It can be
+considered a central part of both: IO and the execution flow control (will be explained
+in advanced section).</p>
+</div>
 <div class="sect3">
-<h4 id="write-to-response"><a class="link" href="#write-to-response">Write to response</a></h4>
+<h4 id="send-a-response"><a class="link" href="#send-a-response">Send a response</a></h4>
 <div class="paragraph">
 <p>As you can observe from the previous example, no status code is being provided, only the
-body of the response. To send a complete response you can use a builtin response type or
-a ring-like hashmap:</p>
+body of the response. To send a complete response you can use a builtin response type:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -444,28 +439,8 @@ a ring-like hashmap:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Following output data types are supported for a handler function:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>a <strong>string</strong>, will result in a response with status code 200 and "text/plain" as content
-type.</p>
-</li>
-<li>
-<p>a <strong>ring style</strong> hash map.</p>
-</li>
-<li>
-<p>a <strong>response</strong> type (very similar to ring one).</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>The handler&#8217;s return value is implemented using clojure protocols and its behavior can be
-extended easily with user defined types.</p>
-</div>
-<div class="paragraph">
-<p>Let see an other example, using <em>catacumba</em>'s response type with additional header:</p>
+<p>The response types exposed under the <code>catacumba.http</code> namespace also accepts additional
+parameters such as response http headers:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -479,7 +454,7 @@ extended easily with user defined types.</p>
 <div class="paragraph">
 <p>In the previous examples, we have seen how the return value is handled, but behind the
 scenes the context is the responsible of interactions with the request and the response.
-Let see the same example but interacti directly with the context:</p>
+Let see the same example but interacting directly with the context:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -494,32 +469,53 @@ Let see the same example but interacti directly with the context:</p>
 <p>The return value handling is really a helper for people coming from ring. Internally, the
 context is the main protagonist in IO operations.</p>
 </div>
+<div class="paragraph">
+<p>So, the handler response is can be:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>a <strong>string</strong>, will result in a response with status code 200 and "text/plain" as content
+type.</p>
+</li>
+<li>
+<p>a <strong>ring style</strong> hash map.</p>
+</li>
+<li>
+<p>a <strong>response</strong> type (previous example).</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The return value handling is implemented using clojure protocols, so its behavior can be
+extended easily with user defined types.</p>
+</div>
 </div>
 <div class="sect3">
 <h4 id="reading-the-request"><a class="link" href="#reading-the-request">Reading the request</a></h4>
 <div class="paragraph">
-<p>As we mentioned previously, the request can also be retrieved from the context instance.
-But in our case, <em>catacumba</em> provides helpers functions to access the most essential data
-such as the request body, request headers, cookies and routing tokens.</p>
+<p>In the catacumba the closest thing to the request concept is a context. In fact, catacumba
+does not has request and responses. Just a central object that handles the IO (Input and Output).</p>
 </div>
 <div class="paragraph">
-<p>You can access to the request object using the <code>get-request</code> function. But, in almost all
-situations you do not need it because the <em>catacumba</em> api is polymorphic and you can get
-access to almost all basic properties from request using a context as parameter, so you
-don&#8217;t need to extract the request from context repeatedly.</p>
+<p>The most important thing here is that the context in a user end acts like a request object
+and allows access to the most used part of the request such as the <code>:body</code>, <code>:method</code>,
+<code>:query</code>, <code>:path</code>, <code>:headers</code> and <code>:cookies</code>. All them are accessible with keyword lookups:</p>
 </div>
-<div class="sect4">
-<h5 id="body"><a class="link" href="#body">Body</a></h5>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-ss">:body</span> <span class="tok-nv">request</span><span class="tok-p">)</span>
+<span class="tok-c1">;; =&gt; &lt;TypedData&gt;</span></code></pre>
+</div>
+</div>
 <div class="paragraph">
-<p>For access to the request body, <em>catacumba</em> exposes a <code>get-body</code> function. This function
-returns a ratpack <a href="http://ratpack.io/manual/current/api/ratpack/http/TypedData.html">internal type</a>
-that represents a body.</p>
+<p>The <code>TypedData</code> is a ratpack <a href="http://ratpack.io/manual/current/api/ratpack/http/TypedData.html">internal type</a>
+that represents the http request body.</p>
 </div>
 <div class="paragraph">
 <p>That object exposes through Java interop methods to access the content type and the raw
-data of the request body. For convenience sake, it also implements the necesarry protocols
-of the <code>clojure.java.io</code> namespace to make it compatible with Clojure&#8217;s native facilities
-for reading data.</p>
+data of the request body. For convenience, it implements the <code>clojure.java.io</code> protocols
+for make it compatible with Clojure&#8217;s native facilities for reading data.</p>
 </div>
 <div class="paragraph">
 <p>A good demostration of this is using the clojure <code>slurp</code> function. It uses
@@ -530,55 +526,110 @@ resource as a string:</p>
 <div class="content">
 <pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">myechohandler</span>
   <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-o">^</span><span class="tok-nv">String</span> <span class="tok-nv">body</span> <span class="tok-p">(</span><span class="tok-nb">slurp </span><span class="tok-p">(</span><span class="tok-nf">ct/get-body</span> <span class="tok-nv">context</span><span class="tok-p">))]</span>
+  <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-o">^</span><span class="tok-nv">String</span> <span class="tok-nv">body</span> <span class="tok-p">(</span><span class="tok-nb">slurp </span><span class="tok-p">(</span><span class="tok-ss">:body</span> <span class="tok-nv">context</span><span class="tok-p">))]</span>
     <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-nv">body</span><span class="tok-p">)))</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>If you don&#8217;t know the behavior of slurp, it reads the content of the provided resource as
-string and return it.</p>
+<p>The <code>slurp</code> function uses the abstractions defined on the <code>clojure.java.io</code> namespace
+for read the content of the provided resourse as string and return it.</p>
 </div>
 <div class="paragraph">
 <p>Furthermore, <em>catacumba</em> offers a more flexible way to parsing body data based on the
 incoming content type, but it is explained with more details in the
-<a href="#Body parsing section">body-parsing</a> of this document.</p>
+<a href="#body-parsing">body parsing section</a> of this document.</p>
 </div>
-</div>
-<div class="sect4">
-<h5 id="headers"><a class="link" href="#headers">Headers</a></h5>
 <div class="paragraph">
-<p>In order to extract headers you should use the <code>get-headers</code> function. As usual, it is a
-polymorphic function and you could use it with a context instance without problems. The
-return value is a clojure map.</p>
+<p>Like the http request body, the http headers are available through the <code>:headers</code> key
+entry. In order to extract some header, just perform the apropiate lookup:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">get-in</span> <span class="tok-nv">context</span> <span class="tok-p">[</span><span class="tok-ss">:headers</span> <span class="tok-ss">:origin</span><span class="tok-p">])</span>
+<span class="tok-c1">;; =&gt; &quot;https://github.com&quot;</span></code></pre>
+</div>
 </div>
 <div class="paragraph">
 <p>If a header has multiple values, the value will be a vector.</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">ct/get-headers</span> <span class="tok-nv">context</span><span class="tok-p">)</span>
-<span class="tok-c1">;; =&gt; {:content-type ...}</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect4">
-<h5 id="cookies"><a class="link" href="#cookies">Cookies</a></h5>
 <div class="paragraph">
-<p>The cookies CRUD operations works very similiar to the headers one. It consists in two
-polymorphic functions (<code>get-cookies</code> and <code>set-cookies!</code>) that can be used directly with
-context or with request or response instances.</p>
+<p>Here a complete reference of the available attributes of the context object:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 14%;">
+<col style="width: 14%;">
+<col style="width: 42%;">
+<col style="width: 28%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Key</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+<th class="tableblock halign-left valign-top">Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:body</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="http://ratpack.io/manual/current/api/ratpack/http/TypedData.html"><code>TypedData</code></a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A object that represents a request body.</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:method</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Keyword</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A request method.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:head</code>, <code>:trace</code>, <code>:get</code>, <code>:options</code>, <code>:put</code>, <code>:post</code>, <code>:patch</code> and <code>:delete</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:query</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A raw string representation of the uri querystring.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"foo=bar&amp;baz=1"</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:path</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A raw string representation of the uri path.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/auth/client</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:headers</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>PersistentMap</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A optionally multi value hash map of the request headers.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>{:host "funcool.org" :pragma "no-cache" &#8230;&#8203;}</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:cookies</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>PersistentMap</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A optionally multivalue hash map of request cookies (explained in details in its own section).</p></td>
+<td class="tableblock halign-left valign-top"></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>:query-params</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>PersistentMap</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A optionally multivalue hash map of the parsed <code>:query</code> string.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>{:foo "bar" :bar 1}</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The <code>context</code> also contains other keys but them will explain in its corresponding section.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="cookies"><a class="link" href="#cookies">Cookies</a></h3>
+<div class="paragraph">
+<p>The cookies CRUD operations works very similiar to the headers one. You can access to the
+request cookies through direct keyword lookup on context object:</p>
 </div>
 <div class="listingblock">
-<div class="title">Get cookies from request example</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">ct/get-cookies</span> <span class="tok-nv">context</span><span class="tok-p">)</span>
-<span class="tok-c1">;; =&gt; {:cookiename {:value &quot;value&quot; :path &quot;/&quot; :secure false}}</span></code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="title">Set cookies in the response</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">ct/set-cookies</span> <span class="tok-nv">context</span> <span class="tok-p">{</span><span class="tok-ss">:cookiename</span> <span class="tok-p">{</span><span class="tok-ss">:value</span> <span class="tok-s">&quot;foobar&quot;</span> <span class="tok-ss">:max-age</span> <span class="tok-mi">3600</span><span class="tok-p">}})</span></code></pre>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">get-in</span> <span class="tok-nv">context</span> <span class="tok-p">[</span><span class="tok-ss">:cookies</span> <span class="tok-ss">:somecookie</span><span class="tok-p">])</span>
+<span class="tok-c1">;; =&gt; {:value &quot;foo&quot; :path &quot;/&quot; ...}</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -605,6 +656,13 @@ following possible properties:</p>
 </li>
 </ul>
 </div>
+<div class="paragraph">
+<p>For set cookies, you should use the <code>set-cookies!</code> function as you can see in the
+following example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">ct/set-cookies!</span> <span class="tok-nv">context</span> <span class="tok-p">{</span><span class="tok-ss">:cookiename</span> <span class="tok-p">{</span><span class="tok-ss">:value</span> <span class="tok-s">&quot;foobar&quot;</span> <span class="tok-ss">:max-age</span> <span class="tok-mi">3600</span><span class="tok-p">}})</span></code></pre>
 </div>
 </div>
 </div>
@@ -670,6 +728,10 @@ directive:</p>
               <span class="tok-ss">:post</span> <span class="tok-nv">create-users-handler</span><span class="tok-p">}]])</span></code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>Behind the scehenes, the <code>:by-method</code> directive will create a handler that in runtime
+will dispatch the request to the corresponding handler by method.</p>
+</div>
 </div>
 <div class="sect3">
 <h4 id="routing-params"><a class="link" href="#routing-params">Routing params</a></h4>
@@ -677,7 +739,7 @@ directive:</p>
 <p><em>catacumba</em>'s routing also allows to capture URL values encoded in the URL or as URL
 parameters using special symbols. For example, the path string "foo/:val" will match paths
 such as "foo/bar", "foo/123".  The matched parameters are automatically populated to the
-context under the <code>:route-params</code> keys.</p>
+context under the <code>:route-params</code> key:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -771,7 +833,7 @@ the use of regular expressions for delimiting the input or marking a URL token o
 </div>
 </div>
 <div class="paragraph">
-<p>Additionally, you can setup "catch all" handlers at the start of a routing definition and
+<p>Additionally, you can setup "match all" handlers at the start of a routing definition and
 use them as interceptors:</p>
 </div>
 <div class="listingblock">
@@ -783,15 +845,15 @@ use them as interceptors:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>For a better understanding of how the handler delegation chain works, see the <strong>Context</strong>
-chapter.</p>
+<p>For a better understanding of how the handler delegation chain works, see the <strong>Handlers delegation</strong>
+section in advanced guide chapter.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="error-handling"><a class="link" href="#error-handling">Error handling</a></h4>
 <div class="paragraph">
 <p>The <em>catacumba</em> router chain allows to setup user defined error handling functions. This
-requires a very, very simple setup, you only have to add another route entry with using
+requires a very simple setup, you only have to add another route entry with using
 <code>:error</code> route directive:</p>
 </div>
 <div class="listingblock">
@@ -856,90 +918,18 @@ file is requested. This is very usefull for SPA (single page applications):</p>
 <p>So, if you make a http request to <code>/assets/</code> the <code>index.html</code> will be automatically
 returned.</p>
 </div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="context"><a class="link" href="#context">Context</a></h3>
-<div class="paragraph">
-<p>Another core part of <em>catacumba</em> is the <strong>Context</strong>.</p>
-</div>
-<div class="paragraph">
-<p>Just like in ratpack, the context in <em>catacumba</em> has following responsbibilities:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Provide direct access to the request and response objects.</p>
-</li>
-<li>
-<p>Access to the contextual objects (called registry).</p>
-</li>
-<li>
-<p>Flow control in handler chaining.</p>
-</li>
-<li>
-<p>Convenience helpers for common handlers operation.</p>
-</li>
-</ul>
-</div>
-<div class="sect3">
-<h4 id="handler-delegation"><a class="link" href="#handler-delegation">Handler delegation</a></h4>
-<div class="paragraph">
-<p>In other words, it can be explained as "flow control" in the chain of handlers.</p>
-</div>
-<div class="paragraph">
-<p>In <em>catacumba</em>, the request process is an asynchronous pipeline of handlers that can be
-composed in different ways (as we previously seen in a router section). So the each
-handler in the pipeline has the ability to do some work and delegate the rest of
-processing to next handler (in the chain/pipeline).</p>
-</div>
-<div class="paragraph">
-<p>This approach allows you build different kind of modular and completelly decoupled
-handlers and compose them into a pipeline to work together.</p>
-</div>
-<div class="paragraph">
-<p>The delegation can be done with <code>delegate</code> function. Let see a simple example:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler1</span>
-  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-nf">do-something</span> <span class="tok-nv">context</span><span class="tok-p">)</span>
-  <span class="tok-p">(</span><span class="tok-nf">ct/delegate</span> <span class="tok-nv">context</span><span class="tok-p">))</span>
-
-<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler2</span>
-  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-s">&quot;hello world&quot;</span><span class="tok-p">))</span>
-
-<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">router</span>
-  <span class="tok-p">(</span><span class="tok-nf">ct/routes</span> <span class="tok-p">[[</span><span class="tok-ss">:get</span> <span class="tok-s">&quot;foo&quot;</span> <span class="tok-nv">handler1</span> <span class="tok-nv">handler2</span><span class="tok-p">]]))</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>In this example, when the request arrives at <code>handler1</code>, it delegates the execution to
-the next handler in the chain. It do not need to know about next handler, it just
-delegates to the routing chain to find a next handler or raise a corresponding error.</p>
-</div>
-<div class="paragraph">
-<p>In addition to the simple handler delegation, <em>catacumba</em> offers a simple way to pass
-context data to the next handler in the chain. It can be done by passing an additional
-parameter to the <code>delegate</code> function:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler1</span>
-  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-nf">do-something</span> <span class="tok-nv">context</span><span class="tok-p">)</span>
-  <span class="tok-p">(</span><span class="tok-nf">ct/delegate</span> <span class="tok-nv">context</span> <span class="tok-p">{</span><span class="tok-ss">:message</span> <span class="tok-s">&quot;foobar&quot;</span><span class="tok-p">}))</span>
-
-<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler2</span>
-  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">message</span> <span class="tok-p">(</span><span class="tok-ss">:message</span> <span class="tok-nv">context</span><span class="tok-p">)]</span>
-    <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-nv">message</span><span class="tok-p">)))</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>In the example above, the second handler prints the message found in the context.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+the assets are resolved using the <code>:basedir</code> parameter of the server
+constructor; for more details see the <a href="#launching-the-server">Launching the server</a> section.
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -959,7 +949,7 @@ of the supported abstractions, such as core.async, reactive-streams and many oth
 (explained below).</p>
 </div>
 <div class="sect3">
-<h4 id="channels"><a class="link" href="#channels">Channels</a></h4>
+<h4 id="body-as-channel"><a class="link" href="#body-as-channel">Body as channel</a></h4>
 <div class="paragraph">
 <p>The <code>core.async</code> channel is one of the supported abstractions that comes with <em>catacumba</em>
 out of the box. It consists of a handler that returns a body as a channel or response as
@@ -1007,7 +997,7 @@ chunked responses.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="promises"><a class="link" href="#promises">Promises</a></h4>
+<h4 id="body-as-promise-completablefuture"><a class="link" href="#body-as-promise-completablefuture">Body as promise (CompletableFuture)</a></h4>
 <div class="paragraph">
 <p>Promises are another abstraction supported out of the box in <em>catacumba</em>. It comes from
 the <a href="https://github.com/funcool/promissum">promissum library</a> and is build on top of
@@ -1051,7 +1041,7 @@ result from <code>(do-other-thing-with b)</code> expression.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="manifold"><a class="link" href="#manifold">Manifold</a></h4>
+<h4 id="body-as-deferred-manifold"><a class="link" href="#body-as-deferred-manifold">Body as deferred (manifold)</a></h4>
 <div class="paragraph">
 <p>The <a href="https://github.com/ztellman/manifold">manifold</a> library offers different kind of
 deferred and stream abstractions for Clojure and you can use both them as response or body
@@ -1069,7 +1059,7 @@ of the response for sending data to the client asynchronously.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="reactive-streams"><a class="link" href="#reactive-streams">Reactive Streams</a></h4>
+<h4 id="body-as-reactive-stream"><a class="link" href="#body-as-reactive-stream">Body as reactive-stream</a></h4>
 <div class="paragraph">
 <p>This is the core of all abstractions, and support for it comes out of the box from
 <strong>ratpack</strong>. All other abstractions that we have seen are always coerced to a <strong>Publisher</strong>
@@ -1090,7 +1080,7 @@ of <strong>Publisher</strong>, you can return it as response or send it as body 
 <span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">my-async-handler</span>
   <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
   <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">pub</span> <span class="tok-p">(</span><span class="tok-nf">-&gt;&gt;</span> <span class="tok-p">(</span><span class="tok-nf">stream/publisher</span> <span class="tok-p">[</span><span class="tok-s">&quot;hello&quot;</span> <span class="tok-s">&quot; &quot;</span> <span class="tok-s">&quot;world&quot;</span><span class="tok-p">])</span>
-                 <span class="tok-p">(</span><span class="tok-nf">stream/publisher</span> <span class="tok-p">(</span><span class="tok-nb">map </span><span class="tok-nv">str/upper</span><span class="tok-p">)))]</span>
+                 <span class="tok-p">(</span><span class="tok-nf">stream/transform</span> <span class="tok-p">(</span><span class="tok-nb">map </span><span class="tok-nv">str/upper</span><span class="tok-p">)))]</span>
     <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-nv">pub</span><span class="tok-p">)))</span>
 
 <span class="tok-c1">;; It will return a chunked response to the client with &quot;HELLO WORLD&quot; string.</span></code></pre>
@@ -1099,7 +1089,7 @@ of <strong>Publisher</strong>, you can return it as response or send it as body 
 </div>
 </div>
 <div class="sect2">
-<h3 id="websockets"><a class="link" href="#websockets">Websockets</a></h3>
+<h3 id="websockets"><a class="link" href="#websockets">WebSockets</a></h3>
 <div class="paragraph">
 <p>One of the main goals of <em>catacumba</em> is come with builtin, full featured and
 backpressure-aware websockets support.</p>
@@ -1130,8 +1120,8 @@ websockets. Let see an example:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Additionally, <em>catacumba</em> offers a a way to set up a websocket handler directly, without
-an additional step in the default handler:</p>
+<p>Additionally, <em>catacumba</em> offers a way to set up a websocket handler directly, without
+an additional step:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1153,13 +1143,20 @@ an additional step in the default handler:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>As you can observe, for any function has additional metadata that indicates to <em>catacumba</em>
-that this function is a websocket type handler, <em>catacumba</em> will bootstrap the websocket
-connection for you.</p>
+<p>As you can observe, the var metadata is used for properly choice the right adapter.</p>
 </div>
-<div class="paragraph">
-<p>Is very important pass a var reference to the router instead of the function directly,
-because the metadata defined in the function is bound to the var and not to the function.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+Is very important pass a var reference to the router instead of the function directly,
+because the metadata defined in the function is bound to the var and not to the function.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>Also, you can attach metadata inline, using the <code>with-meta</code> Clojure built-in function:</p>
@@ -1186,8 +1183,9 @@ changes or any other events. For this purpose exists
 and <em>catacumba</em> also has support for it.</p>
 </div>
 <div class="paragraph">
-<p>The handler for SSE does not differs a lot from websockets that we have seen in the
-previous section. The main difference is that the reception of the data is not allowed.</p>
+<p>The handler for SSE does not differs much from websockets (that we have seen in the
+previous section). The main difference is that server-sent events are unidirectional
+and they only can send data in the server to client direction.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1295,7 +1293,23 @@ all related middlewares) or in a <em>catacumba</em>'s routing chain.</p>
 <div class="sect2">
 <h3 id="cps-continuation-passing-style"><a class="link" href="#cps-continuation-passing-style">CPS (Continuation-passing style)</a></h3>
 <div class="paragraph">
-<p>TBD</p>
+<p>Is a low level handler type that works in a cps style (in other words, they works with
+callbacks). This is not general purpose handler type but you maybe found it usefull for
+integrate catacumba with other scenarios that it is not initialy designed to work.</p>
+</div>
+<div class="paragraph">
+<p>This is the aspect ot the cps style handler:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code>(defn my-cps-handler
+  "Some usefull docstring."
+  {:handler-type :catacumba/cps}
+  [context callback]
+  (future
+    (Thread/sleep 1000)
+    (callback "hello world")))</code></pre>
+</div>
 </div>
 </div>
 </div>
@@ -1702,34 +1716,6 @@ facilities and attach them to <em>catacumba</em> using the routing chain.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="context-as-request"><a class="link" href="#context-as-request">Context as Request</a></h3>
-<div class="paragraph">
-<p>By default, the <em>catacumba</em>'s context allows you direct access to the request and
-response, both which are instances of classes defined in Ratpack. These classes allows
-you to access all related properties such as headers, the request body, the request
-method, etc.</p>
-</div>
-<div class="paragraph">
-<p>But <em>catacumba</em> additionally offers a small set of helper functions for interacting with
-that data: getting/setting headers and reading the body (explained in previous sections).</p>
-</div>
-<div class="paragraph">
-<p>To compensate for this, <em>catacumba</em> comes with a special chain handler that populates the
-context with basic request properties such as, headers, path and method:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">catacumba.handlers</span> <span class="tok-ss">:refer</span> <span class="tok-p">[</span><span class="tok-nv">basic-request</span><span class="tok-p">]])</span>
-
-<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">app</span>
-  <span class="tok-p">(</span><span class="tok-nf">ct/routes</span> <span class="tok-p">[[</span><span class="tok-ss">:prefix</span> <span class="tok-s">&quot;api/v1&quot;</span>
-               <span class="tok-p">[</span><span class="tok-ss">:any</span> <span class="tok-nv">basic-request</span><span class="tok-p">]</span>
-               <span class="tok-p">[</span><span class="tok-ss">:get</span> <span class="tok-s">&quot;foo&quot;</span> <span class="tok-nv">some-handler</span><span class="tok-p">]</span>
-               <span class="tok-p">[</span><span class="tok-ss">:post</span> <span class="tok-s">&quot;foo&quot;</span> <span class="tok-nv">some-save-handler</span><span class="tok-p">]]]))</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
 <h3 id="security"><a class="link" href="#security">Security</a></h3>
 <div class="sect3">
 <h4 id="cross-origin-resource-sharing"><a class="link" href="#cross-origin-resource-sharing">Cross-Origin Resource Sharing</a></h4>
@@ -1917,6 +1903,91 @@ can use it:</p>
 <h2 id="advanced-topics"><a class="link" href="#advanced-topics">Advanced topics</a></h2>
 <div class="sectionbody">
 <div class="sect2">
+<h3 id="handler-delegation"><a class="link" href="#handler-delegation">Handler delegation</a></h3>
+<div class="paragraph">
+<p>A part of the obvious (and previously explained) responsability of the <code>context</code>
+object in catacubla. It has some others responsabilities. Just a summary of them:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Provide direct access to the request and response objects.</p>
+</li>
+<li>
+<p>Access to the contextual objects (called registry).</p>
+</li>
+<li>
+<p>Flow control in handler chaining.</p>
+</li>
+<li>
+<p>Convenience helpers for common handlers operation.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>In a catacumba design (inherited from ratpack), a handler is a unit of work in
+an asynchronous handler and the context is a execution controler and local storage
+for the current request state.</p>
+</div>
+<div class="paragraph">
+<p>In other words it can be explained as "flow control" in the chain of handlers.</p>
+</div>
+<div class="paragraph">
+<p>The request process is an asynchronous pipeline of handlers that can be
+composed in different ways (as we previously seen in a router section). So the each
+handler in the pipeline has the ability to do some work and delegate the rest of
+processing to next handler in the chain.</p>
+</div>
+<div class="paragraph">
+<p>This approach allows you build different kind of modular and completelly decoupled
+handlers and compose them into a pipeline to work together.</p>
+</div>
+<div class="paragraph">
+<p>The delegation action can be done with <code>delegate</code> function. Let see a simple example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler1</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-nf">do-something</span> <span class="tok-nv">context</span><span class="tok-p">)</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/delegate</span> <span class="tok-nv">context</span><span class="tok-p">))</span>
+
+<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler2</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-s">&quot;hello world&quot;</span><span class="tok-p">))</span>
+
+<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">router</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/routes</span> <span class="tok-p">[[</span><span class="tok-ss">:get</span> <span class="tok-s">&quot;foo&quot;</span> <span class="tok-nv">handler1</span> <span class="tok-nv">handler2</span><span class="tok-p">]]))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this example, when the request arrives at <code>handler1</code>, it delegates the execution to
+the next handler in the chain. It do not need to know about next handler, it just
+delegates to the routing chain to find a next handler or raise a corresponding error.</p>
+</div>
+<div class="paragraph">
+<p>In addition to the simple handler delegation, <em>catacumba</em> offers a simple way to pass
+context data to the next handler in the chain. It can be done by passing an additional
+parameter to the <code>delegate</code> function:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler1</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-nf">do-something</span> <span class="tok-nv">context</span><span class="tok-p">)</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/delegate</span> <span class="tok-nv">context</span> <span class="tok-p">{</span><span class="tok-ss">:message</span> <span class="tok-s">&quot;foobar&quot;</span><span class="tok-p">}))</span>
+
+<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler2</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">message</span> <span class="tok-p">(</span><span class="tok-ss">:message</span> <span class="tok-nv">context</span><span class="tok-p">)]</span>
+    <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-nv">message</span><span class="tok-p">)))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In the example above, the second handler prints the message found in the context.</p>
+</div>
+</div>
+<div class="sect2">
 <h3 id="modular-components"><a class="link" href="#modular-components">Modular components</a></h3>
 <div class="paragraph">
 <p><em>Catacumba</em> is build from its ground with optional support for the
@@ -1987,12 +2058,20 @@ with real code. See the <a href="#examples">examples</a> section for it.</p>
 <p>As you can see in the quick start section, the main entry point for start the server is
 the <code>run-server</code> function that receives a handler chain and a map with options.</p>
 </div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">catacumba.core</span> <span class="tok-ss">:as</span> <span class="tok-nv">ct</span><span class="tok-p">])</span>
+
+<span class="tok-c1">;; ... handler definition</span>
+
+<span class="tok-p">(</span><span class="tok-nf">ct/run-server</span> <span class="tok-o">#</span><span class="tok-ss">&#39;my-handler</span> <span class="tok-p">{</span><span class="tok-ss">:port</span> <span class="tok-mi">4040</span> <span class="tok-ss">:debug</span> <span class="tok-nv">true</span><span class="tok-p">})</span></code></pre>
+</div>
+</div>
 <div class="paragraph">
-<p>At this moment, it has a very small subset of options that netty and ratpack offer but is
-a good starting point.</p>
+<p>Here a complete reference of the currently supported options that can be passed
+to the <code>run-server</code> function:</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
-<caption class="title">Table 2. Supported options</caption>
 <colgroup>
 <col style="width: 25%;">
 <col style="width: 25%;">
@@ -2057,6 +2136,25 @@ java -jar yourjarhere.jar</code></pre>
 <pre class="pygments highlight"><code data-lang="bash">java -Dcatacumba.port<span class="tok-o">=</span><span class="tok-m">8000</span> -Dcatacumba.debug<span class="tok-o">=</span><span class="tok-nb">true</span> -jar yourjarhere.jar</code></pre>
 </div>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+if no <code>:basedir</code> is specified, catacumba will try to find a <code>.catacumba</code> file
+in the classpath and will set a base dir to its directory.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="instrumentation"><a class="link" href="#instrumentation">Instrumentation</a></h3>
+<div class="paragraph">
+<p>TODO</p>
+</div>
 </div>
 </div>
 </div>
@@ -2067,24 +2165,44 @@ java -jar yourjarhere.jar</code></pre>
 <h3 id="website-example"><a class="link" href="#website-example">Website and Auth</a></h3>
 <div class="paragraph">
 <p>This example tries to show the way to use <em>catacumba</em> in a website like projects, with
-authentication and session.</p>
+<strong>authentication</strong> and <strong>sessions</strong>.</p>
 </div>
 <div class="paragraph">
-<p>You can see the example code here:
-<a href="https://github.com/funcool/catacumba/tree/master/examples/website" class="bare">https://github.com/funcool/catacumba/tree/master/examples/website</a></p>
+<p>Just run the following commands:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span class="tok-nv">$ </span>git clone git@github.com:funcool/catacumba.git
+<span class="tok-nv">$ </span><span class="tok-nb">cd </span>catacumba/
+<span class="tok-nv">$ </span>lein with-profile website-example run
+<span class="tok-o">[</span>main<span class="tok-o">]</span> INFO ratpack.server.RatpackServer - Ratpack started <span class="tok-k">for</span> http://localhost:5050</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can found the source code of this example
+<a href="https://github.com/funcool/catacumba/tree/master/examples/website">here</a>.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="single-file-example"><a class="link" href="#single-file-example">Single file web app</a></h3>
+<h3 id="websocket-echo-example"><a class="link" href="#websocket-echo-example">WebSocket Echo</a></h3>
 <div class="paragraph">
-<p>This example tries to show how you can use <em>catacumba</em> for building small web applications
-that fits in one file and execute them like a shell script or an executable.</p>
+<p>This example application tries to show a very simple application
+using the websockets capabilities of <em>catacumba</em></p>
 </div>
 <div class="paragraph">
-<p>This example requires <a href="http://boot-clj.com/" class="bare">http://boot-clj.com/</a></p>
+<p>Get it up and running following this commands:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span class="tok-nv">$ </span>git clone git@github.com:funcool/catacumba.git
+<span class="tok-nv">$ </span><span class="tok-nb">cd </span>catacumba/
+<span class="tok-nv">$ </span>lein with-profile websocket-echo-example run
+<span class="tok-o">[</span>main<span class="tok-o">]</span> INFO ratpack.server.RatpackServer - Ratpack started <span class="tok-k">for</span> http://localhost:5050</code></pre>
+</div>
 </div>
 <div class="paragraph">
-<p><a href="https://github.com/funcool/catacumba/tree/master/examples/single-file" class="bare">https://github.com/funcool/catacumba/tree/master/examples/single-file</a></p>
+<p>You can found the source code of this example
+<a href="https://github.com/funcool/catacumba/tree/master/examples/websocket-echo">here</a>.</p>
 </div>
 </div>
 <div class="sect2">
@@ -2095,8 +2213,23 @@ that fits in one file and execute them like a shell script or an executable.</p>
 <strong>stuartsierra/component</strong> for a modular application architecture.</p>
 </div>
 <div class="paragraph">
-<p>You can see the example code here:
-<a href="https://github.com/funcool/catacumba/tree/master/examples/component-chat" class="bare">https://github.com/funcool/catacumba/tree/master/examples/component-chat</a></p>
+<p>For make this example application run, follow this commands:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span class="tok-nv">$ </span>git clone git@github.com:funcool/catacumba.git
+<span class="tok-nv">$ </span><span class="tok-nb">cd </span>catacumba/
+<span class="tok-nv">$ </span>lein with-profile component-chat-example run
+<span class="tok-o">[</span>main<span class="tok-o">]</span> INFO ratpack.server.RatpackServer - Ratpack started <span class="tok-k">for</span> http://localhost:5050</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now, open <a href="http://localhost:5050" class="bare">http://localhost:5050</a> in two different browsers and try send messages between
+them.</p>
+</div>
+<div class="paragraph">
+<p>You can found the source code of this example
+<a href="https://github.com/funcool/catacumba/tree/master/examples/component-chat">here</a>.</p>
 </div>
 </div>
 <div class="sect2">
@@ -2108,8 +2241,19 @@ application. It is not directly compatible with <em>catacumba</em> but it is rel
 adapt it.</p>
 </div>
 <div class="paragraph">
-<p>You can see the example code here:
-<a href="https://github.com/funcool/catacumba/tree/master/examples/debugging" class="bare">https://github.com/funcool/catacumba/tree/master/examples/debugging</a></p>
+<p>Just follow the following commands for get it up and running:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span class="tok-nv">$ </span>git clone git@github.com:funcool/catacumba.git
+<span class="tok-nv">$ </span><span class="tok-nb">cd </span>catacumba/
+<span class="tok-nv">$ </span>lein with-profile debugging-example run
+<span class="tok-o">[</span>main<span class="tok-o">]</span> INFO ratpack.server.RatpackServer - Ratpack started <span class="tok-k">for</span> http://localhost:5050</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can found the source code of this example
+<a href="https://github.com/funcool/catacumba/tree/master/examples/debugging">here</a>.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -2127,15 +2271,72 @@ without any additional adaptation. This example shows how it can be used with
 </div>
 </div>
 <div class="sect2">
-<h3 id="instrumentation"><a class="link" href="#instrumentation">Instrumentation</a></h3>
+<h3 id="instrumentation-2"><a class="link" href="#instrumentation-2">Instrumentation</a></h3>
 <div class="paragraph">
 <p><em>Catacumba</em> comes with the ability to instrument your application for taking different
 kinds of diagnosis, such as performance, latency, etc. This example shows how it can be
 done.</p>
 </div>
 <div class="paragraph">
-<p>You can see the example code here:
-<a href="https://github.com/funcool/catacumba/tree/master/examples/interceptor" class="bare">https://github.com/funcool/catacumba/tree/master/examples/interceptor</a></p>
+<p>In case of this concrete example application, it uses the instrumentation facilities
+of catacumba for monitoring the time of oxecuttion of request handlers.</p>
+</div>
+<div class="paragraph">
+<p>Follow this steps for get this example up and running:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span class="tok-nv">$ </span>git clone git@github.com:funcool/catacumba.git
+<span class="tok-nv">$ </span><span class="tok-nb">cd </span>catacumba/
+<span class="tok-nv">$ </span>lein with-profile interceptor-example run
+<span class="tok-o">[</span>main<span class="tok-o">]</span> INFO ratpack.server.RatpackServer - Ratpack started <span class="tok-k">for</span> http://localhost:5050</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>And go to <a href="http://localhost:5050/" class="bare">http://localhost:5050/</a></p>
+</div>
+<div class="paragraph">
+<p>After some requests, you will see the similar output in the console:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash">Computation :compute elapsed in: 0.025150461 <span class="tok-o">(</span>sec<span class="tok-o">)</span>
+Computation :compute elapsed in: 0.001690894 <span class="tok-o">(</span>sec<span class="tok-o">)</span>
+Computation :compute elapsed in: 0.001541675 <span class="tok-o">(</span>sec<span class="tok-o">)</span>
+Computation :compute elapsed in: 0.001554894 <span class="tok-o">(</span>sec<span class="tok-o">)</span>
+Computation :compute elapsed in: 0.00175033 <span class="tok-o">(</span>sec<span class="tok-o">)</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can found the source code of this example
+<a href="https://github.com/funcool/catacumba/tree/master/examples/interceptor">here</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="single-file-example"><a class="link" href="#single-file-example">Single file web app</a></h3>
+<div class="paragraph">
+<p><strong>This example application requires that you should have <a href="http://boot-clj.com">boot-clj</a>
+properly installed on your system.</strong></p>
+</div>
+<div class="paragraph">
+<p>This example tries to show how you can use <em>catacumba</em> for building small web applications
+that fits in one file and execute them like a shell script or an executable.</p>
+</div>
+<div class="paragraph">
+<p>You should execute the following commands for get it up and running:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span class="tok-nv">$ </span>git clone git@github.com:funcool/catacumba.git
+<span class="tok-nv">$ </span><span class="tok-nb">cd </span>catacumba/examples/single-file
+<span class="tok-nv">$ </span><span class="tok-nb">export </span><span class="tok-nv">BOOT_CLOJURE_VERSION</span><span class="tok-o">=</span>1.7.0
+<span class="tok-nv">$ </span>./main.clj
+<span class="tok-o">[</span>main<span class="tok-o">]</span> INFO ratpack.server.RatpackServer - Ratpack started <span class="tok-k">for</span> http://localhost:5050</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can found the source code of this example
+<a href="https://github.com/funcool/catacumba/tree/master/examples/single-file">here</a>.</p>
 </div>
 </div>
 </div>
@@ -2279,7 +2480,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-26 18:27:57 EEST
+Last updated 2015-08-11 17:53:31 EEST
 </div>
 </div>
 </body>

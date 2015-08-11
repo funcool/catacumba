@@ -2,7 +2,7 @@
 
 ## Version 0.5.0 ##
 
-Date: unreleased
+Date: 2015-08-11
 
 - Removed `get-body` function.
 - The context is rich by default with keyword access to all most used

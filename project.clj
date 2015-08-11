@@ -1,5 +1,5 @@
-(defproject funcool/catacumba "0.5.0-SNAPSHOT"
-  :description "Asynchronous web toolkit for Clojure build on top of Ratpack."
+(defproject funcool/catacumba "0.5.0"
+  :description "Asynchronous Web Toolkit for Clojure."
   :url "http://github.com/funcool/catacumba"
   :license {:name "BSD (2-Clause)"
             :url "http://opensource.org/licenses/BSD-2-Clause"}

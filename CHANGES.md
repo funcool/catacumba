@@ -15,6 +15,10 @@ Date: unreleased
 - Update to ratpack 0.9.19 and prepare code to up coming ratpack 1.0.0 (that
   implies a lot of changes in the catacumba internals and performance
   improvements).
+- Add classpath basedir resolve method (thanks to @mitchelkuijpers).
+- Make more easy the example project maintenance.
+- Add websocket-echo example (thanks to @mitchelkuijpers).
+
 
 ## Version 0.4.0 ##
 

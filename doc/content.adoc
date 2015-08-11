@@ -288,7 +288,7 @@ for read the content of the provided resourse as string and return it.
 
 Furthermore, _catacumba_ offers a more flexible way to parsing body data based on the
 incoming content type, but it is explained with more details in the
-<<Body parsing section,body-parsing>> of this document.
+<<body-parsing,body parsing section>> of this document.
 
 Like the http request body, the http headers are available through the `:headers` key
 entry. In order to extract some header, just perform the apropiate lookup:

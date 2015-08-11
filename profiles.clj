@@ -3,8 +3,6 @@
   :source-paths ["src"]
   :codeina {:sources ["src/clojure"]
             :exclude [catacumba.impl.context
-                      catacumba.impl.helpers
-                      catacumba.impl.parse
                       catacumba.impl.atomic
                       catacumba.impl.executor
                       catacumba.impl.stream
@@ -16,11 +14,9 @@
                       catacumba.impl.server
                       catacumba.impl.http
                       catacumba.impl.routing
-                      catacumba.impl.streams
+                      catacumba.impl.stream
                       catacumba.impl.websocket
                       catacumba.impl.sse
-                      catacumba.impl.types
-                      catacumba.handlers.core
                       catacumba.handlers.cors
                       catacumba.handlers.auth
                       catacumba.handlers.autoreload
@@ -40,11 +36,40 @@
                  [ring/ring-core "1.4.0"
                   :exclusions [javax.servlet/servlet-api clj-time org.clojure/clojure]]]}
  ;; Examples
+ :examples
+ {:dependencies [[cheshire "5.5.0"]
+                 [hiccup "1.0.5"]]}
 
- :websocket-example
- {:source-paths ["examples/echo-websocket/src"]
-  :resource-paths ["examples/echo-websocket/resources"]
-  :dependencies [[org.clojure/clojure "1.7.0"]
-                 [cheshire "5.5.0"]]
-  :main ^:skip-aot echo-websocket.core}}
+ :websocket-echo-example
+ [:examples
+  {:source-paths ["examples/websocket-echo/src"]
+   :resource-paths ["examples/websocket-echo/resources"]
+   :main ^:skip-aot websocket-echo.core}]
+
+ :component-chat-example
+ [:examples
+  {:source-paths ["examples/component-chat/src"]
+   :resource-paths ["examples/component-chat/resources"]
+   :main ^:skip-aot compchat.core}]
+
+ :debugging-example
+ [:examples
+  {:dependencies [[prone "0.8.2"]]
+   :source-paths ["examples/debugging/src"]
+   :resource-paths ["examples/debugging/resources"]
+   :main ^:skip-aot debugging.core}]
+
+ :interceptor-example
+ [:examples
+  {:source-paths ["examples/interceptor/src"]
+   :resource-paths ["examples/interceptor/resources"]
+   :main ^:skip-aot interceptor.core}]
+
+ :website-example
+ [:examples
+  {:source-paths ["examples/website/src"]
+   :resource-paths ["examples/website/resources"]
+   :main ^:skip-aot website.core}]
+
+ }
 

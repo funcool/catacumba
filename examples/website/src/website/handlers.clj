@@ -99,8 +99,8 @@
 
 (defn login-submit
   [context]
-  (let [form-params (ct/parse-formdata context)
-        query-params (ct/parse-queryparams context)
+  (let [form-params (ct/get-formdata context)
+        query-params (:query-params context)
         username (get form-params "username" "")
         password (get form-params "password" "")]
     (if (or (empty? username) (empty? password))

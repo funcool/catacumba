@@ -55,7 +55,7 @@
   "A simple handler for receive messages via post."
   [context]
   (let [bus (get-in context [::app :eventbus])
-        params (ct/parse-formdata context)
+        params (ct/get-formdata context)
         message (get params "message")
         author (get params "author")]
     (if (> (count message) 0)

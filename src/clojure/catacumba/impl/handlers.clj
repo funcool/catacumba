@@ -261,7 +261,7 @@
                              (-> (hp/promise (fn [resolve] (handler context #(resolve %))))
                                  (hp/then #(-handle-response % context))))))))
 
-(defn- build-request
+(defn build-request
   [^Request request]
    (let [local-address (.getLocalAddress request)
          remote-address (.getRemoteAddress request)

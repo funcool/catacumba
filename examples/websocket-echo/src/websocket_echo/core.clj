@@ -1,4 +1,4 @@
-(ns echo-websocket.core
+(ns websocket-echo.core
   (:require [clojure.core.async :as async :refer [go-loop <! >! close!]]
             [clojure.java.io :as io]
             [cheshire.core :as json]
@@ -19,7 +19,6 @@
   (go-loop []
     (if-let [received (<! in)]
       (do
-        (println "received" received)
         (>! out received)
         (recur))
       (do

@@ -21,7 +21,7 @@
 ;; function from catacumba.
 
 (def app
-  (ct/routes [[:assets "assets" {:dir "resources/public"}]
+  (ct/routes [[:assets "assets" {:dir "public"}]
               [:any (hs/autoreloader)]
               [:any (hs/session {:storage :inmemory})]
               [:any (hs/auth auth-backend)]
@@ -37,5 +37,4 @@
 (defn -main
   "The main entry point to your application."
   [& args]
-  (ct/run-server app {:port 5051
-                      :basedir "."}))
+  (ct/run-server app {:port 5050}))

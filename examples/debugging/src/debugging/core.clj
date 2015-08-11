@@ -1,7 +1,6 @@
 (ns debugging.core
   (:require [catacumba.core :as ct]
             [catacumba.http :as http]
-            [catacumba.impl.handlers :refer [build-request]]
             [prone.stacks :refer [normalize-exception]]
             [prone.debug :as debug]
             [prone.prep :refer [prep-error-page prep-debug-page]]
@@ -17,7 +16,7 @@
       [context throwable]
       (.printStackTrace throwable)
       (-> (normalize-exception throwable)
-          (prep-error-page [] (build-request (:request context)) [appname])
+          (prep-error-page [] context [appname])
           (render-page)
           (serve)))))
 

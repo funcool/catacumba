@@ -1567,21 +1567,38 @@ TODO
 === Website and Auth
 
 This example tries to show the way to use _catacumba_ in a website like projects, with
-authentication and session.
+*authentication* and *sessions*.
 
-You can see the example code here:
-https://github.com/funcool/catacumba/tree/master/examples/website
+Just run the following commands:
+
+```bash
+$ git clone git@github.com:funcool/catacumba.git
+$ cd catacumba/
+$ lein with-profile website-example run
+[main] INFO ratpack.server.RatpackServer - Ratpack started for http://localhost:5050
+```
+
+You can found the source code of this example
+link:https://github.com/funcool/catacumba/tree/master/examples/website[here].
 
 
-[[single-file-example]]
-=== Single file web app
+[[websocket-echo-example]]
+=== WebSocket Echo
 
-This example tries to show how you can use _catacumba_ for building small web applications
-that fits in one file and execute them like a shell script or an executable.
+This example application tries to show a very simple application
+using the websockets capabilities of _catacumba_
 
-This example requires http://boot-clj.com/
+Get it up and running following this commands:
 
-https://github.com/funcool/catacumba/tree/master/examples/single-file
+```bash
+$ git clone git@github.com:funcool/catacumba.git
+$ cd catacumba/
+$ lein with-profile websocket-echo-example run
+[main] INFO ratpack.server.RatpackServer - Ratpack started for http://localhost:5050
+```
+
+You can found the source code of this example
+link:https://github.com/funcool/catacumba/tree/master/examples/websocket-echo[here].
 
 
 [[sse-component-example]]
@@ -1591,8 +1608,20 @@ This example tries to demonstrate how can you build a simple chat using
 "Server-Sent Events" for communicating events to the client and using
 *stuartsierra/component* for a modular application architecture.
 
-You can see the example code here:
-https://github.com/funcool/catacumba/tree/master/examples/component-chat
+For make this example application run, follow this commands:
+
+```bash
+$ git clone git@github.com:funcool/catacumba.git
+$ cd catacumba/
+$ lein with-profile component-chat-example run
+[main] INFO ratpack.server.RatpackServer - Ratpack started for http://localhost:5050
+```
+
+Now, open http://localhost:5050 in two different browsers and try send messages between
+them.
+
+You can found the source code of this example
+link:https://github.com/funcool/catacumba/tree/master/examples/component-chat[here].
 
 
 === Debugging with prone
@@ -1602,8 +1631,18 @@ shows a beautiful and human readable stack traces when a exception is raised in 
 application. It is not directly compatible with _catacumba_ but it is relatively easy to
 adapt it.
 
-You can see the example code here:
-https://github.com/funcool/catacumba/tree/master/examples/debugging
+Just follow the following commands for get it up and running:
+
+```bash
+$ git clone git@github.com:funcool/catacumba.git
+$ cd catacumba/
+$ lein with-profile debugging-example run
+[main] INFO ratpack.server.RatpackServer - Ratpack started for http://localhost:5050
+```
+
+You can found the source code of this example
+link:https://github.com/funcool/catacumba/tree/master/examples/debugging[here].
+
 
 NOTE: Obviously, if you are using the ring type of handler, you can use Prone as is,
 without any additional adaptation. This example shows how it can be used with
@@ -1616,9 +1655,56 @@ _Catacumba_ comes with the ability to instrument your application for taking dif
 kinds of diagnosis, such as performance, latency, etc. This example shows how it can be
 done.
 
-You can see the example code here:
-https://github.com/funcool/catacumba/tree/master/examples/interceptor
+In case of this concrete example application, it uses the instrumentation facilities
+of catacumba for monitoring the time of oxecuttion of request handlers.
 
+Follow this steps for get this example up and running:
+
+```bash
+$ git clone git@github.com:funcool/catacumba.git
+$ cd catacumba/
+$ lein with-profile interceptor-example run
+[main] INFO ratpack.server.RatpackServer - Ratpack started for http://localhost:5050
+```
+
+And go to http://localhost:5050/
+
+After some requests, you will see the similar output in the console:
+
+```bash
+Computation :compute elapsed in: 0.025150461 (sec)
+Computation :compute elapsed in: 0.001690894 (sec)
+Computation :compute elapsed in: 0.001541675 (sec)
+Computation :compute elapsed in: 0.001554894 (sec)
+Computation :compute elapsed in: 0.00175033 (sec)
+```
+
+
+You can found the source code of this example
+link:https://github.com/funcool/catacumba/tree/master/examples/interceptor[here].
+
+
+[[single-file-example]]
+=== Single file web app
+
+*This example application requires that you should have link:http://boot-clj.com[boot-clj]
+properly installed on your system.*
+
+This example tries to show how you can use _catacumba_ for building small web applications
+that fits in one file and execute them like a shell script or an executable.
+
+You should execute the following commands for get it up and running:
+
+```bash
+$ git clone git@github.com:funcool/catacumba.git
+$ cd catacumba/examples/single-file
+$ export BOOT_CLOJURE_VERSION=1.7.0
+$ ./main.clj
+[main] INFO ratpack.server.RatpackServer - Ratpack started for http://localhost:5050
+```
+
+You can found the source code of this example
+link:https://github.com/funcool/catacumba/tree/master/examples/single-file[here].
 
 
 == FAQ

@@ -65,7 +65,7 @@
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))))))
 
-  (testing "Using client ns functions."
+  (testing "Using response object as return value with string as body."
     (let [handler (fn [ctx]
                     (http/ok "hello world" {:x-header "foobar"}))]
       (with-server {:handler handler}
@@ -73,9 +73,18 @@
           (is (= (get-in response [:headers "x-header"]) "foobar"))
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))))))
-)
 
-(deftest request-response-chunked
+
+  (testing "Using channel as response."
+    (let [handler (fn [ctx]
+                    (go
+                      (<! (timeout 100))
+                      (http/ok "hello world")))]
+      (with-server {:handler handler}
+        (let [response (client/get base-url)]
+          (is (= (:body response) "hello world"))
+          (is (= (:status response) 200))))))
+
   (testing "Using channel as body."
     (let [handler (fn [ctx]
                     (let [ch (chan)]
@@ -91,22 +100,21 @@
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))))))
 
-  (testing "Using channel as response."
+  (testing "Using completable future as response."
     (letfn [(handler [ctx]
-              (go
-                (<! (timeout 100))
-                "hello world"))]
+              (p/promise (fn [resolve]
+                           (async/<!! (async/timeout 1000))
+                           (resolve (http/ok "hello world")))))]
       (with-server {:handler handler}
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))))))
 
-  (testing "Using promise as response."
+  (testing "Using completable future as body."
     (letfn [(handler [ctx]
-              (m/mlet [x (p/promise (fn [resolve]
-                                      (async/<!! (async/timeout 1000))
-                                      (resolve "hello")))]
-                (m/return (str x " world"))))]
+              (http/ok (p/promise (fn [resolve]
+                                    (async/<!! (async/timeout 1000))
+                                    (resolve "hello world")))))]
       (with-server {:handler handler}
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
@@ -120,6 +128,17 @@
       (with-server {:handler handler}
         (let [response (client/get base-url)]
           (is (= (:body response) "HELLO WORLD"))
+          (is (= (:status response) 202))))))
+
+  (testing "Using manifold deferred as response."
+    (letfn [(handler [ctx]
+              (let [d (md/deferred)]
+                (async/thread
+                  (md/success! d (http/accepted "hello world")))
+                d))]
+      (with-server {:handler handler}
+        (let [response (client/get base-url)]
+          (is (= (:body response) "hello world"))
           (is (= (:status response) 202))))))
 
   (testing "Using manifold deferred as body."

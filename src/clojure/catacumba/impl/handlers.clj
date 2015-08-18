@@ -24,6 +24,7 @@
 
 (ns catacumba.impl.handlers
   (:require [clojure.java.io :as io]
+            [clojure.core.async :as a]
             [manifold.stream :as ms]
             [manifold.deferred :as md]
             [promissum.core :as p]
@@ -88,23 +89,21 @@
 
   clojure.core.async.impl.channels.ManyToManyChannel
   (-handle-response [data ^DefaultContext context]
-    (ct/set-status! context 200)
-    (-send data (:catacumba/context context)))
+    (-> (hp/promise #(a/take! data %))
+        (hp/then #(-handle-response % context))))
 
-  manifold.stream.default.Stream
+  manifold.deferred.IDeferred
   (-handle-response [data ^DefaultContext context]
-    (ct/set-status! context 200)
-    (-send data (:catacumba/context context)))
-
-  Publisher
-  (-handle-response [data ^DefaultContext context]
-    (ct/set-status! context 200)
-    (-send data (:catacumba/context context)))
+    (-> (hp/promise #(md/on-realized data %1 %1))
+        (hp/then #(-handle-response % context))))
 
   CompletableFuture
   (-handle-response [data ^DefaultContext context]
-    (ct/set-status! context 200)
-    (-send data (:catacumba/context context))))
+    (-> (hp/promise (fn [callback]
+                      (-> data
+                          (p/then callback)
+                          (p/catch callback))))
+        (hp/then #(-handle-response % context)))))
 
 (extend-protocol ISend
   String

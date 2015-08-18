@@ -45,6 +45,7 @@
            ratpack.exec.Blocking
            ratpack.registry.Registry
            catacumba.impl.context.DefaultContext
+           catacumba.impl.context.ContextData
            org.reactivestreams.Publisher
            java.util.concurrent.CompletableFuture
            io.netty.buffer.Unpooled
@@ -54,7 +55,8 @@
            java.io.BufferedReader
            java.io.InputStreamReader
            java.io.BufferedInputStream
-           java.util.Map))
+           java.util.Map
+           java.util.Optional))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Protocol Definition
@@ -71,11 +73,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (extend-protocol IHandlerResponse
+
+  ;; TODO: improve unnecesary object construction on the delegate process
+
   catacumba.impl.context.ContextData
   (-handle-response [data ^DefaultContext context]
     (let [^Context ctx (:catacumba/context context)]
       (if (:payload data)
-        (.next ctx (Registry/single data))
+        (let [^Optional odata (.maybeGet ctx ContextData)]
+          (if (.isPresent odata)
+            (.next ctx (Registry/single (ContextData. (merge (:payload (.get odata))
+                                                             (:payload data)))))
+            (.next ctx (Registry/single data))))
         (.next ctx))))
 
   String

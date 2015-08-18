@@ -59,7 +59,7 @@
                      (exec-interceptor interceptor)
                      (reify Block
                        (^void execute [_]
-                         (context/delegate context))))))
+                         (.next ctx))))))
 
 (defmethod routing/attach-route :interceptor
   [^Chain chain [_ interceptor']]

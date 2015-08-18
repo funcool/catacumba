@@ -194,7 +194,7 @@
 
   (testing "Chaining handlers in one route."
     (let [handler1 (fn [ctx]
-                     (ct/delegate ctx {:foo "bar"}))
+                     (ct/delegate {:foo "bar"}))
           handler2 (fn [ctx]
                      (str "hello " (:foo ctx)))
           router (ct/routes [[:get "" handler1 handler2]])]
@@ -205,7 +205,7 @@
 
   (testing "Chaining handlers in more than one route."
     (let [handler1 (fn [ctx]
-                     (ct/delegate ctx {:foo "bar"}))
+                     (ct/delegate {:foo "bar"}))
           handler2 (fn [ctx]
                      (str "hello " (:foo ctx)))
           router (ct/routes [[:prefix "foo"
@@ -297,12 +297,12 @@
 
 (deftest context-data-forwarding
   (letfn [(handler1 [context]
-            (ct/delegate context {:foo 1}))
+            (ct/delegate {:foo 1}))
           (handler2 [context]
-            (ct/delegate context {:bar 2}))
+            (ct/delegate {:bar 2}))
           (handler3 [context]
-            (ct/delegate context {:baz (+ (:foo context)
-                                          (:bar context))}))
+            (ct/delegate {:baz (+ (:foo context)
+                                  (:bar context))}))
           (handler4 [p context]
             (deliver p (select-keys context [:foo :bar :baz]))
             "hello world")]
@@ -317,6 +317,19 @@
         (is (= (deref p 1000 nil)
                {:foo 1 :bar 2 :baz 3})))))))
 
+
+(deftest async-context-delegation
+  (letfn [(handler1 [context]
+            (md/future
+              (ct/delegate)))
+          (handler2 [context]
+            (md/future
+              (http/accepted "hello world" {:Content-Type "plain/text"})))]
+    (with-server {:handler (ct/routes [[:any handler1]
+                                       [:any handler2]])}
+      (let [response (client/get (str base-url))]
+        (is (= (:body response) "hello world"))
+        (is (= (:status response) 202))))))
 
 ;; (deftest experiments
 ;;   (letfn [(handler1 [context]

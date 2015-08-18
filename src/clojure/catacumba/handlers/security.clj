@@ -43,7 +43,7 @@
    (fn [context]
      (let [header-value (str "max-age=" max-age (when subdomains "; includeSubDomains"))]
        (ct/set-headers! context {"Strict-Transport-Security" header-value})
-       (ct/delegate context)))))
+       (ct/delegate)))))
 
 (defn frame-options-headers
   "A chain handler that adds X-Frame-Options header to the response.
@@ -66,7 +66,7 @@
    (let [header-value (str/upper (name policy))]
      (fn [context]
        (ct/set-headers! context {"X-Frame-Options" header-value})
-       (ct/delegate context)))))
+       (ct/delegate)))))
 
 (defn csp-headers
   "A chain handler that adds Content-Security-Policy header to the response.
@@ -101,7 +101,7 @@
      (assert (pos? (count value)))
      (fn [context]
        (ct/set-headers! context {"Content-Security-Policy" (str/join "; " value)})
-       (ct/delegate context)))))
+       (ct/delegate)))))
 
 (defn content-type-options-headers
   "A chain handler that adds the `X-Content-Type-Options` header to
@@ -115,7 +115,7 @@
   https://www.owasp.org/index.php/List_of_useful_HTTP_headers"
   [context]
   (ct/set-headers! {"X-Content-Type-Options" "nosniff"})
-  (ct/delegate context))
+  (ct/delegate))
 
 (defn- form-post?
   [context]
@@ -148,10 +148,10 @@
    (fn [context]
      (if (form-post? context)
        (if (csrf-tokens-match? context header-name field-name cookie-name)
-         (ct/delegate context)
+         (ct/delegate)
          (if (fn? on-error)
            (on-error context)
            (http/bad-request "CSRF tokens don't match")))
        (do
          (ct/set-cookies! context {cookie-name {:value (str (uuid/v1))}})
-         (ct/delegate context))))))
+         (ct/delegate))))))

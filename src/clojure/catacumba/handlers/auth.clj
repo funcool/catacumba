@@ -128,6 +128,8 @@
 ;; Handlers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; TODO: remove unnecesary promise/callback chaining
+
 (defn- do-auth
   "Perform an asynchronous recursive loop over all
   provided backends and tries to authenticate with
@@ -151,8 +153,9 @@
   [& backends]
   {:pre [(pos? (count backends))]}
   (fn [context]
-    (-> (hp/promise #(do-auth context backends %))
-        (hp/then #(ct/delegate context %)))))
+    (p/promise
+     (fn [next]
+       (do-auth context backends #(next (ct/delegate %)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Adapters

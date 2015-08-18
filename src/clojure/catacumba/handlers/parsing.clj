@@ -67,4 +67,4 @@
    (fn [context]
      (let [^Context ctx (:catacumba/context context)
            ^TypedData body (:body context)]
-       (ct/delegate context {:data (parsefn ctx body)})))))
+       (ct/delegate {:data (parsefn ctx body)})))))

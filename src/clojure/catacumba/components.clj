@@ -60,7 +60,7 @@
   and delegates the request processing to the next handler."
   [data]
   (fn [context]
-    (ct/delegate context data)))
+    (ct/delegate data)))
 
 (defn assoc-routes!
   "Assoc routes to the running server. Executing this function

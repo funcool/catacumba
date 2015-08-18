@@ -58,7 +58,7 @@
         (ct/set-headers! context {"Access-Control-Allow-Headers" (str/join "," allow-headers)}))
       (when expose-headers
         (ct/set-headers! context {"Access-Control-Expose-Headers" (str/join "," expose-headers)})))
-    (ct/delegate context)))
+    (ct/delegate)))
 
 (defn- cors-preflight?
   [context headers]

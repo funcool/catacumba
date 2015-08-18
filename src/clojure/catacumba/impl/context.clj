@@ -81,6 +81,8 @@
   [^DefaultContext context]
   (get-context-params* (:catacumba/context context)))
 
+;; TODO: improve unnecesary object construction on the delegate process
+
 (defn delegate
   "Delegate handling to the next handler in line.
 
@@ -88,15 +90,10 @@
   pass context parameters to the next handlers, and
   that can be obtained with `context-params`
   function."
-  ([^DefaultContext context]
+  ([]
    (ContextData. nil))
-  ([^DefaultContext context data]
-   (let [^Context ctx (:catacumba/context context)
-         ^Optional odata (.maybeGet ctx ContextData)]
-     (if (.isPresent odata)
-       (let [^ContextData ctxdata (.get odata)]
-         (ContextData. (merge (:payload ctxdata) data)))
-       (ContextData. data)))))
+  ([data]
+   (ContextData. data)))
 
 (defn public-address
   "Get the current public address as URI instance.

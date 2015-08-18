@@ -196,7 +196,7 @@
                         (swap! session assoc :foo 2)
                         (deliver p @session))
                       "hello"))
-          handler (ct/routes [[:any (hs/session {})]
+          handler (ct/routes [[:any (hs/session)]
                               [:any handler]])]
       (with-server {:handler handler}
         (let [response (client/get (str base-url "/foo"))
@@ -242,7 +242,6 @@
   (let [counter (atom 0)
         p1 (promise)]
     (letfn [(interceptor [_ type continuation]
-              ;; (println "interceptor:init", type)
               (swap! counter inc)
               (continuation)
               (swap! counter inc))

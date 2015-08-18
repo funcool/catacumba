@@ -69,7 +69,7 @@
   [^Context ctx]
   (let [^Optional odata (.maybeGet ctx ContextData)]
     (if (.isPresent odata)
-      @(:payload (.get odata))
+      (:payload (.get odata))
       {})))
 
 (defn get-context-params
@@ -95,7 +95,7 @@
          ^Optional odata (.maybeGet ctx ContextData)]
      (if (.isPresent odata)
        (let [^ContextData ctxdata (.get odata)]
-         (ContextData. (merge ctxdata data)))
+         (ContextData. (merge (:payload ctxdata) data)))
        (ContextData. data)))))
 
 (defn public-address

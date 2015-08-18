@@ -1,5 +1,26 @@
 # Changelog #
 
+## Version 0.6.0 ##
+
+Date: Unreleased
+
+- Improved inconsistences on response handling.
+  Now the manifold stream and the reactive-stream published
+  are not allowed as response value bacause them represents
+  a collection of values and this consept does not fits well
+  with response that is one unique value. They continue to be
+  supported as body value. This is a BREAKING CHANGE.
+- Reimplement the context management.
+  Now is behaves like any other response value instead of special
+  case and does not requires contex as first parameter. This change
+  allows remove the special case for CPS style handler and also allow
+  the fully asynchronous handlers chain.
+  This is a BREAKING CHANGE because the signature of the `delegate`
+  function is changed: it longer accepts context as parameter and
+  now it should be a return value of the handler in sync or async
+  way.
+
+
 ## Version 0.5.0 ##
 
 Date: 2015-08-11

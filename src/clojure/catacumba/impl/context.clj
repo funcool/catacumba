@@ -89,17 +89,14 @@
   that can be obtained with `context-params`
   function."
   ([^DefaultContext context]
-   (let [^Context ctx (:catacumba/context context)]
-     (.next ctx)))
+   (ContextData. nil))
   ([^DefaultContext context data]
    (let [^Context ctx (:catacumba/context context)
          ^Optional odata (.maybeGet ctx ContextData)]
      (if (.isPresent odata)
-       (do
-         (vswap! (:payload (.get odata)) merge data)
-         (.next ctx))
-       (let [^Registry reg (Registry/single (ContextData. (volatile! data)))]
-         (.next ctx reg))))))
+       (let [^ContextData ctxdata (.get odata)]
+         (ContextData. (merge ctxdata data)))
+       (ContextData. data)))))
 
 (defn public-address
   "Get the current public address as URI instance.

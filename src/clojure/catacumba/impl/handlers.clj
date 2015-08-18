@@ -43,6 +43,7 @@
            ratpack.exec.Downstream
            ratpack.exec.Promise
            ratpack.exec.Blocking
+           ratpack.registry.Registry
            catacumba.impl.context.DefaultContext
            org.reactivestreams.Publisher
            java.util.concurrent.CompletableFuture
@@ -70,6 +71,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (extend-protocol IHandlerResponse
+  catacumba.impl.context.ContextData
+  (-handle-response [data ^DefaultContext context]
+    (let [^Context ctx (:catacumba/context context)]
+      (if (:payload data)
+        (.next ctx (Registry/single data))
+        (.next ctx))))
+
   String
   (-handle-response [data ^DefaultContext context]
     (-send data (:catacumba/context context)))

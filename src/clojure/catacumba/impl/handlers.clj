@@ -221,33 +221,39 @@
 ;; Adapters Implementation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; TODO: Remove repeated context building accross handlers
-;; delegation process.
-;; (defrecord InternalCache [payload])
-;; (alter-meta! #'->InternalCache assoc :private true)
-;; (alter-meta! #'map->InternalCache assoc :private true)
-
 (defn hydrate-context
   {:internal true :no-doc true}
-  [^Context ctx callback]
-  (letfn [(continuation [^DefaultContext context ^TypedData body]
-            (let [context (assoc context :body body)]
-              (callback (merge context (ct/get-context-params* ctx)))))]
-    (let [^Request request (.getRequest ctx)
-          ^Response response (.getResponse ctx)
-          ^Promise promise (.getBody request)
-          contextdata {:catacumba/context ctx
-                       :catacumba/request request
-                       :catacumba/response response
-                       :path (str "/" (.getPath request))
-                       :query (.getQuery request)
-                       :method (keyword (.. request getMethod getName toLowerCase))
-                       :query-params (ct/get-query-params* request)
-                       :route-params (ct/get-route-params* ctx)
-                       :cookies (ct/get-cookies* request)
-                       :headers (ct/get-headers* request true)}
-          context (ct/context contextdata)]
-      (hp/then promise (partial continuation context)))))
+  [^Context ctx next]
+  (letfn [(build-context [^Context ctx next]
+            (let [^Request request (.getRequest ctx)
+                  ^Response response (.getResponse ctx)
+                  contextdata {:catacumba/context ctx
+                               :catacumba/request request
+                               :catacumba/response response
+                               :path (str "/" (.getPath request))
+                               :query (.getQuery request)
+                               :method (keyword (.. request getMethod getName toLowerCase))
+                               :query-params (ct/get-query-params* request)
+                               :route-params (ct/get-route-params* ctx)
+                               :cookies (ct/get-cookies* request)
+                               :headers (ct/get-headers* request true)}
+                  context (ct/context contextdata)]
+              (hp/then (.getBody request)
+                       (fn [^TypedData body]
+                         (next (assoc context :body body))))))
+
+          (retrieve-context [^Context ctx next]
+            (let [^Request request (.getRequest ctx)
+                  ^Optional odata (.maybeGet request DefaultContext)]
+              (if (.isPresent odata)
+                (next (.get odata))
+                (build-context ctx #(cache-context request % next)))))
+
+          (cache-context [^Request request ^DefaultContext context next]
+            (.add request DefaultContext context)
+            (next context))]
+    (retrieve-context ctx (fn [^DefaultContext context]
+                            (next (merge context (ct/get-context-params* ctx)))))))
 
 (defmethod adapter :catacumba/default
   [handler]

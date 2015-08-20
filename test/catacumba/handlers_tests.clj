@@ -257,8 +257,7 @@
           (is (nil? (deref p1 1000 nil)))
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))
-          (is (= @counter 6)))))))
-
+          (is (= @counter 2)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Auth

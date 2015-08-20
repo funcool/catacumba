@@ -47,7 +47,7 @@
           (is (= (:status response) 200))
           (is (= (:body response) "hello world"))
           (let [formdata (deref p 1000 nil)]
-            (is (= (get formdata "foo") "bar")))))))
+            (is (= (get formdata :foo) "bar")))))))
 
   (testing "Form encoded body parsing using chain handler"
     (let [p (promise)
@@ -57,7 +57,7 @@
                                    "hello world")]])]
       (with-server {:handler app}
         (let [response (client/post base-url {:form-params {:foo "bar"}})]
-          (is (= {"foo" "bar"} (deref p 1000 nil)))))))
+          (is (= {:foo "bar"} (deref p 1000 nil)))))))
 
   (testing "Json encoded body parsing using chain handler"
     (let [p (promise)
@@ -123,7 +123,7 @@
           handler (ct/routes [[:any (hs/cors cors-config1)]
                               [:get handler]])]
       (with-server {:handler handler}
-        (let [response (client/get base-url {:headers {"Origin" "http://localhost/"}})
+        (let [response (client/get base-url {:headers {:origin "http://localhost/"}})
               headers (:headers response)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))
@@ -135,8 +135,8 @@
           handler (ct/routes [[:any (hs/cors cors-config1)]
                               [:get handler]])]
       (with-server {:handler handler}
-        (let [response (client/options base-url {:headers {"Origin" "http://localhost/"
-                                                           "access-control-request-method" "post"}})
+        (let [response (client/options base-url {:headers {:origin "http://localhost/"
+                                                           :access-control-request-method "post"}})
               headers (:headers response)]
           (is (= (:body response) ""))
           (is (= (:status response) 200))

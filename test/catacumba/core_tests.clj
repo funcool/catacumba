@@ -70,7 +70,7 @@
                     (http/ok "hello world" {:x-header "foobar"}))]
       (with-server {:handler handler}
         (let [response (client/get base-url)]
-          (is (= (get-in response [:headers "x-header"]) "foobar"))
+          (is (= (get-in response [:headers :x-header]) "foobar"))
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))))))
 
@@ -337,7 +337,7 @@
 ;;             "hello world")
 ;;           (handler4 [context]
 ;;             (println 4444)
-;;             (ct/delegate context))
+;;             (ct/delegate ))
 ;;           (handler2 [context]
 ;;             (println 2222)
 ;;             "hello world")

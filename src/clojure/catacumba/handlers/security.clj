@@ -42,7 +42,7 @@
   ([{:keys [max-age subdomains] :or {max-age 31536000 subdomains true}}]
    (fn [context]
      (let [header-value (str "max-age=" max-age (when subdomains "; includeSubDomains"))]
-       (ct/set-headers! context {"Strict-Transport-Security" header-value})
+       (ct/set-headers! context {:strict-transport-security header-value})
        (ct/delegate)))))
 
 (defn frame-options-headers
@@ -65,7 +65,7 @@
               (= policy :deny))]}
    (let [header-value (str/upper (name policy))]
      (fn [context]
-       (ct/set-headers! context {"X-Frame-Options" header-value})
+       (ct/set-headers! context {:x-frame-options header-value})
        (ct/delegate)))))
 
 (defn csp-headers

@@ -62,8 +62,8 @@
 (defn- find-header
   "Looks up a header in a headers map case insensitively,
   returning the header map entry, or nil if not present."
-  [headers ^String header-name]
-  (first (filter #(.equalsIgnoreCase header-name (key %)) headers)))
+  [headers header-name]
+  (first (filter #(.equalsIgnoreCase (name header-name) (name (key %))) headers)))
 
 (defn- get-header
   [request header-name]
@@ -71,7 +71,7 @@
 
 (defn- parse-authorization-header
   [request token-name]
-  (some->> (get-header request "authorization")
+  (some->> (get-header request :authorization)
            (re-find (re-pattern (str "^" token-name " (.+)$")))
            (second)))
 

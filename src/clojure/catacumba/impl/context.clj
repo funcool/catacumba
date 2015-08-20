@@ -149,7 +149,7 @@
     (persistent!
      (reduce (fn [acc key]
                (let [values (.getAll params key)]
-                 (reduce #(hp/assoc-conj! %1 key %2) acc values)))
+                 (reduce #(hp/assoc-conj! %1 (keyword key) %2) acc values)))
              (transient {})
              (.keySet params)))))
 
@@ -178,7 +178,7 @@
     (persistent!
      (reduce (fn [acc ^String key]
                (let [values (.getAll headers key)
-                     key (.toLowerCase key)]
+                     key  (keyword (.toLowerCase key))]
                  (reduce #(hp/assoc-conj! %1 key %2) acc values)))
              (transient {})
              (.keySet headers)))))
@@ -269,12 +269,12 @@
         result (transient {})]
     (reduce (fn [acc key]
               (let [values (.getAll files key)]
-                (reduce #(hp/assoc-conj! %1 key %2) acc values)))
+                (reduce #(hp/assoc-conj! %1 (keyword key) %2) acc values)))
             result
             (.keySet files))
     (reduce (fn [acc key]
               (let [values (.getAll form key)]
-                (reduce #(hp/assoc-conj! %1 key %2) acc values)))
+                (reduce #(hp/assoc-conj! %1 (keyword key) %2) acc values)))
             result
             (.keySet form))
       (persistent! result)))

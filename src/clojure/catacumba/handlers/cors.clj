@@ -37,34 +37,34 @@
 
 (defn- handle-preflight
   [context headers {:keys [allow-methods allow-headers max-age allow-credentials] :as opts}]
-  (let [^String origin (get headers "origin")]
+  (let [^String origin (get headers :origin)]
     (when-let [origin (allow-origin? origin opts)]
-      (ct/set-headers! context {"Access-Control-Allow-Origin" origin
-                                   "Access-Control-Allow-Methods" (str/join "," allow-methods)})
+      (ct/set-headers! context {:access-control-allow-origin origin
+                                :access-control-allow-methods (str/join "," allow-methods)})
       (when allow-credentials
-        (ct/set-headers! context {"Access-Control-Allow-Credentials" true}))
+        (ct/set-headers! context {:access-control-allow-credentials true}))
       (when max-age
-        (ct/set-headers! context {"Access-Control-Max-Age" max-age}))
+        (ct/set-headers! context {:access-control-max-age max-age}))
       (when allow-headers
-        (ct/set-headers! context {"Access-Control-Allow-Headers" (str/join "," allow-headers)})))
+        (ct/set-headers! context {:access-control-allow-headers (str/join "," allow-headers)})))
     (hs/send! context "")))
 
 (defn- handle-response
   [context headers {:keys [allow-headers expose-headers origin] :as opts}]
-  (let [^String origin (get headers "origin")]
+  (let [^String origin (get headers :origin)]
     (when-let [origin (allow-origin? origin opts)]
-      (ct/set-headers! context {"Access-Control-Allow-Origin" origin})
+      (ct/set-headers! context {:access-control-allow-origin origin})
       (when allow-headers
-        (ct/set-headers! context {"Access-Control-Allow-Headers" (str/join "," allow-headers)}))
+        (ct/set-headers! context {:access-control-allow-headers (str/join "," allow-headers)}))
       (when expose-headers
-        (ct/set-headers! context {"Access-Control-Expose-Headers" (str/join "," expose-headers)})))
+        (ct/set-headers! context {:access-control-expose-headers (str/join "," expose-headers)})))
     (ct/delegate)))
 
 (defn- cors-preflight?
   [context headers]
   (and (= (:method context) :options)
-       (contains? headers "origin")
-       (contains? headers "access-control-request-method")))
+       (contains? headers :origin)
+       (contains? headers :access-control-request-method)))
 
 (defn cors
   "A chain handler that handles cors related headers."

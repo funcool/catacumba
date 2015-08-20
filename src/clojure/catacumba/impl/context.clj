@@ -81,7 +81,8 @@
   [^DefaultContext context]
   (get-context-params* (:catacumba/context context)))
 
-;; TODO: improve unnecesary object construction on the delegate process
+(def ^{:no-doc true :internal true}
+  +empty-ctxdata+ (ContextData. nil))
 
 (defn delegate
   "Delegate handling to the next handler in line.
@@ -91,7 +92,7 @@
   that can be obtained with `context-params`
   function."
   ([]
-   (ContextData. nil))
+   +empty-ctxdata+)
   ([data]
    (ContextData. data)))
 

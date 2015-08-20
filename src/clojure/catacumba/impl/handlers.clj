@@ -73,9 +73,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (extend-protocol IHandlerResponse
-
-  ;; TODO: improve unnecesary object construction on the delegate process
-
   catacumba.impl.context.ContextData
   (-handle-response [data ^DefaultContext context]
     (let [^Context ctx (:catacumba/context context)]

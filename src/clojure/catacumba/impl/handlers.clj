@@ -245,7 +245,7 @@
                        :query-params (ct/get-query-params* request)
                        :route-params (ct/get-route-params* ctx)
                        :cookies (ct/get-cookies* request)
-                       :headers (ct/get-headers* request)}
+                       :headers (ct/get-headers* request true)}
           context (ct/context contextdata)]
       (hp/then promise (partial continuation context)))))
 
@@ -289,7 +289,7 @@
       :query-string (.getQuery request)
       :scheme :http
       :request-method (keyword (.. request getMethod getName toLowerCase))
-      :headers (ct/get-headers* request)
+      :headers (ct/get-headers* request false)
       :content-type (.. body getContentType getType)
       :content-length (Integer/parseInt (.. request getHeaders (get "Content-Length")))
       :character-encoding (.. body getContentType (getCharset "utf-8"))

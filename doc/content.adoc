@@ -937,9 +937,9 @@ experience of using _catacumba_ more pleasant.
 === Body parsing
 
 _Catacumba_ comes with builtin support for conditional body parsing depending on the
-incoming content type. It consists of a routing chain that adds the `:body` entry in the
-context with the parsed data or `nil` in case of an incoming content type does not have an
-attached parser implementation.
+incoming content type. It consists of a routing chain that replaces the `:body` entry in
+the context with the parsed data or `nil` in case of an incoming content type does not
+have an attached parser implementation.
 
 In order to use it, it is simple as prepending the `body-params` handler to your route
 chain:

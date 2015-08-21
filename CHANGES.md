@@ -19,6 +19,10 @@ Date: Unreleased
   function is changed: it longer accepts context as parameter and
   now it should be a return value of the handler in sync or async
   way.
+- The keys of the headers, query-params and form params maps are
+  now keywordized. BREAKING CHANGE.
+- Performance improvements on context building across handlers
+  chain execution process.
 
 
 ## Version 0.5.0 ##

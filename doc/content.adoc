@@ -568,6 +568,7 @@ constructor; for more details see the <<launching-the-server,Launching the serve
 
 This section intends to explain the different kind of builting handler types.
 
+
 === Asynchronous
 
 Asynchronous handlers are handlers that return a value in an asynchronous way using one
@@ -575,13 +576,13 @@ of the supported abstractions, such as core.async, reactive-streams and many oth
 (explained below).
 
 
-==== Body as channel
+==== Channel (core.async)
 
 The `core.async` channel is one of the supported abstractions that comes with _catacumba_
 out of the box. It consists of a handler that returns a body as a channel or response as
 a channel.
 
-This is the aspect of async handler returning the channel as a body:
+This is the aspect of async handler returning a core.async channel as a body:
 
 [source, clojure]
 ----
@@ -596,12 +597,13 @@ This is the aspect of async handler returning the channel as a body:
     (http/ok ch)))
 ----
 
-Returning a channel as the body has the advantage that you have the ability of setting
-additional headers and HTTP status in your function body code. But, if you are return a
-channel as a response value, the default status code will be set for you. The behavior of
-two approaches is the same, resulting in a chunked encoded response to the client.
+Do not worry about how much data you can send to the client, if you are using channels in
+a right way (in a go block), you will send data to the client as fast as the client can
+consume it. This technique is also called backpressure, and is fully supported for
+chunked responses.
 
-And this is an example of an async handler returning a channel as response:
+Additionaly, you also can return a channel as the handler response. The main difference
+is that in this case you should put a complete response into the channel:
 
 [source, clojure]
 ----
@@ -609,26 +611,27 @@ And this is an example of an async handler returning a channel as response:
   [context]
   (go
     (let [result (<! (do-some-async-task))]
-      (:message result)))
+      (http/ok (:data result)))))
 ----
 
-Do not worry about how much data you can send to the client, if you are using channels in
-a right way (in a go block), you will send data to the client as fast as the client can
-consume it. This technique is also called backpressure, and is fully supported for
-chunked responses.
 
-
-==== Body as promise (CompletableFuture)
-
-Promises are another abstraction supported out of the box in _catacumba_. It comes from
-the link:https://github.com/funcool/promissum[promissum library] and is build on top of
-JDK8 _CompletableFuture_.
+==== CompletableFuture
 
 Sometimes, you do not need send a chunked stream to the client, but your "bussines logic"
 is defined in an asynchronous friendly API using promises (or something similar). In this
 case, with _catacumba_ you can return a promise as a body or as a response and the data
 will be sent to the client when the promise has been resolved successfully.
 
+The `CompletableFuture` is an other asynchronous primitive supported out of the box by
+_catacumba_; so you can return it as body or as response.
+
+For more pleasant usage of `CompletableFuture` in clojure, the link:https://github.com/funcool/promissum[promissum library]
+is used. That library provides a more clojure friendly api on top of JDK8
+`CompletableFuture` and a great sugar syntax for composing them thanks to the
+link:https://github.com/funcool/cats[cats library].
+
+
+.A example using the _promissum_ library api for create a `CompletableFuture` instance and return it as body.
 [source, clojure]
 ----
 (require '[promissum.core :as p])
@@ -639,8 +642,26 @@ will be sent to the client when the promise has been resolved successfully.
     (http/ok promise {:content-type "text/plain"})))
 ----
 
-Thanks to the link:https://github.com/funcool/cats[cats] `mlet` macro, that allows us
-structure pure async code in a synchronous way:
+Like as usual, you can return an instance of `CompletableFuture` as response:
+
+[source, clojure]
+----
+(require '[promissum.core :as p])
+
+(defn my-async-handler
+  [context]
+  (p/promise (fn [resolve]
+               (future
+                 (Thread/sleep 100)
+                 (resolve (http/ok "hello world"))))))
+----
+
+One of the advantages of using `CompletableFuture` abstraction with _promissum_ and
+_cats_ libraries is that them both exposes additional sugar syntax that work with
+promises in a more painless way.
+
+Let see an example that thaks to the link:https://github.com/funcool/cats[cats] `mlet`
+macro composes few async compitations in a very clojure familiar syntax:
 
 [source, clojure]
 ----
@@ -649,42 +670,50 @@ structure pure async code in a synchronous way:
 
 (defn my-async-handler
   [context]
-  (m/mlet [a (something-that-returns-promise context)
-           b (do-something-with a)]
-    (m/return (do-other-thing-with b)))
+  (m/mlet [tempvar (something-that-returns-promise context)
+           result (do-something-with a)]
+    (http/ok result)))
 ----
 
-The result of `mlet` macro expression will be a *promise* with the eventually available
-result from `(do-other-thing-with b)` expression.
+The result of `mlet` macro expression will be an instance of `CompletableFuture` that
+eventually will be completed with the http response.
 
 
-==== Body as deferred (manifold)
+==== Manifold Deferred
 
-The link:https://github.com/ztellman/manifold[manifold] library offers different kind of
-deferred and stream abstractions for Clojure and you can use both them as response or body
-of the response for sending data to the client asynchronously.
+The link:https://github.com/ztellman/manifold[manifold] library also offers a promise
+like abstraction. The main advantage of using it is that is build for clojure and is not
+restricted to JDK8.
 
+.Example code that returns a body as manifold deferred.
 [source, clojure]
 ----
 (require '[manifold.deferred :as d])
 
 (defn my-async-handler
   [context]
-  (let [result (d/future (Thread/sleep 1000) "hello world")]
+  (let [result (d/future
+                 (Thread/sleep 1000)
+                 "hello world")]
     (http/ok result {"content-type" "text/plain"})))
 ----
 
+Like the previously explained abstractions, you also can return manifold deferreds
+as handler response.
 
-==== Body as reactive-stream
 
-This is the core of all abstractions, and support for it comes out of the box from
-*ratpack*. All other abstractions that we have seen are always coerced to a *Publisher*
-instance before sending it to the client.
+==== Manifold Streams
 
-Here there isn't anything  new to explain, if you have a function that return some kind
-of *Publisher*, you can return it as response or send it as body like as usual.
+TODO
 
-Let see an example:
+
+==== Reactive-Streams
+
+The link:http://www.reactive-streams.org/[reactive-streams] support is inherited from
+ratpack and like manifold streams it is only can be used for send the response body.
+
+Here there isn't anything  new to explain, just build and/or compose your streams
+and return them as http response body:
 
 [source, clojure]
 ----
@@ -699,6 +728,11 @@ Let see an example:
 
 ;; It will return a chunked response to the client with "HELLO WORLD" string.
 ----
+
+One of the best parts of the reactive-strams is that them comes with backpressure
+support out of the box and it native support in ratpack makes them a great glue
+abstraction for similar async primitives. In fact, the support for all stream like
+primitives explained until now are implemented in terms of _reactive-streams_ publisher.
 
 
 === WebSockets

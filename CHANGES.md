@@ -23,6 +23,9 @@ Date: Unreleased
   now keywordized. BREAKING CHANGE.
 - Performance improvements on context building across handlers
   chain execution process.
+- The slf4j-simple is no longer included by default. So if you
+  want the previous behavior, just include `[org.slf4j/slf4j-simple "1.7.12"]`
+  on your dependency list.
 
 
 ## Version 0.5.0 ##

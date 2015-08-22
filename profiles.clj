@@ -1,6 +1,6 @@
 {:dev
  {:global-vars {*warn-on-reflection* false}
-  :source-paths ["src"]
+  :source-paths ["dev"]
   :codeina {:sources ["src/clojure"]
             :exclude [catacumba.impl.context
                       catacumba.impl.atomic
@@ -35,6 +35,15 @@
                  [org.clojure/tools.namespace "0.2.11"]
                  [ring/ring-core "1.4.0"
                   :exclusions [javax.servlet/servlet-api clj-time org.clojure/clojure]]]}
+
+ :bench
+ [:dev
+  {:jvm-opts ^:replace ["-XX:+AggressiveOpts"
+                        "-XX:+UseG1GC"
+                        "-Xmx4g"
+                        "-Xms4g"]
+   :main ^:skip-aot bench}]
+
  ;; Examples
  :examples
  {:dependencies [[cheshire "5.5.0"]

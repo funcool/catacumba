@@ -904,7 +904,7 @@ integrate catacumba with other scenarios that it is not initialy designed to wor
 
 This is the aspect ot the cps style handler:
 
-[source]
+[source, clojure]
 ----
 (defn my-cps-handler
   "Some usefull docstring."

@@ -62,9 +62,9 @@
 
   This function optionally accept a used defined method
   or multimethod where to delegate the body parsing."
-  ([] (body-params parse))
-  ([parsefn]
+  ([] (body-params {}))
+  ([{:keys [parsefn attr] :or {parsefn parse attr :data}}]
    (fn [context]
      (let [^Context ctx (:catacumba/context context)
            ^TypedData body (:body context)]
-       (ct/delegate {:data (parsefn ctx body)})))))
+       (ct/delegate {attr (parsefn ctx body)})))))

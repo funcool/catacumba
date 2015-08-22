@@ -7,8 +7,9 @@
   :source-paths ["src/clojure"]
   :java-source-paths ["src/java"]
 
-  :jar-exclusions [#"\.swp|\.swo|user.clj"]
+  :jar-exclusions [#"\.swp|\.swo|bench\.clj|user\.clj"]
   :javac-options ["-target" "1.8" "-source" "1.8" "-Xlint:-options" "-Xlint:unchecked"]
+
   :repositories [["clojars" {:sign-releases false}]]
   :dependencies [[org.clojure/clojure "1.7.0" :scope "provided"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]

@@ -937,11 +937,11 @@ experience of using _catacumba_ more pleasant.
 === Body parsing
 
 _Catacumba_ comes with builtin support for conditional body parsing depending on the
-incoming content type. It consists of a routing chain that replaces the `:body` entry in
+incoming content type. It consists of a routing chain that adds the `:data` entry in
 the context with the parsed data or `nil` in case of an incoming content type does not
 have an attached parser implementation.
 
-In order to use it, it is simple as prepending the `body-params` handler to your route
+In order to use it you should prepending the `body-params` handler to your route
 chain:
 
 [source, clojure]
@@ -950,8 +950,8 @@ chain:
 
 (defn example-handler
   [context]
-  (let [body (:body context)]
-    (println "Received body:" body)
+  (let [body (:data context)]
+    (println "Received data:" data)
     (http/no-content)))
 
 (def app
@@ -967,8 +967,8 @@ link:https://github.com/dakrone/cheshire[cheshire] json parser is used for parsi
 body with the `application/json` content type.
 
 The body parsing is a open system, implemented using clojure's polymorphism facilites
-such as multimethods. If you want add additional parser, is as simple as adding an
-implementation to the `parse` multimethod with your content-type as dispatch tag.
+such as multimethods. If you want add additional parser, just add an additional
+implementation to the parse multimethod with your content-type as dispatch tag.
 
 [source, clojure]
 ----
@@ -1413,7 +1413,8 @@ More information:
 === Handler delegation
 
 A part of the obvious (and previously explained) responsability of the `context`
-object in catacubla. It has some others responsabilities. Just a summary of them:
+object in catacubla, it has some others responsabilities. Here just a summary of
+them:
 
 * Provide direct access to the request and response objects.
 * Access to the contextual objects (called registry).
@@ -1434,14 +1435,14 @@ processing to next handler in the chain.
 This approach allows you build different kind of modular and completelly decoupled
 handlers and compose them into a pipeline to work together.
 
-The delegation action can be done with `delegate` function. Let see a simple example:
+The delegation response can be done with `delegate` function. Let see a simple example:
 
 [source, clojure]
 ----
 (defn handler1
   [context]
   (do-something context)
-  (ct/delegate context))
+  (ct/delegate)
 
 (defn handler2
   [context]
@@ -1464,7 +1465,7 @@ parameter to the `delegate` function:
 (defn handler1
   [context]
   (do-something context)
-  (ct/delegate context {:message "foobar"}))
+  (ct/delegate {:message "foobar"}))
 
 (defn handler2
   [context]
@@ -1473,6 +1474,7 @@ parameter to the `delegate` function:
 ----
 
 In the example above, the second handler prints the message found in the context.
+
 
 
 === Modular components

@@ -80,7 +80,7 @@
 <h1>Catacumba - Web toolkit for Clojure.</h1>
 <div class="details">
 <span id="author" class="author">Andrey Antukh, &lt;niwi@niwi.nz&gt;</span><br>
-<span id="revdate">v0.5.0</span>
+<span id="revdate">v0.6.0</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -255,29 +255,13 @@ transducers and jdk8 concurrency primitives).</p>
 <div class="sect2">
 <h3 id="install"><a class="link" href="#install">Install</a></h3>
 <div class="paragraph">
-<p>This section covers the <em>catacumba</em> library installing process and its requirements.</p>
-</div>
-<div class="paragraph">
-<p><strong>Leiningen</strong></p>
-</div>
-<div class="paragraph">
 <p>The simplest way to use <em>catacumba</em> in a clojure project, is by including it in the
 dependency vector on your <strong><em>project.clj</em></strong> file:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">funcool/catacumba</span> <span class="tok-s">&quot;0.5.0&quot;</span><span class="tok-p">]</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p><strong>Gradle</strong></p>
-</div>
-<div class="paragraph">
-<p>If you are using gradle, this is a dependency line for gradle dsl:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="groovy"><span class="tok-n">compile</span> <span class="tok-s2">&quot;funcool:catacumba:0.5.0&quot;</span></code></pre>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">funcool/catacumba</span> <span class="tok-s">&quot;0.6.0&quot;</span><span class="tok-p">]</span>
+<span class="tok-p">[</span><span class="tok-nv">org.slf4j/slf4j-simple</span> <span class="tok-s">&quot;1.7.12&quot;</span><span class="tok-p">]</span> <span class="tok-c1">;; (optional, only for show ratpack info messages)</span></code></pre>
 </div>
 </div>
 </div>
@@ -949,14 +933,14 @@ of the supported abstractions, such as core.async, reactive-streams and many oth
 (explained below).</p>
 </div>
 <div class="sect3">
-<h4 id="body-as-channel"><a class="link" href="#body-as-channel">Body as channel</a></h4>
+<h4 id="channel-core-async"><a class="link" href="#channel-core-async">Channel (core.async)</a></h4>
 <div class="paragraph">
 <p>The <code>core.async</code> channel is one of the supported abstractions that comes with <em>catacumba</em>
 out of the box. It consists of a handler that returns a body as a channel or response as
 a channel.</p>
 </div>
 <div class="paragraph">
-<p>This is the aspect of async handler returning the channel as a body:</p>
+<p>This is the aspect of async handler returning a core.async channel as a body:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -972,13 +956,14 @@ a channel.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Returning a channel as the body has the advantage that you have the ability of setting
-additional headers and HTTP status in your function body code. But, if you are return a
-channel as a response value, the default status code will be set for you. The behavior of
-two approaches is the same, resulting in a chunked encoded response to the client.</p>
+<p>Do not worry about how much data you can send to the client, if you are using channels in
+a right way (in a go block), you will send data to the client as fast as the client can
+consume it. This technique is also called backpressure, and is fully supported for
+chunked responses.</p>
 </div>
 <div class="paragraph">
-<p>And this is an example of an async handler returning a channel as response:</p>
+<p>Additionaly, you also can return a channel as the handler response. The main difference
+is that in this case you should put a complete response into the channel:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -986,30 +971,30 @@ two approaches is the same, resulting in a chunked encoded response to the clien
   <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
   <span class="tok-p">(</span><span class="tok-nf">go</span>
     <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">result</span> <span class="tok-p">(</span><span class="tok-nf">&lt;!</span> <span class="tok-p">(</span><span class="tok-nf">do-some-async-task</span><span class="tok-p">))]</span>
-      <span class="tok-p">(</span><span class="tok-ss">:message</span> <span class="tok-nv">result</span><span class="tok-p">)))</span></code></pre>
+      <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-p">(</span><span class="tok-ss">:data</span> <span class="tok-nv">result</span><span class="tok-p">)))))</span></code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p>Do not worry about how much data you can send to the client, if you are using channels in
-a right way (in a go block), you will send data to the client as fast as the client can
-consume it. This technique is also called backpressure, and is fully supported for
-chunked responses.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="body-as-promise-completablefuture"><a class="link" href="#body-as-promise-completablefuture">Body as promise (CompletableFuture)</a></h4>
-<div class="paragraph">
-<p>Promises are another abstraction supported out of the box in <em>catacumba</em>. It comes from
-the <a href="https://github.com/funcool/promissum">promissum library</a> and is build on top of
-JDK8 <em>CompletableFuture</em>.</p>
-</div>
+<h4 id="completablefuture"><a class="link" href="#completablefuture">CompletableFuture</a></h4>
 <div class="paragraph">
 <p>Sometimes, you do not need send a chunked stream to the client, but your "bussines logic"
 is defined in an asynchronous friendly API using promises (or something similar). In this
 case, with <em>catacumba</em> you can return a promise as a body or as a response and the data
 will be sent to the client when the promise has been resolved successfully.</p>
 </div>
+<div class="paragraph">
+<p>The <code>CompletableFuture</code> is an other asynchronous primitive supported out of the box by
+<em>catacumba</em>; so you can return it as body or as response.</p>
+</div>
+<div class="paragraph">
+<p>For more pleasant usage of <code>CompletableFuture</code> in clojure, the <a href="https://github.com/funcool/promissum">promissum library</a>
+is used. That library provides a more clojure friendly api on top of JDK8
+<code>CompletableFuture</code> and a great sugar syntax for composing them thanks to the
+<a href="https://github.com/funcool/cats">cats library</a>.</p>
+</div>
 <div class="listingblock">
+<div class="title">A example using the <em>promissum</em> library api for create a <code>CompletableFuture</code> instance and return it as body.</div>
 <div class="content">
 <pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">promissum.core</span> <span class="tok-ss">:as</span> <span class="tok-nv">p</span><span class="tok-p">])</span>
 
@@ -1020,8 +1005,28 @@ will be sent to the client when the promise has been resolved successfully.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Thanks to the <a href="https://github.com/funcool/cats">cats</a> <code>mlet</code> macro, that allows us
-structure pure async code in a synchronous way:</p>
+<p>Like as usual, you can return an instance of <code>CompletableFuture</code> as response:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">promissum.core</span> <span class="tok-ss">:as</span> <span class="tok-nv">p</span><span class="tok-p">])</span>
+
+<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">my-async-handler</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-nf">p/promise</span> <span class="tok-p">(</span><span class="tok-k">fn </span><span class="tok-p">[</span><span class="tok-nv">resolve</span><span class="tok-p">]</span>
+               <span class="tok-p">(</span><span class="tok-nf">future</span>
+                 <span class="tok-p">(</span><span class="tok-nf">Thread/sleep</span> <span class="tok-mi">100</span><span class="tok-p">)</span>
+                 <span class="tok-p">(</span><span class="tok-nb">resolve </span><span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-s">&quot;hello world&quot;</span><span class="tok-p">))))))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>One of the advantages of using <code>CompletableFuture</code> abstraction with <em>promissum</em> and
+<em>cats</em> libraries is that them both exposes additional sugar syntax that work with
+promises in a more painless way.</p>
+</div>
+<div class="paragraph">
+<p>Let see an example that thaks to the <a href="https://github.com/funcool/cats">cats</a> <code>mlet</code>
+macro composes few async compitations in a very clojure familiar syntax:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1030,47 +1035,56 @@ structure pure async code in a synchronous way:</p>
 
 <span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">my-async-handler</span>
   <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-nf">m/mlet</span> <span class="tok-p">[</span><span class="tok-nv">a</span> <span class="tok-p">(</span><span class="tok-nf">something-that-returns-promise</span> <span class="tok-nv">context</span><span class="tok-p">)</span>
-           <span class="tok-nv">b</span> <span class="tok-p">(</span><span class="tok-nf">do-something-with</span> <span class="tok-nv">a</span><span class="tok-p">)]</span>
-    <span class="tok-p">(</span><span class="tok-nf">m/return</span> <span class="tok-p">(</span><span class="tok-nf">do-other-thing-with</span> <span class="tok-nv">b</span><span class="tok-p">)))</span></code></pre>
+  <span class="tok-p">(</span><span class="tok-nf">m/mlet</span> <span class="tok-p">[</span><span class="tok-nv">tempvar</span> <span class="tok-p">(</span><span class="tok-nf">something-that-returns-promise</span> <span class="tok-nv">context</span><span class="tok-p">)</span>
+           <span class="tok-nv">result</span> <span class="tok-p">(</span><span class="tok-nf">do-something-with</span> <span class="tok-nv">a</span><span class="tok-p">)]</span>
+    <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-nv">result</span><span class="tok-p">)))</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The result of <code>mlet</code> macro expression will be a <strong>promise</strong> with the eventually available
-result from <code>(do-other-thing-with b)</code> expression.</p>
+<p>The result of <code>mlet</code> macro expression will be an instance of <code>CompletableFuture</code> that
+eventually will be completed with the http response.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="body-as-deferred-manifold"><a class="link" href="#body-as-deferred-manifold">Body as deferred (manifold)</a></h4>
+<h4 id="manifold-deferred"><a class="link" href="#manifold-deferred">Manifold Deferred</a></h4>
 <div class="paragraph">
-<p>The <a href="https://github.com/ztellman/manifold">manifold</a> library offers different kind of
-deferred and stream abstractions for Clojure and you can use both them as response or body
-of the response for sending data to the client asynchronously.</p>
+<p>The <a href="https://github.com/ztellman/manifold">manifold</a> library also offers a promise
+like abstraction. The main advantage of using it is that is build for clojure and is not
+restricted to JDK8.</p>
 </div>
 <div class="listingblock">
+<div class="title">Example code that returns a body as manifold deferred.</div>
 <div class="content">
 <pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">manifold.deferred</span> <span class="tok-ss">:as</span> <span class="tok-nv">d</span><span class="tok-p">])</span>
 
 <span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">my-async-handler</span>
   <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">result</span> <span class="tok-p">(</span><span class="tok-nf">d/future</span> <span class="tok-p">(</span><span class="tok-nf">Thread/sleep</span> <span class="tok-mi">1000</span><span class="tok-p">)</span> <span class="tok-s">&quot;hello world&quot;</span><span class="tok-p">)]</span>
+  <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">result</span> <span class="tok-p">(</span><span class="tok-nf">d/future</span>
+                 <span class="tok-p">(</span><span class="tok-nf">Thread/sleep</span> <span class="tok-mi">1000</span><span class="tok-p">)</span>
+                 <span class="tok-s">&quot;hello world&quot;</span><span class="tok-p">)]</span>
     <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-nv">result</span> <span class="tok-p">{</span><span class="tok-s">&quot;content-type&quot;</span> <span class="tok-s">&quot;text/plain&quot;</span><span class="tok-p">})))</span></code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>Like the previously explained abstractions, you also can return manifold deferreds
+as handler response.</p>
+</div>
 </div>
 <div class="sect3">
-<h4 id="body-as-reactive-stream"><a class="link" href="#body-as-reactive-stream">Body as reactive-stream</a></h4>
+<h4 id="manifold-streams"><a class="link" href="#manifold-streams">Manifold Streams</a></h4>
 <div class="paragraph">
-<p>This is the core of all abstractions, and support for it comes out of the box from
-<strong>ratpack</strong>. All other abstractions that we have seen are always coerced to a <strong>Publisher</strong>
-instance before sending it to the client.</p>
+<p>TODO</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="reactive-streams"><a class="link" href="#reactive-streams">Reactive-Streams</a></h4>
+<div class="paragraph">
+<p>The <a href="http://www.reactive-streams.org/">reactive-streams</a> support is inherited from
+ratpack and like manifold streams it is only can be used for send the response body.</p>
 </div>
 <div class="paragraph">
-<p>Here there isn&#8217;t anything  new to explain, if you have a function that return some kind
-of <strong>Publisher</strong>, you can return it as response or send it as body like as usual.</p>
-</div>
-<div class="paragraph">
-<p>Let see an example:</p>
+<p>Here there isn&#8217;t anything  new to explain, just build and/or compose your streams
+and return them as http response body:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1085,6 +1099,12 @@ of <strong>Publisher</strong>, you can return it as response or send it as body 
 
 <span class="tok-c1">;; It will return a chunked response to the client with &quot;HELLO WORLD&quot; string.</span></code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>One of the best parts of the reactive-strams is that them comes with backpressure
+support out of the box and it native support in ratpack makes them a great glue
+abstraction for similar async primitives. In fact, the support for all stream like
+primitives explained until now are implemented in terms of <em>reactive-streams</em> publisher.</p>
 </div>
 </div>
 </div>
@@ -1325,12 +1345,12 @@ experience of using <em>catacumba</em> more pleasant.</p>
 <h3 id="body-parsing"><a class="link" href="#body-parsing">Body parsing</a></h3>
 <div class="paragraph">
 <p><em>Catacumba</em> comes with builtin support for conditional body parsing depending on the
-incoming content type. It consists of a routing chain that adds the <code>:body</code> entry in the
-context with the parsed data or <code>nil</code> in case of an incoming content type does not have an
-attached parser implementation.</p>
+incoming content type. It consists of a routing chain that adds the <code>:data</code> entry in
+the context with the parsed data or <code>nil</code> in case of an incoming content type does not
+have an attached parser implementation.</p>
 </div>
 <div class="paragraph">
-<p>In order to use it, it is simple as prepending the <code>body-params</code> handler to your route
+<p>In order to use it you should prepending the <code>body-params</code> handler to your route
 chain:</p>
 </div>
 <div class="listingblock">
@@ -1339,8 +1359,8 @@ chain:</p>
 
 <span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">example-handler</span>
   <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">body</span> <span class="tok-p">(</span><span class="tok-ss">:body</span> <span class="tok-nv">context</span><span class="tok-p">)]</span>
-    <span class="tok-p">(</span><span class="tok-nb">println </span><span class="tok-s">&quot;Received body:&quot;</span> <span class="tok-nv">body</span><span class="tok-p">)</span>
+  <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">body</span> <span class="tok-p">(</span><span class="tok-ss">:data</span> <span class="tok-nv">context</span><span class="tok-p">)]</span>
+    <span class="tok-p">(</span><span class="tok-nb">println </span><span class="tok-s">&quot;Received data:&quot;</span> <span class="tok-nv">data</span><span class="tok-p">)</span>
     <span class="tok-p">(</span><span class="tok-nf">http/no-content</span><span class="tok-p">)))</span>
 
 <span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">app</span>
@@ -1358,8 +1378,8 @@ body with the <code>application/json</code> content type.</p>
 </div>
 <div class="paragraph">
 <p>The body parsing is a open system, implemented using clojure&#8217;s polymorphism facilites
-such as multimethods. If you want add additional parser, is as simple as adding an
-implementation to the <code>parse</code> multimethod with your content-type as dispatch tag.</p>
+such as multimethods. If you want add additional parser, just add an additional
+implementation to the parse multimethod with your content-type as dispatch tag.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1906,7 +1926,8 @@ can use it:</p>
 <h3 id="handler-delegation"><a class="link" href="#handler-delegation">Handler delegation</a></h3>
 <div class="paragraph">
 <p>A part of the obvious (and previously explained) responsability of the <code>context</code>
-object in catacubla. It has some others responsabilities. Just a summary of them:</p>
+object in catacubla, it has some others responsabilities. Here just a summary of
+them:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1943,14 +1964,14 @@ processing to next handler in the chain.</p>
 handlers and compose them into a pipeline to work together.</p>
 </div>
 <div class="paragraph">
-<p>The delegation action can be done with <code>delegate</code> function. Let see a simple example:</p>
+<p>The delegation response can be done with <code>delegate</code> function. Let see a simple example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler1</span>
   <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
   <span class="tok-p">(</span><span class="tok-nf">do-something</span> <span class="tok-nv">context</span><span class="tok-p">)</span>
-  <span class="tok-p">(</span><span class="tok-nf">ct/delegate</span> <span class="tok-nv">context</span><span class="tok-p">))</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/delegate</span><span class="tok-p">)</span>
 
 <span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler2</span>
   <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
@@ -1975,7 +1996,7 @@ parameter to the <code>delegate</code> function:</p>
 <pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler1</span>
   <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
   <span class="tok-p">(</span><span class="tok-nf">do-something</span> <span class="tok-nv">context</span><span class="tok-p">)</span>
-  <span class="tok-p">(</span><span class="tok-nf">ct/delegate</span> <span class="tok-nv">context</span> <span class="tok-p">{</span><span class="tok-ss">:message</span> <span class="tok-s">&quot;foobar&quot;</span><span class="tok-p">}))</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/delegate</span> <span class="tok-p">{</span><span class="tok-ss">:message</span> <span class="tok-s">&quot;foobar&quot;</span><span class="tok-p">}))</span>
 
 <span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler2</span>
   <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
@@ -2480,7 +2501,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-08-11 17:53:31 EEST
+Last updated 2015-08-22 17:11:30 EEST
 </div>
 </div>
 </body>

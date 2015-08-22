@@ -1322,13 +1322,13 @@ integrate catacumba with other scenarios that it is not initialy designed to wor
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code>(defn my-cps-handler
-  "Some usefull docstring."
-  {:handler-type :catacumba/cps}
-  [context callback]
-  (future
-    (Thread/sleep 1000)
-    (callback "hello world")))</code></pre>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">my-cps-handler</span>
+  <span class="tok-s">&quot;Some usefull docstring.&quot;</span>
+  <span class="tok-p">{</span><span class="tok-ss">:handler-type</span> <span class="tok-ss">:catacumba/cps</span><span class="tok-p">}</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span> <span class="tok-nv">callback</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-nf">future</span>
+    <span class="tok-p">(</span><span class="tok-nf">Thread/sleep</span> <span class="tok-mi">1000</span><span class="tok-p">)</span>
+    <span class="tok-p">(</span><span class="tok-nf">callback</span> <span class="tok-s">&quot;hello world&quot;</span><span class="tok-p">)))</span></code></pre>
 </div>
 </div>
 </div>
@@ -2501,7 +2501,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-08-22 17:11:30 EEST
+Last updated 2015-08-22 17:26:43 EEST
 </div>
 </div>
 </body>

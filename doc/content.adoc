@@ -67,10 +67,6 @@ transducers and jdk8 concurrency primitives).
 
 === Install
 
-This section covers the _catacumba_ library installing process and its requirements.
-
-*Leiningen*
-
 The simplest way to use _catacumba_ in a clojure project, is by including it in the
 dependency vector on your *_project.clj_* file:
 
@@ -80,14 +76,6 @@ dependency vector on your *_project.clj_* file:
 [org.slf4j/slf4j-simple "1.7.12"] ;; (optional, only for show ratpack info messages)
 ----
 
-*Gradle*
-
-If you are using gradle, this is a dependency line for gradle dsl:
-
-[source, groovy]
-----
-compile "funcool:catacumba:0.6.0"
-----
 
 [[quickstart]]
 == Quick Start

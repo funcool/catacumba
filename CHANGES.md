@@ -2,7 +2,7 @@
 
 ## Version 0.6.0 ##
 
-Date: Unreleased
+Date: 2015-08-22
 
 - Improved inconsistences on response handling.
   Now the manifold stream and the reactive-stream published

@@ -172,8 +172,9 @@
     (let [handler (fn [ctx]
                     (let [params (:route-params ctx)]
                       (str "hello " (:name params))))
-          handler (ct/routes [[:get ":name" handler]])]
-      (with-server {:handler handler}
+          app (ct/routes [[:any (fn [_] (ct/delegate))]
+                          [:get ":name" handler]])]
+      (with-server {:handler app}
         (let [response (client/get (str base-url "/foo"))]
           (is (= (:body response) "hello foo"))
           (is (= (:status response) 200))))))

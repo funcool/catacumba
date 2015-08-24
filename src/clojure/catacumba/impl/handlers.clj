@@ -231,7 +231,6 @@
                                :query (.getQuery request)
                                :method (keyword (.. request getMethod getName toLowerCase))
                                :query-params (ct/get-query-params* request)
-                               :route-params (ct/get-route-params* ctx)
                                :cookies (ct/get-cookies* request)
                                :headers (ct/get-headers* request true)}
                   context (ct/context contextdata)]
@@ -250,7 +249,9 @@
             (.add request DefaultContext context)
             (next context))]
     (retrieve-context ctx (fn [^DefaultContext context]
-                            (next (merge context (ct/get-context-params* ctx)))))))
+                            (next (merge context
+                                         {:route-params (ct/get-route-params* ctx)}
+                                         (ct/get-context-params* ctx)))))))
 
 (defmethod adapter :catacumba/default
   [handler]

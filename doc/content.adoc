@@ -59,12 +59,6 @@ Ratpack, Netty, Rective-Streams and core.async.
 Since _catacumba_ is a young project there can be some API breakage.
 
 
-=== Requirements
-
-_Catacumba_ is only runs with *JDK8* and *Clojure 1.7+* (due to extensive use of
-transducers and jdk8 concurrency primitives).
-
-
 === Install
 
 The simplest way to use _catacumba_ in a clojure project, is by including it in the
@@ -75,6 +69,9 @@ dependency vector on your *_project.clj_* file:
 [funcool/catacumba "0.6.1"]
 [org.slf4j/slf4j-simple "1.7.12"] ;; (optional, only for show ratpack info messages)
 ----
+
+_Catacumba_ is only runs with *JDK8* and *Clojure 1.7+* (due to extensive use of
+transducers and jdk8 concurrency primitives).
 
 
 [[quickstart]]

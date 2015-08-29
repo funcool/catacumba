@@ -164,7 +164,7 @@
   "Return a hash-map with parameters extracted from
   routing patterns."
   [^Context ctx]
-  (into {} hp/keywordice-keys-t (.getPathTokens ctx)))
+  (into {} hp/keywordice-keys-t (.getAllPathTokens ctx)))
 
 (defn get-route-params
   "Return a hash-map with parameters extracted from

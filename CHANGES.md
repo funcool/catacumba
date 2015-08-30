@@ -1,5 +1,13 @@
 # Changelog #
 
+## Version 0.6.2 ##
+
+Date: 2015-08-31
+
+- Properly collect all route params when using multiple route nesting.
+  (Thanks to @prepor for report and patch)
+
+
 ## Version 0.6.1 ##
 
 Date: 2015-08-24

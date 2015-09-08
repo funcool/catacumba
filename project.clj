@@ -9,8 +9,6 @@
 
   :jar-exclusions [#"\.swp|\.swo|bench\.clj|user\.clj"]
   :javac-options ["-target" "1.8" "-source" "1.8" "-Xlint:-options" "-Xlint:unchecked"]
-
-  :repositories [["clojars" {:sign-releases false}]]
   :dependencies [[org.clojure/clojure "1.7.0" :scope "provided"]
                  [org.slf4j/slf4j-simple "1.7.12" :scope "provided"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]

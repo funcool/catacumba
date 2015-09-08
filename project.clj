@@ -23,8 +23,8 @@
                  [com.stuartsierra/component "0.2.3"]
                  [buddy/buddy-sign "0.6.1"]
                  [funcool/cuerdas "0.6.0"]
-                 [funcool/promissum "0.2.0"]
-                 [funcool/cats "0.6.1"]
+                 [funcool/promissum "0.3.0-SNAPSHOT"]
+                 [funcool/cats "1.0.0-SNAPSHOT"]
                  [danlentz/clj-uuid "0.1.6"]
                  [environ "1.0.0"]
                  [potemkin "0.4.1"]])

@@ -47,10 +47,10 @@
 (defprotocol IAuthentication
   "Protocol that defines unfied workflow steps for
   all authentication backends."
-  (^:private parse [_ request]
+  (-parse [_ request]
     "Parse token (from cookie, session or any other
     http header) and return it.")
-  (^:private authenticate [_ context token]
+  (-authenticate [_ context token]
     "Given a request and parsed data (from previous step), tries
     authenticate the current request and return the user entity.
     This function should return a IPromise instance."))
@@ -85,9 +85,9 @@
     :or {token-name "Token"}}]
   (reify
     IAuthentication
-    (parse [_ context]
+    (-parse [_ context]
       (parse-authorization-header context token-name))
-    (authenticate [_ context token]
+    (-authenticate [_ context token]
       (p/promise (fn [resolve]
                    (try+
                     (resolve (jws/unsign token secret options))
@@ -102,9 +102,9 @@
     :or {token-name "Token"}}]
   (reify
     IAuthentication
-    (parse [_ context]
+    (-parse [_ context]
       (parse-authorization-header context token-name))
-    (authenticate [_ context token]
+    (-authenticate [_ context token]
       (p/promise (fn [resolve]
                    (try+
                     (resolve (jwe/decrypt token secret options))
@@ -119,31 +119,28 @@
   []
   (reify
     IAuthentication
-    (parse [_ context]
+    (-parse [_ context]
       (:identity @(:session context)))
-    (authenticate [_ context data]
+    (-authenticate [_ context data]
       (p/resolved data))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Handlers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; TODO: remove unnecesary promise/callback chaining
-
 (defn- do-auth
   "Perform an asynchronous recursive loop over all
   provided backends and tries to authenticate with
   all them in order."
-  [context backends callback]
-  (if-let [backend (first backends)]
-    (let [last? (empty? (rest backends))
-          token (parse backend context)]
-      (if (and (nil? token) last?)
-        (callback {})
-        (-> (authenticate backend context token)
+  [context callback [backend & backends]]
+  (if backend
+    (let [token (-parse backend context)]
+      (if (nil? token)
+        (do-auth context callback backends)
+        (-> (-authenticate backend context token)
             (p/then (fn [ue]
                       (if (nil? ue)
-                        (do-auth context (rest backends) callback)
+                        (do-auth context callback backends)
                         (callback {:identity ue}))))
             (p/catch (fn [e] (callback {}))))))
     (callback {})))
@@ -155,7 +152,8 @@
   (fn [context]
     (p/promise
      (fn [next]
-       (do-auth context backends #(next (ct/delegate %)))))))
+       (let [callback #(next (ct/delegate %))]
+         (do-auth context callback backends))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Adapters

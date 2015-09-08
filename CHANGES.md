@@ -1,5 +1,15 @@
 # Changelog #
 
+## Version 0.7.0 ##
+
+Date: unreleased
+
+- Upgrade to ratpack 1.0.0
+- Upgrade to promissum 0.3.0
+- Upgrade to cats 1.0.0
+- Improve the auth handlers and its support for multiple backends.
+
+
 ## Version 0.6.2 ##
 
 Date: 2015-08-31

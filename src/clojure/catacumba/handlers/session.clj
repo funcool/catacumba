@@ -41,7 +41,7 @@
            ratpack.exec.Downstream
            ratpack.exec.Promise
            ratpack.handling.Context
-           ratpack.http.ResponseMetaData))
+           ratpack.http.Response))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Constants
@@ -194,7 +194,7 @@
      (fn [context]
        (-> (context->session context options)
            (p/then (fn [[sid session]]
-                     (ct/before-send context (fn [^ResponseMetaData response]
+                     (ct/before-send context (fn [^Response response]
                                                (cond
                                                  (empty? session)
                                                  (let [cookie (-> (make-cookie sid options)

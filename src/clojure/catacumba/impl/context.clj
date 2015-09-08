@@ -36,7 +36,6 @@
            ratpack.http.Headers
            ratpack.http.TypedData
            ratpack.http.MutableHeaders
-           ratpack.http.ResponseMetaData
            ratpack.util.MultiValueMap
            ratpack.server.PublicAddress
            ratpack.registry.Registry
@@ -112,7 +111,7 @@
   [^DefaultContext context]
   (let [^Context ctx (:catacumba/context context)
         ^PublicAddress addr (.get ctx PublicAddress)]
-    (.getAddress addr ctx)))
+    (.get addr ctx)))
 
 (defn on-close
   "Register a callback in the context that will be called
@@ -227,7 +226,7 @@
 (defn set-status!
   "Set the response http status."
   [context status]
-  (let [^ResponseMetaData response (:catacumba/response context)]
+  (let [^Response response (:catacumba/response context)]
     (.status response status)))
 
 (defn set-cookies!

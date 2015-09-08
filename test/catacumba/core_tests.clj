@@ -35,8 +35,7 @@
     (with-server {:handler handler}
       (let [response (client/get base-url)
             uri (deref p 1000 nil)]
-        (is (= (str uri) "http://localhost:5050")))))
-)
+        (is (= (str uri) "http://localhost:5050"))))))
 
 (deftest cookies
   (testing "Setting new cookie."

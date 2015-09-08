@@ -59,7 +59,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defprotocol IPromiseAcceptor
-  (^:private -accept [v ds]))
+  (-accept [v ds]))
 
 (extend-protocol IPromiseAcceptor
   CompletableFuture
@@ -79,8 +79,8 @@
   [callback]
   (Promise/of (reify Upstream
                 (^void connect [_ ^Downstream ds]
-                  (let [continuation #(-accept % ds)]
-                    (callback continuation))))))
+                  (let [accept #(-accept % ds)]
+                    (callback accept))))))
 
 (defmacro blocking
   "Performs a blocking operation on a separate thread,

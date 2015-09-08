@@ -137,8 +137,8 @@
 
   manifold.deferred.IDeferred
   (-send [data ^Context ctx]
-    (-> (stream/publisher data)
-        (-send ctx)))
+    (-> (hp/promise #(md/on-realized data %1 %1))
+        (hp/then #(-send % ctx))))
 
   CompletableFuture
   (-send [future' ^Context ctx]

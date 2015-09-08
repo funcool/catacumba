@@ -25,7 +25,7 @@
 (ns catacumba.impl.stream
   (:require [clojure.core.async :as a]
             [manifold.stream :as ms]
-            [manifold.deferred]
+            [manifold.deferred :as md]
             [catacumba.impl.stream.common :as common]
             [catacumba.impl.stream.promise :as promise]
             [catacumba.impl.stream.channel :as channel]
@@ -69,10 +69,6 @@
   clojure.core.async.impl.channels.ManyToManyChannel
   (publisher [source]
     (channel/publisher source))
-
-  manifold.deferred.IDeferred
-  (publisher [source]
-    (publisher (p/promise source)))
 
   CompletableFuture
   (publisher [source]

@@ -59,10 +59,13 @@
 
 (defmethod parse :application/transit+json
   [^Context ctx ^TypedData body]
-  (transit/read
-   (transit/reader
-    (.getInputStream body)
-    :json)))
+  (let [reader (transit/reader (.getInputStream body) :json)]
+    (transit/read reader)))
+
+(defmethod parse :application/transit+msgpack
+  [^Context ctx ^TypedData body]
+  (let [reader (transit/reader (.getInputStream body) :msgpack)]
+    (transit/read reader)))
 
 (defn body-params
   "A route chain that parses the body into

@@ -40,9 +40,10 @@
 
 (defn data->transit
   "Simple util to convert clojure data structures into transit"
-  [data]
-  (let [out (ByteArrayOutputStream.)]
-    (transit/write
-     (transit/writer out :json)
-     data)
-    (ByteArrayInputStream. (.toByteArray out))))
+  ([data]
+   (data->transit data :json))
+  ([data encoding]
+   (with-open [out (ByteArrayOutputStream.)]
+     (let [w (transit/writer out encoding)]
+       (transit/write w data)
+       (.toByteArray out)))))

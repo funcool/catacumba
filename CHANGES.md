@@ -8,6 +8,7 @@ Date: unreleased
 - Upgrade to promissum 0.3.0
 - Upgrade to cats 1.0.0
 - Improve the auth handlers and its support for multiple backends.
+- Add transit encoding support for body-parsing handler.
 
 
 ## Version 0.6.2 ##

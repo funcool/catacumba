@@ -70,7 +70,7 @@
                                               :content-type "application/json"})]
           (is (= {:foo "bar"} (deref p 1000 nil)))))))
 
-  (testing "Transit encoded body parsing using chain handler"
+  (testing "Transit + json encoded body parsing using chain handler"
     (let [p (promise)
           app (ct/routes [[:any (hs/body-params)]
                           [:any #(do
@@ -79,6 +79,17 @@
       (with-server {:handler app}
         (let [response (client/post base-url {:body (test-utils/data->transit {:foo/bar "bar"})
                                               :content-type "application/transit+json"})]
+          (is (= {:foo/bar "bar"} (deref p 1000 nil)))))))
+
+  (testing "Transit + msgpack encoded body parsing using chain handler"
+    (let [p (promise)
+          app (ct/routes [[:any (hs/body-params)]
+                          [:any #(do
+                                   (deliver p (:data %))
+                                   "hello world")]])]
+      (with-server {:handler app}
+        (let [response (client/post base-url {:body (test-utils/data->transit {:foo/bar "bar"} :msgpack)
+                                              :content-type "application/transit+msgpack"})]
           (is (= {:foo/bar "bar"} (deref p 1000 nil)))))))
   )
 

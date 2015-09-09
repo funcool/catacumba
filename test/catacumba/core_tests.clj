@@ -19,7 +19,8 @@
            ratpack.func.Action
            ratpack.func.Block
            ratpack.exec.ExecInterceptor
-           ratpack.exec.ExecInterceptor$ExecType))
+           ratpack.exec.ExecInterceptor$ExecType
+           java.io.ByteArrayInputStream))
 
 (def base-url "http://localhost:5050")
 
@@ -72,7 +73,6 @@
           (is (= (get-in response [:headers :x-header]) "foobar"))
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))))))
-
 
   (testing "Using channel as response."
     (let [handler (fn [ctx]
@@ -164,6 +164,15 @@
         (let [response (client/get base-url)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 202))))))
+
+  (testing "Using InputStream as body"
+    (let [data (ByteArrayInputStream. (.getBytes "Hello world!" "UTF-8"))
+          handler (fn [context]
+                    (http/ok data {:content-type "text/plain;charset=utf-8"}))]
+      (with-server {:handler handler}
+        (let [response (client/get base-url)]
+          (is (= (:body response) "Hello world!"))
+          (is (= (:status response) 200))))))
 )
 
 (deftest routing

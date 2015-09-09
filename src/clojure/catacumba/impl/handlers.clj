@@ -32,8 +32,18 @@
             [catacumba.helpers :as hp]
             [catacumba.impl.context :as ct]
             [catacumba.impl.http :as http])
-  (:import ratpack.handling.Handler
+  (:import catacumba.impl.context.DefaultContext
+           catacumba.impl.context.ContextData
+           java.io.InputStream
+           java.io.BufferedReader
+           java.io.InputStreamReader
+           java.io.BufferedInputStream
+           java.util.Map
+           java.util.Optional
+           java.util.concurrent.CompletableFuture
+           ratpack.handling.Handler
            ratpack.handling.Context
+           ratpack.render.Renderable
            ratpack.http.Request
            ratpack.http.Response
            ratpack.http.Headers
@@ -44,19 +54,11 @@
            ratpack.exec.Promise
            ratpack.exec.Blocking
            ratpack.registry.Registry
-           catacumba.impl.context.DefaultContext
-           catacumba.impl.context.ContextData
+           org.apache.commons.io.IOUtils
            org.reactivestreams.Publisher
-           java.util.concurrent.CompletableFuture
            io.netty.buffer.Unpooled
            io.netty.buffer.ByteBuf
-           io.netty.handler.codec.http.Cookie
-           java.io.InputStream
-           java.io.BufferedReader
-           java.io.InputStreamReader
-           java.io.BufferedInputStream
-           java.util.Map
-           java.util.Optional))
+           io.netty.handler.codec.http.Cookie))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Protocol Definition
@@ -153,23 +155,12 @@
            (stream/bind-exec)
            (.sendStream response))))
 
-  ;; TODO: reimplement this as chunked stream instread of
-  ;; read all data in memory. The current approach is slightly
-  ;; awfull because it reads all inputstream firstly in a memory.
   InputStream
   (-send [data ^Context ctx]
-    (let [^Response response (.getResponse ctx)
-          ^Promise prom (hp/blocking
-                         (let [^bytes buffer (byte-array 1024)
-                               ^ByteBuf buf (Unpooled/buffer (.available data))]
-                           (loop [index 0]
-                             (let [readed (.read data buffer 0 1024)]
-                               (when-not (= readed -1)
-                                 (.writeBytes buf buffer 0 readed)
-                                 (recur (+ index readed)))))
-                           buf))]
-      (hp/then prom (fn [buff]
-                      (.send response buff))))))
+    (let [^Response response (.getResponse ctx)]
+      (-> (hp/blocking (IOUtils/toByteArray data))
+          (hp/then (fn [^bytes buff]
+                     (.send response buff)))))))
 
 (extend-protocol io/IOFactory
   TypedData

@@ -24,7 +24,9 @@
 
 (ns catacumba.testing
   "Testing facilities for catacuba."
-  (:require [catacumba.core :as ct]))
+  (:require [catacumba.core :as ct]
+            [cognitect.transit :as transit])
+  (:import [java.io ByteArrayOutputStream ByteArrayInputStream]))
 
 (defmacro with-server
   "Evaluate code in context of running catacumba server."
@@ -35,3 +37,12 @@
        (finally
          (.stop server#)
          (Thread/sleep ~sleep)))))
+
+(defn data->transit
+  "Simple util to convert clojure data structures into transit"
+  [data]
+  (let [out (ByteArrayOutputStream.)]
+    (transit/write
+     (transit/writer out :json)
+     data)
+    (ByteArrayInputStream. (.toByteArray out))))

@@ -27,4 +27,5 @@
                  [funcool/cats "1.0.0-SNAPSHOT"]
                  [danlentz/clj-uuid "0.1.6"]
                  [environ "1.0.0"]
-                 [potemkin "0.4.1"]])
+                 [potemkin "0.4.1"]
+                 [com.cognitect/transit-clj "0.8.281"]])

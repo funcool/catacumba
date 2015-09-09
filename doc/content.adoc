@@ -947,10 +947,10 @@ chain:
 ;; ...
 ----
 
-By default, the `application/x-www-form-urlencoded`, `multipart/form-data` and
-`application/json` parsers come out of the box. The
-link:https://github.com/dakrone/cheshire[cheshire] json parser is used for parsing the
-body with the `application/json` content type.
+By default, the `application/x-www-form-urlencoded`, `multipart/form-data`,
+`application/json`, `application/transit+json` and `application/transit+msgpack`
+parsers come out of the box. The link:https://github.com/dakrone/cheshire[cheshire]
+json parser is used for parsing the body with the `application/json` content type.
 
 The body parsing is a open system, implemented using clojure's polymorphism facilites
 such as multimethods. If you want add additional parser, just add an additional

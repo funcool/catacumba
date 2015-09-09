@@ -16,7 +16,7 @@
             [catacumba.handlers :as hs]
             [catacumba.handlers.session :as session]
             [catacumba.handlers.auth :as auth]
-            [catacumba.testing :refer [with-server]]
+            [catacumba.testing :as test-utils :refer [with-server]]
             [catacumba.core-tests :refer [base-url]]))
 
 
@@ -69,6 +69,17 @@
         (let [response (client/post base-url {:body (json/generate-string {:foo "bar"})
                                               :content-type "application/json"})]
           (is (= {:foo "bar"} (deref p 1000 nil)))))))
+
+  (testing "Transit encoded body parsing using chain handler"
+    (let [p (promise)
+          app (ct/routes [[:any (hs/body-params)]
+                          [:any #(do
+                                   (deliver p (:data %))
+                                   "hello world")]])]
+      (with-server {:handler app}
+        (let [response (client/post base-url {:body (test-utils/data->transit {:foo/bar "bar"})
+                                              :content-type "application/transit+json"})]
+          (is (= {:foo/bar "bar"} (deref p 1000 nil)))))))
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -173,6 +173,15 @@
         (let [response (client/get base-url)]
           (is (= (:body response) "Hello world!"))
           (is (= (:status response) 200))))))
+
+  (testing "Using InputStream as body"
+    (let [data (.getBytes "Hello world!" "UTF-8")
+          handler (fn [context]
+                    (http/ok data {:content-type "text/plain;charset=utf-8"}))]
+      (with-server {:handler handler}
+        (let [response (client/get base-url)]
+          (is (= (:body response) "Hello world!"))
+          (is (= (:status response) 200))))))
 )
 
 (deftest routing

@@ -122,6 +122,11 @@
         (hp/then #(-handle-response % context)))))
 
 (extend-protocol ISend
+  (Class/forName "[B")
+  (-send [data ^Context ctx]
+    (let [^Response response (.getResponse ctx)]
+      (.send response ^bytes data)))
+
   String
   (-send [data ^Context ctx]
     (let [^Response response (.getResponse ctx)]

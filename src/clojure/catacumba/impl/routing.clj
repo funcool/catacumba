@@ -80,7 +80,6 @@
                   (^void handle [_ ^Context ctx]
                     (.byMethod ctx (hp/fn->action (partial callback ctx))))))))
 
-
 (defmethod attach-route :error
   [^Chain chain [_ error-handler]]
   (letfn [(on-register [^RegistrySpec rspec]

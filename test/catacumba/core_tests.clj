@@ -285,6 +285,22 @@
           (is (= (:body response) "from get"))
           (is (= (:status response) 200))))))
 
+  (testing "Routing with regex matchig"
+    (letfn [(handler [ctx]
+              (let [params (:route-params ctx)]
+                (http/ok (:id params))))]
+      (let [app (ct/routes [[:prefix ":id:\\d+"
+                             [:any handler]]])]
+        (with-server {:handler app}
+          (let [response (client/get (str base-url "/2"))]
+            (is (= (:body response) "2"))
+            (is (= (:status response) 200)))
+          (try
+            (client/get (str base-url "/foo"))
+            (throw (RuntimeException. "not expected"))
+            (catch clojure.lang.ExceptionInfo e
+              (let [data (ex-data e)]
+                (is (= (:status data) 404)))))))))
 )
 
 

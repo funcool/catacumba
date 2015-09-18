@@ -2,7 +2,7 @@
 
 ## Version 0.7.0 ##
 
-Date: unreleased
+Date: 2015-09-19
 
 - Upgrade to ratpack 1.0.0
 - Upgrade to promissum 0.3.0

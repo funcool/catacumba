@@ -1,4 +1,4 @@
-(defproject funcool/catacumba "0.7.0-SNAPSHOT"
+(defproject funcool/catacumba "0.7.0"
   :description "Asynchronous Web Toolkit for Clojure."
   :url "http://github.com/funcool/catacumba"
   :license {:name "BSD (2-Clause)"
@@ -8,11 +8,12 @@
   :java-source-paths ["src/java"]
 
   :jar-exclusions [#"\.swp|\.swo|bench\.clj|user\.clj"]
-  :javac-options ["-target" "1.8" "-source" "1.8" "-Xlint:-options" "-Xlint:unchecked"]
+  :javac-options ["-target" "1.8" "-source" "1.8" "-Xlint:-options"
+                  "-Xlint:unchecked"]
   :dependencies [[org.clojure/clojure "1.7.0" :scope "provided"]
                  [org.slf4j/slf4j-simple "1.7.12" :scope "provided"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
-                 [io.ratpack/ratpack-core "1.0.0-rc-2"
+                 [io.ratpack/ratpack-core "1.0.0"
                   :exclusions [io.netty/netty-codec-http
                                io.netty/netty-handler
                                io.netty/netty-transport-native-epoll]]
@@ -24,8 +25,8 @@
                  [commons-io/commons-io "2.4"]
                  [buddy/buddy-sign "0.6.1"]
                  [funcool/cuerdas "0.6.0"]
-                 [funcool/promissum "0.3.0-SNAPSHOT"]
-                 [funcool/cats "1.0.0-SNAPSHOT"]
+                 [funcool/promissum "0.3.1"]
+                 [funcool/cats "1.0.0"]
                  [danlentz/clj-uuid "0.1.6"]
                  [environ "1.0.0"]
                  [potemkin "0.4.1"]

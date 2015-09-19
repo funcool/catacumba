@@ -28,6 +28,7 @@
   (:require [promissum.core :as p]
             [buddy.core.nonce :as nonce]
             [buddy.core.codecs :as codecs]
+            [buddy.sign.jws :as jws]
             [promissum.core :as p]
             [catacumba.impl.atomic :as atomic]
             [catacumba.impl.handlers :as hs]
@@ -156,6 +157,31 @@
         (p/promise
          (fn [deliver]
            (swap! internalstore dissoc key)
+           (deliver key)))))))
+
+(defn signed-cookie
+  [& {:keys [key] :as opts}]
+  (let [pkey (or key (nonce/random-nonce 128))]
+    (reify ISessionStorage
+      (-read [_ dkey]
+        (p/promise
+         (fn [deliver]
+           (if (nil? dkey)
+             (deliver [(jws/sign {} pkey opts) {}])
+             (try
+               (println 2222 dkey)
+               (deliver [dkey (jws/unsign dkey pkey opts)])
+               (catch clojure.lang.ExceptionInfo e
+                 (deliver [(jws/sign {} pkey opts) {}])))))))
+
+      (-write [_ key data]
+        (p/promise
+         (fn [deliver]
+           (deliver (jws/sign data pkey opts)))))
+
+      (-delete [_ key]
+        (p/promise
+         (fn [deliver]
            (deliver key)))))))
 
 (defn lookup-storage

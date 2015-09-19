@@ -130,19 +130,33 @@
   []
   (let [internalstore (atom {})]
     (reify ISessionStorage
-      (read-session [_ key]
-        (p/promise (fn [deliver]
-                     (let [key (keyword key)]
-                       (deliver (get @internalstore key nil))))))
+      clojure.lang.IDeref
+      (deref [_]
+        @internalstore)
 
-      (write-session [_ key data]
-        (p/promise (fn [deliver]
-                     (let [key (keyword key)]
-                       (deliver (swap! internalstore assoc key data))))))
-      (delete-session [_ key]
-        (p/promise (fn [deliver]
-                     (let [key (keyword key)]
-                       (deliver (swap! internalstore dissoc key)))))))))
+      (-read [_ key]
+        (p/promise
+         (fn [deliver]
+           (if (nil? key)
+             (let [key (codecs/bytes->safebase64 (nonce/random-nonce 48))]
+               (deliver [key {}]))
+             (let [data (get @internalstore key nil)]
+               (if (nil? data)
+                 (let [key (codecs/bytes->safebase64 (nonce/random-nonce 48))]
+                   (deliver [key {}]))
+                 (deliver [key data])))))))
+
+      (-write [_ key data]
+        (p/promise
+         (fn [deliver]
+           (swap! internalstore assoc key data)
+           (deliver key))))
+
+      (-delete [_ key]
+        (p/promise
+         (fn [deliver]
+           (swap! internalstore dissoc key)
+           (deliver key)))))))
 
 (defn lookup-storage
   "A helper for create session storages with
@@ -153,7 +167,8 @@
     :inmemory (memory-storage)
     ;; :signed-cookie (cookie-storage)
     (if (not (satisfies? ISessionStorage storage))
-      (throw (IllegalArgumentException. "storage should satisfy ISessionStorage protocol."))
+      (throw (IllegalArgumentException.
+              "storage should satisfy ISessionStorage protocol."))
       storage)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

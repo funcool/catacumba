@@ -28,6 +28,7 @@
   (:require [promissum.core :as p]
             [buddy.core.nonce :as nonce]
             [buddy.core.codecs :as codecs]
+            [buddy.sign.jws :as jws]
             [promissum.core :as p]
             [catacumba.impl.atomic :as atomic]
             [catacumba.impl.handlers :as hs]
@@ -54,14 +55,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defprotocol ISession
-  (^:private empty? [_] "Check if the session is empty.")
-  (^:private accessed? [_] "Check if session is accessed")
-  (^:private modified? [_] "Check if session is modified"))
+  (-get-id [_] "Get the session id.")
+  (-empty? [_] "Check if the session is empty.")
+  (-accessed? [_] "Check if session is accessed")
+  (-modified? [_] "Check if session is modified"))
 
 (defprotocol ISessionStorage
-  (^:private read-session [_ key] "")
-  (^:private write-session [_ key data] "")
-  (^:private delete-session [_ key] ""))
+  (-read [_ key] "")
+  (-write [_ key data] "")
+  (-delete [_ key] ""))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Types
@@ -104,9 +106,10 @@
     (.deref data))
 
   ISession
-  (empty? [_] (= (count @data) 0))
-  (accessed? [_] @accessed)
-  (modified? [_] @modified))
+  (-get-id [_] sessionid)
+  (-empty? [_] (= (count @data) 0))
+  (-accessed? [_] @accessed)
+  (-modified? [_] @modified))
 
 (alter-meta! #'->Session assoc :private true)
 
@@ -128,19 +131,58 @@
   []
   (let [internalstore (atom {})]
     (reify ISessionStorage
-      (read-session [_ key]
-        (p/promise (fn [deliver]
-                     (let [key (keyword key)]
-                       (deliver (get @internalstore key nil))))))
+      clojure.lang.IDeref
+      (deref [_]
+        @internalstore)
 
-      (write-session [_ key data]
-        (p/promise (fn [deliver]
-                     (let [key (keyword key)]
-                       (deliver (swap! internalstore assoc key data))))))
-      (delete-session [_ key]
-        (p/promise (fn [deliver]
-                     (let [key (keyword key)]
-                       (deliver (swap! internalstore dissoc key)))))))))
+      (-read [_ key]
+        (p/promise
+         (fn [deliver]
+           (if (nil? key)
+             (let [key (codecs/bytes->safebase64 (nonce/random-nonce 48))]
+               (deliver [key {}]))
+             (let [data (get @internalstore key nil)]
+               (if (nil? data)
+                 (let [key (codecs/bytes->safebase64 (nonce/random-nonce 48))]
+                   (deliver [key {}]))
+                 (deliver [key data])))))))
+
+      (-write [_ key data]
+        (p/promise
+         (fn [deliver]
+           (swap! internalstore assoc key data)
+           (deliver key))))
+
+      (-delete [_ key]
+        (p/promise
+         (fn [deliver]
+           (swap! internalstore dissoc key)
+           (deliver key)))))))
+
+(defn signed-cookie
+  [& {:keys [key] :as opts}]
+  (let [pkey (or key (nonce/random-nonce 128))]
+    (reify ISessionStorage
+      (-read [_ dkey]
+        (p/promise
+         (fn [deliver]
+           (if (nil? dkey)
+             (deliver [(jws/sign {} pkey opts) {}])
+             (try
+               (println 2222 dkey)
+               (deliver [dkey (jws/unsign dkey pkey opts)])
+               (catch clojure.lang.ExceptionInfo e
+                 (deliver [(jws/sign {} pkey opts) {}])))))))
+
+      (-write [_ key data]
+        (p/promise
+         (fn [deliver]
+           (deliver (jws/sign data pkey opts)))))
+
+      (-delete [_ key]
+        (p/promise
+         (fn [deliver]
+           (deliver key)))))))
 
 (defn lookup-storage
   "A helper for create session storages with
@@ -151,7 +193,8 @@
     :inmemory (memory-storage)
     ;; :signed-cookie (cookie-storage)
     (if (not (satisfies? ISessionStorage storage))
-      (throw (IllegalArgumentException. "storage should satisfy ISessionStorage protocol."))
+      (throw (IllegalArgumentException.
+              "storage should satisfy ISessionStorage protocol."))
       storage)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -171,17 +214,14 @@
    :http-only cookie-http-only})
 
 (defn- context->session
-  [context {:keys [storage cookie-name]
-            :or {cookie-name default-cookie-name}}]
+  [context {:keys [storage cookie-name] :or {cookie-name default-cookie-name}}]
   (let [^Context ctx (:catacumba/context context)
         cookies (ct/get-cookies context)
         cookie (get cookies (keyword cookie-name) nil)
         sid (:value cookie)]
-    (if sid
-      (-> (read-session storage sid)
-          (p/then (fn [v] [sid (->session sid v)])))
-      (let [sid (codecs/bytes->safebase64 (nonce/random-nonce 48))]
-        (p/resolved [sid (->session sid)])))))
+    (p/then (-read storage sid)
+            (fn [[sid v]]
+              (->session sid v)))))
 
 (defn session
   "A session chain handler constructor."
@@ -191,18 +231,29 @@
      :as options}]
    (let [storage (lookup-storage storage)
          options (assoc options :storage storage)]
+     (letfn [(delete-session [context session]
+               (let [sid (-get-id session)
+                     cookie (-> (make-cookie sid options)
+                                (assoc :max-age 0))]
+                 (-> (hp/completable-future->promise (-delete storage sid))
+                     (hp/then (fn [_]
+                                (ct/set-cookies! context {cookie-name cookie}))))))
+
+             (persist-session [context session]
+               (let [sid (-get-id session)]
+                 (-> (hp/completable-future->promise (-write storage sid @session))
+                     (hp/then (fn [sid]
+                                (let [cookie (make-cookie sid options)]
+                                  (ct/set-cookies! context {cookie-name cookie})))))))
+
+             (before-send [context session response]
+               (cond
+                 (-empty? session)
+                 (delete-session context session)
+                 (-modified? session)
+                 (persist-session context session)))]
      (fn [context]
        (-> (context->session context options)
-           (p/then (fn [[sid session]]
-                     (ct/before-send context (fn [^Response response]
-                                               (cond
-                                                 (empty? session)
-                                                 (let [cookie (-> (make-cookie sid options)
-                                                                  (assoc :max-age 0))]
-                                                   (ct/set-cookies! context {cookie-name cookie}))
-
-                                                 (modified? session)
-                                                 (let [cookie (make-cookie sid options)]
-                                                   (write-session storage sid @session)
-                                                   (ct/set-cookies! context {cookie-name cookie})))))
-                     (ct/delegate {:session session}))))))))
+           (p/then (fn [session]
+                     (ct/before-send context (partial before-send context session))
+                     (ct/delegate {:session session})))))))))

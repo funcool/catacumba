@@ -125,33 +125,48 @@
          (or (= content-type "application/x-www-form-urlencoded")
              (= content-type "multipart/form-data")))))
 
+;; (deftype CSRFStore [value])
+
+;; (defn- csrf-tokens-match?
+;;   [context header-name field-name cookie-name]
+;;   (let [cookies (ct/get-cookies context)
+;;         formdata (ct/get-formdata context)
+;;         headers (:headers context)
+;;         htoken (get headers header-name)
+;;         ctoken (get cookies cookie-name)
+;;         ptoken (get formdata field-name)]
+;;     (and (not (nil? ctoken))
+;;          (or (= ctoken ptoken)
+;;              (= ctoken htoken)))))
+
 (defn- csrf-tokens-match?
-  [context header-name field-name cookie-name]
-  (let [cookies (ct/get-cookies context)
-        formdata (ct/get-formdata context)
-        headers (:headers context)
-        htoken (get headers header-name)
-        ctoken (get cookies cookie-name)
-        ptoken (get formdata field-name)]
-    (and (not (nil? ctoken))
-         (or (= ctoken ptoken)
-             (= ctoken htoken)))))
+  [token context header-name field-name]
+  (let [formdata (ct/get-formdata context)
+        headers (:headers context)]
+    (and (not (nil? token))
+         (or (= token (get formdata field-name))
+             (= token (get headers header-name))))))
 
 (defn csrf-protect
   "A chain handler that provides csrf (Cross-site request forgery)
   protection. Also known as a one-click attack or session riding."
   ([] (csrf-protect {}))
   ([{:keys [on-error cookie-name field-name header-name]
-     :or {header-name "x-csrftoken"
-          field-name "csrftoken"
-          cookie-name "csrftoken"}}]
+     :or {header-name :x-csrftoken
+          field-name  :csrftoken
+          cookie-name :csrftoken}}]
    (fn [context]
-     (if (form-post? context)
-       (if (csrf-tokens-match? context header-name field-name cookie-name)
-         (ct/delegate)
-         (if (fn? on-error)
-           (on-error context)
-           (http/bad-request "CSRF tokens don't match")))
-       (do
-         (ct/set-cookies! context {cookie-name {:value (str (uuid/v1))}})
-         (ct/delegate))))))
+     (let [cookies (ct/get-cookies context)
+           csrfcookie (get cookies cookie-name)
+           csrftoken (:value csrfcookie)]
+       (if (form-post? context)
+         (if (csrf-tokens-match? csrftoken context header-name field-name)
+           (ct/delegate {::csrftoken csrftoken})
+           (if (fn? on-error)
+             (on-error context)
+             (http/bad-request "CSRF tokens don't match")))
+         (if (nil? csrftoken)
+           (let [csrftoken (str (uuid/v1))]
+             (ct/set-cookies! context {cookie-name {:value csrftoken}})
+             (ct/delegate {::csrftoken csrftoken}))
+           (ct/delegate {::csrftoken csrftoken})))))))

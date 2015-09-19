@@ -99,13 +99,17 @@
 
 (deftest csrf-protect-tests
   (testing "Post with csrf using form param"
-    (let [app (ct/routes [[:any (hs/csrf-protect)]
-                          [:any (fn [context] "hello world")]])]
+    (let [p (promise)
+          app (ct/routes [[:any (hs/csrf-protect)]
+                          [:any (fn [context]
+                                  (deliver p (:catacumba.handlers.security/csrftoken context))
+                                  "hello world")]])]
       (with-server {:handler app}
         (let [response (client/get base-url {:form-params {:foo "bar"
                                                            :csrftoken "baz"}
                                              :cookies {:csrftoken {:value "baz"}}})]
-          (is (= (:status response) 200))))))
+          (is (= (:status response) 200))
+          (is (= (deref p 1000 nil) "baz"))))))
 
   (testing "Post with csrf using header"
     (let [app (ct/routes [[:any (hs/csrf-protect)]

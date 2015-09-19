@@ -7,6 +7,8 @@ Date: Unreleased
 - Session handler and storage abstraction refactored
   to be more flexible and support cookie signed like
   session storages.
+- Add csrf documentation.
+- Improve csrf security handler implementation.
 
 
 ## Version 0.7.1 ##

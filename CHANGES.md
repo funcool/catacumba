@@ -1,5 +1,12 @@
 # Changelog #
 
+## Version 0.7.1 ##
+
+Date: 2015-09-19
+
+- Upgrade buddy-sign to 0.7.0
+
+
 ## Version 0.7.0 ##
 
 Date: 2015-09-19

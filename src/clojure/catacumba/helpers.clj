@@ -82,6 +82,12 @@
                   (let [accept #(-accept % ds)]
                     (callback accept))))))
 
+(defn completable-future->promise
+  "Coerce jdk8 completable future to ratpack promise."
+  [fut]
+  (promise (fn [accept]
+             (accept fut))))
+
 (defmacro blocking
   "Performs a blocking operation on a separate thread,
   returning a promise for its value."

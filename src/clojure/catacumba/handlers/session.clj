@@ -214,17 +214,14 @@
    :http-only cookie-http-only})
 
 (defn- context->session
-  [context {:keys [storage cookie-name]
-            :or {cookie-name default-cookie-name}}]
+  [context {:keys [storage cookie-name] :or {cookie-name default-cookie-name}}]
   (let [^Context ctx (:catacumba/context context)
         cookies (ct/get-cookies context)
         cookie (get cookies (keyword cookie-name) nil)
         sid (:value cookie)]
-    (if sid
-      (-> (read-session storage sid)
-          (p/then (fn [v] [sid (->session sid v)])))
-      (let [sid (codecs/bytes->safebase64 (nonce/random-nonce 48))]
-        (p/resolved [sid (->session sid)])))))
+    (p/then (-read storage sid)
+            (fn [[sid v]]
+              (->session sid v)))))
 
 (defn session
   "A session chain handler constructor."
@@ -234,18 +231,29 @@
      :as options}]
    (let [storage (lookup-storage storage)
          options (assoc options :storage storage)]
+     (letfn [(delete-session [context session]
+               (let [sid (-get-id session)
+                     cookie (-> (make-cookie sid options)
+                                (assoc :max-age 0))]
+                 (-> (hp/completable-future->promise (-delete storage sid))
+                     (hp/then (fn [_]
+                                (ct/set-cookies! context {cookie-name cookie}))))))
+
+             (persist-session [context session]
+               (let [sid (-get-id session)]
+                 (-> (hp/completable-future->promise (-write storage sid @session))
+                     (hp/then (fn [sid]
+                                (let [cookie (make-cookie sid options)]
+                                  (ct/set-cookies! context {cookie-name cookie})))))))
+
+             (before-send [context session response]
+               (cond
+                 (-empty? session)
+                 (delete-session context session)
+                 (-modified? session)
+                 (persist-session context session)))]
      (fn [context]
        (-> (context->session context options)
-           (p/then (fn [[sid session]]
-                     (ct/before-send context (fn [^Response response]
-                                               (cond
-                                                 (empty? session)
-                                                 (let [cookie (-> (make-cookie sid options)
-                                                                  (assoc :max-age 0))]
-                                                   (ct/set-cookies! context {cookie-name cookie}))
-
-                                                 (modified? session)
-                                                 (let [cookie (make-cookie sid options)]
-                                                   (write-session storage sid @session)
-                                                   (ct/set-cookies! context {cookie-name cookie})))))
-                     (ct/delegate {:session session}))))))))
+           (p/then (fn [session]
+                     (ct/before-send context (partial before-send context session))
+                     (ct/delegate {:session session})))))))))

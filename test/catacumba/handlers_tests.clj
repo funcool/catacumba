@@ -208,53 +208,126 @@
 ;; Session tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(deftest session-handler-tests
-  (testing "Simple session access."
+(deftest session-handler-with-inmemmory-storage
+  (testing "Simple session access in memory storage"
     (let [p (promise)
-          handler (fn [ctx]
+          storage (session/memory-storage)
+          handler1 (fn [ctx]
                     (let [session (:session ctx)]
                       (swap! session assoc :foo 2)
-                      (if (= (count @session) 0)
-                        (swap! session assoc :foo 2)
-                        (deliver p @session))
-                      "hello"))
-          handler (ct/routes [[:any (hs/session)]
-                              [:any handler]])]
-      (with-server {:handler handler}
-        (let [response (client/get (str base-url "/foo"))
+                      "hello world"))
+          handler2 (fn [ctx]
+                    (let [session (:session ctx)]
+                      (swap! session update :foo inc)
+                      "hello world"))
+          handler3 (fn [ctx]
+                    (let [session (:session ctx)]
+                      (deliver p @session)
+                      "hello world"))
+          app (ct/routes [[:any (hs/session {:storage storage})]
+                          [:get "h1" handler1]
+                          [:get "h2" handler2]
+                          [:get "h3" handler3]])]
+      (with-server {:handler app}
+        (let [response (client/get (str base-url "/h1"))
               cookie (get-in response [:cookies "sessionid"])]
-          (is (map? cookie))
-          (is (:value cookie))
           (is (= (:status response) 200))
-          (let [cookie {:value (:value cookie)}
-                response' (client/get (str base-url "/foo") {:cookies {"sessionid" cookie}})]
-            (is (= (:status response') 200))
-            (is (= (deref p 1000 nil) {:foo 2})))))))
+          (let [response (client/get (str base-url "/h2") {:cookies {"sessionid" cookie}})]
+            (is (= (:status response) 200)))
+          (let [response (client/get (str base-url "/h3") {:cookies {"sessionid" cookie}})]
+            (is (= (:status response) 200)))
+          (let [data (deref p 1000 nil)]
+            (is (= (:foo data) 3)))))
+      ))
 
-  (testing "Session type behavior"
-    (let [s (#'session/->session "foobar")]
-      (is (not (#'session/accessed? s)))
-      (is (not (#'session/modified? s)))
-      (is (#'session/empty? s)))
+  (testing "Inject not existing key"
+    (let [p (promise)
+          storage (session/memory-storage)
+          handler (fn [ctx]
+                    "hello world")
+          app (ct/routes [[:any (hs/session {:storage storage})]
+                          [:get "h1" handler]])]
+      (with-server {:handler app}
+        (let [response (client/get (str base-url "/h1")
+                                   {:cookies {"sessionid" {:value "foobar"}}})
+              cookie (get-in response [:cookies "sessionid"])]
+          (println 2222 cookie)
+          (is (= (:status response) 200))
+          (is (not= (:value cookie) "foobar"))))))
 
-    (let [s (#'session/->session "foobar")]
-      (deref s)
-      (is (#'session/accessed? s))
-      (is (not (#'session/modified? s)))
-      (is (#'session/empty? s)))
+  (testing "Remove empty session"
+    (let [p (promise)
+          storage (session/memory-storage)
+          handler1 (fn [ctx]
+                    (let [session (:session ctx)]
+                      (swap! session assoc :foo 2)
+                      "hello world"))
+          handler2 (fn [ctx]
+                    (let [session (:session ctx)]
+                      (swap! session dissoc :foo)
+                      "hello world"))
+          app (ct/routes [[:any (hs/session {:storage storage})]
+                          [:get "h1" handler1]
+                          [:get "h2" handler2]])]
+      (with-server {:handler app}
+        (let [response (client/get (str base-url "/h1"))
+              cookie (get-in response [:cookies "sessionid"])]
+          (is (= (:status response) 200))
+          (let [response (client/get (str base-url "/h2")
+                                     {:cookies {"sessionid" cookie}})]
+            (is (= (:status response) 200))
+            (is (empty? @storage)))))
+      )))
 
-    (let [s (#'session/->session "foobar")]
-      (swap! s assoc :foo 2)
-      (is (#'session/accessed? s))
-      (is (#'session/modified? s))
-      (is (not (#'session/empty? s)))))
+(deftest session-object-interface
+  (let [s (#'session/->session "foobar")]
+    (is (not (session/-accessed? s)))
+    (is (not (session/-modified? s)))
+    (is (session/-empty? s)))
 
-  ;; (testing "In memory session storage"
-  ;;   (let [st (session/memory-storage)]
-  ;;     (is (nil? (#'session/read-session st :foo)))
-  ;;     (#'session/write-session st :foo {:bar 2})
-  ;;     (is (= (#'session/read-session st :foo) {:bar 2}))))
-  )
+  (let [s (#'session/->session "foobar")]
+    (deref s)
+    (is (session/-accessed? s))
+    (is (not (session/-modified? s)))
+    (is (session/-empty? s)))
+
+  (let [s (#'session/->session "foobar")]
+    (swap! s assoc :foo 2)
+    (is (session/-accessed? s))
+    (is (session/-modified? s))
+    (is (not (session/-empty? s)))))
+
+(deftest session-handler-with-signed-cookie-storage
+  (let [p (promise)
+        storage (session/signed-cookie :key "test")
+        handler1 (fn [ctx]
+                   (let [session (:session ctx)]
+                     (swap! session assoc :foo 2)
+                     "hello world"))
+        handler2 (fn [ctx]
+                   (let [session (:session ctx)]
+                     (swap! session update :foo inc)
+                     "hello world"))
+        handler3 (fn [ctx]
+                   (let [session (:session ctx)]
+                     (deliver p @session)
+                     "hello world"))
+        app (ct/routes [[:any (hs/session {:storage storage})]
+                        [:get "h1" handler1]
+                        [:get "h2" handler2]
+                        [:get "h3" handler3]])]
+    (with-server {:handler app}
+      (let [response (client/get (str base-url "/h1"))
+            cookie (get-in response [:cookies "sessionid"])]
+        (is (= (:status response) 200))
+        (let [response (client/get (str base-url "/h2") {:cookies {"sessionid" cookie}})
+              cookie (get-in response [:cookies "sessionid"])]
+          (is (= (:status response) 200))
+          (let [response (client/get (str base-url "/h3") {:cookies {"sessionid" cookie}})]
+            (is (= (:status response) 200))
+            (let [data (deref p 1000 nil)]
+              (is (= (:foo data) 3)))))))
+    ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Interceptors

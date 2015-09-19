@@ -54,14 +54,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defprotocol ISession
-  (^:private empty? [_] "Check if the session is empty.")
-  (^:private accessed? [_] "Check if session is accessed")
-  (^:private modified? [_] "Check if session is modified"))
+  (-get-id [_] "Get the session id.")
+  (-empty? [_] "Check if the session is empty.")
+  (-accessed? [_] "Check if session is accessed")
+  (-modified? [_] "Check if session is modified"))
 
 (defprotocol ISessionStorage
-  (^:private read-session [_ key] "")
-  (^:private write-session [_ key data] "")
-  (^:private delete-session [_ key] ""))
+  (-read [_ key] "")
+  (-write [_ key data] "")
+  (-delete [_ key] ""))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Types
@@ -104,9 +105,10 @@
     (.deref data))
 
   ISession
-  (empty? [_] (= (count @data) 0))
-  (accessed? [_] @accessed)
-  (modified? [_] @modified))
+  (-get-id [_] sessionid)
+  (-empty? [_] (= (count @data) 0))
+  (-accessed? [_] @accessed)
+  (-modified? [_] @modified))
 
 (alter-meta! #'->Session assoc :private true)
 

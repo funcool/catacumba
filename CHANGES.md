@@ -1,5 +1,14 @@
 # Changelog #
 
+## Version 0.8.0 ##
+
+Date: Unreleased
+
+- Session handler and storage abstraction refactored
+  to be more flexible and support cookie signed like
+  session storages.
+
+
 ## Version 0.7.1 ##
 
 Date: 2015-09-19

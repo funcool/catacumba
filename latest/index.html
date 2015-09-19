@@ -80,7 +80,7 @@
 <h1>Catacumba - Web toolkit for Clojure.</h1>
 <div class="details">
 <span id="author" class="author">Andrey Antukh, &lt;niwi@niwi.nz&gt;</span><br>
-<span id="revdate">v0.6.2</span>
+<span id="revdate">v0.7.1</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -252,7 +252,7 @@ dependency vector on your <strong><em>project.clj</em></strong> file:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">funcool/catacumba</span> <span class="tok-s">&quot;0.6.2&quot;</span><span class="tok-p">]</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">funcool/catacumba</span> <span class="tok-s">&quot;0.7.1&quot;</span><span class="tok-p">]</span>
 <span class="tok-p">[</span><span class="tok-nv">org.slf4j/slf4j-simple</span> <span class="tok-s">&quot;1.7.12&quot;</span><span class="tok-p">]</span> <span class="tok-c1">;; (optional, only for show ratpack info messages)</span></code></pre>
 </div>
 </div>
@@ -1367,10 +1367,10 @@ chain:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>By default, the <code>application/x-www-form-urlencoded</code>, <code>multipart/form-data</code> and
-<code>application/json</code> parsers come out of the box. The
-<a href="https://github.com/dakrone/cheshire">cheshire</a> json parser is used for parsing the
-body with the <code>application/json</code> content type.</p>
+<p>By default, the <code>application/x-www-form-urlencoded</code>, <code>multipart/form-data</code>,
+<code>application/json</code>, <code>application/transit+json</code> and <code>application/transit+msgpack</code>
+parsers come out of the box. The <a href="https://github.com/dakrone/cheshire">cheshire</a>
+json parser is used for parsing the body with the <code>application/json</code> content type.</p>
 </div>
 <div class="paragraph">
 <p>The body parsing is a open system, implemented using clojure&#8217;s polymorphism facilites
@@ -2497,7 +2497,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-08-31 00:47:35 EEST
+Last updated 2015-09-19 12:07:53 EEST
 </div>
 </div>
 </body>

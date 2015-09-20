@@ -13,8 +13,8 @@ Date: Unreleased
   `.prefix` for attach handlers for `:any` and `:all` routing
   directives. (This a more correct way to handle it and it
   should not cause regressions).
-- Add restfull handlers. This will allow build and expose
-  restfull resources in a simpler way.
+- Add restful handlers. This will allow build and expose
+  restful resources in a simpler way.
 
 
 ## Version 0.7.1 ##

@@ -18,7 +18,7 @@
             [catacumba.handlers :as hs]
             [catacumba.handlers.session :as session]
             [catacumba.handlers.auth :as auth]
-            [catacumba.handlers.restfull :as rest]
+            [catacumba.handlers.restful :as rest]
             [catacumba.testing :as test-utils :refer [with-server]]
             [catacumba.core-tests :refer [base-url]]))
 
@@ -410,7 +410,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Restfull
+;; Restful
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- sample-method
@@ -429,9 +429,9 @@
 (def simple-resource-2
   {:show (sample-method 200 "2")})
 
-(deftest restfull-resources-tests
+(deftest restful-resources-tests
   (testing "Resource with all methods"
-    (let [app (ct/routes [[:restfull/resource "foo" simple-resource-1]])]
+    (let [app (ct/routes [[:restful/resource "foo" simple-resource-1]])]
       (with-server {:handler app}
         (let [response (client/get (str base-url "/foo"))]
           (is (= (:body response) "1"))
@@ -463,7 +463,7 @@
         )))
 
   (testing "Resource with some methods"
-    (let [app (ct/routes [[:restfull/resource "foo" simple-resource-2]])]
+    (let [app (ct/routes [[:restful/resource "foo" simple-resource-2]])]
       (with-server {:handler app}
         (let [response (client/get (str base-url "/foo/1"))]
           (is (= (:body response) "2"))

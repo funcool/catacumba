@@ -22,7 +22,7 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(ns catacumba.handlers.restfull
+(ns catacumba.handlers.restful
   (:require [catacumba.impl.handlers :as hs]
             [catacumba.impl.routing :as rt]
             [catacumba.http :as http]
@@ -73,7 +73,7 @@
     (fn [^Chain chain]
       (reduce rt/attach-route chain routes))))
 
-(defmethod rt/attach-route :restfull/resource
+(defmethod rt/attach-route :restful/resource
   [^Chain chain [_ ^String path resource]]
   (let [callback (resource->setup resource)]
     (.prefix chain path (hp/fn->action callback))))

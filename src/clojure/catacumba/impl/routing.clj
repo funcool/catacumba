@@ -98,6 +98,10 @@
               (.add rspec ServerErrorHandler ehandler)))]
     (.register chain ^Action (hp/fn->action on-register))))
 
+(defmethod attach-route :setup
+  [^Chain chain [_ ^String path setup]]
+  (.prefix chain path (hp/fn->action setup)))
+
 (defmethod attach-route :default
   [chain [method & handlers-and-path]]
   (let [path (first handlers-and-path)]

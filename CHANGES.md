@@ -9,6 +9,12 @@ Date: Unreleased
   session storages.
 - Add csrf documentation.
 - Improve csrf security handler implementation.
+- Start using ratpack's chain `.path` method instread of
+  `.prefix` for attach handlers for `:any` and `:all` routing
+  directives. (This a more correct way to handle it and it
+  should not cause regressions).
+- Add restfull handlers. This will allow build and expose
+  restfull resources in a simpler way.
 
 
 ## Version 0.7.1 ##

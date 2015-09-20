@@ -39,6 +39,12 @@
            ratpack.func.Action
            java.util.List))
 
+(defn- combine-handlers
+  "Given a list of handlers, return a handler
+  that chains them."
+  [handlers]
+  (Handlers/chain (mapv hs/adapter handlers)))
+
 (defmulti attach-route
   (fn [chain [method & args]]
     method))
@@ -92,15 +98,18 @@
               (.add rspec ServerErrorHandler ehandler)))]
     (.register chain ^Action (hp/fn->action on-register))))
 
+(defmethod attach-route :setup
+  [^Chain chain [_ ^String path setup]]
+  (.prefix chain path (hp/fn->action setup)))
+
 (defmethod attach-route :default
   [chain [method & handlers-and-path]]
   (let [path (first handlers-and-path)]
     (if (string? path)
-      (let [^Handler handler (-> (mapv hs/adapter (rest handlers-and-path))
-                                 (Handlers/chain))]
+      (let [^Handler handler (combine-handlers (rest handlers-and-path))]
         (case method
-          :any (.prefix chain path (hp/fn->action #(.all % handler)))
-          :all (.prefix chain path (hp/fn->action #(.all % handler)))
+          :any (.path chain path handler)
+          :all (.path chain path handler)
           :get (.get chain path handler)
           :post (.post chain path handler)
           :put (.put chain path handler)

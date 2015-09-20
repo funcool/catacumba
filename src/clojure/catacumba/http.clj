@@ -23,11 +23,17 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (ns catacumba.http
-  (:require [catacumba.impl.http :refer [response]]))
+  (:require [catacumba.impl.http :as http]))
+
+(defn response
+  "Create a response instance."
+  ([body] (http/response body 200 {}))
+  ([body status] (http/response body status {}))
+  ([body status headers] (http/response body status headers)))
 
 (defn continue
-  ([body] (response body 100))
-  ([body headers] (response body 100 headers)))
+  ([body] (http/response body 100))
+  ([body headers] (http/response body 100 headers)))
 
 (defn ok
   "HTTP 200 OK
@@ -38,8 +44,8 @@
   the REST API successfully carried out whatever action the client requested,
   and that no more specific code in the 2xx series is appropriate. Unlike
   the 204 status code, a 200 response should include a response body."
-  ([body] (response body 200))
-  ([body headers] (response body 200 headers)))
+  ([body] (http/response body 200))
+  ([body headers] (http/response body 200 headers)))
 
 (defn created
   "HTTP 201 Created
@@ -49,9 +55,9 @@
   or a store adds, a new resource at the client's request. There may also be
   times when a new resource is created as a result of some controller action,
   in which case 201 would also be an appropriate response."
-  ([location] (response "" 201 {:location location}))
-  ([location body] (response body 201 {:location location}))
-  ([location body headers] (response body 201 (merge headers {:location location}))))
+  ([location] (http/response "" 201 {:location location}))
+  ([location body] (http/response body 201 {:location location}))
+  ([location body headers] (http/response body 201 (merge headers {:location location}))))
 
 (defn accepted
   "HTTP 202 Accepted
@@ -62,8 +68,8 @@
   appears valid, but it still may have problems once it's finally processed.
   A 202 response is typically used for actions that take a long while to
   process."
-  ([body] (response body 202))
-  ([body headers] (response body 202 headers)))
+  ([body] (http/response body 202))
+  ([body headers] (http/response body 202 headers)))
 
 (defn no-content
   "HTTP 204 No Content
@@ -74,8 +80,8 @@
   or representation in the response message's body. An API may also send 204
   in conjunction with a GET request to indicate that the requested resource
   exists, but has no state representation to include in the body."
-  ([] (response "" 204))
-  ([headers] (response "" 204 headers)))
+  ([] (http/response "" 204))
+  ([headers] (http/response "" 204 headers)))
 
 (defn moved-permanently
   "301 Moved Permanently
@@ -85,9 +91,9 @@
   significantly redesigned and a new permanent URI has been assigned to the
   client's requested resource. The REST API should specify the new URI in
   the response's Location header."
-  ([location] (response "" 301 {:location location}))
-  ([location body] (response body 301 {:location location}))
-  ([location body headers] (response body 301 (merge headers {:location location}))))
+  ([location] (http/response "" 301 {:location location}))
+  ([location body] (http/response body 301 {:location location}))
+  ([location body headers] (http/response body 301 (merge headers {:location location}))))
 
 (defn found
   "HTTP 302 Found
@@ -106,9 +112,9 @@
   To clear things up, HTTP 1.1 introduced status codes 303 (\"See Other\")
   and 307 (\"Temporary Redirect\"), either of which should be used
   instead of 302."
-  ([location] (response "" 302 {:location location}))
-  ([location body] (response body 302 {:location location}))
-  ([location body headers] (response body 302 (merge headers {:location location}))))
+  ([location] (http/response "" 302 {:location location}))
+  ([location body] (http/response body 302 {:location location}))
+  ([location body headers] (http/response body 302 (merge headers {:location location}))))
 
 (defn see-other
   "HTTP 303 See Other
@@ -123,9 +129,9 @@
   reference to a resource without forcing the client to download its state.
   Instead, the client may send a GET request to the value of the Location
   header."
-  ([location] (response "" 303 {:location location}))
-  ([location body] (response body 303 {:location location}))
-  ([location body headers] (response body 303 (merge headers {:location location}))))
+  ([location] (http/response "" 303 {:location location}))
+  ([location body] (http/response body 303 {:location location}))
+  ([location body headers] (http/response body 303 (merge headers {:location location}))))
 
 (defn temporary-redirect
   "HTTP 307 Temporary Redirect
@@ -140,9 +146,9 @@
   A REST API can use this status code to assign a temporary URI to the
   client's requested resource. For example, a 307 response can be used to
   shift a client request over to another host."
-  ([location] (response "" 307 {:location location}))
-  ([location body] (response body 307 {:location location}))
-  ([location body headers] (response body 307 (merge headers {:location location}))))
+  ([location] (http/response "" 307 {:location location}))
+  ([location body] (http/response body 307 {:location location}))
+  ([location body headers] (http/response body 307 (merge headers {:location location}))))
 
 (defn bad-request
   "HTTP 400 Bad Request
@@ -150,8 +156,8 @@
 
   400 is the generic client-side error status, used when no other 4xx error
   code is appropriate."
-  ([body] (response body 400))
-  ([body headers] (response body 400 headers)))
+  ([body] (http/response body 400))
+  ([body headers] (http/response body 400 headers)))
 
 (defn unauthorized
   "HTTP 401 Unauthorized
@@ -160,8 +166,8 @@
   A 401 error response indicates that the client tried to operate on a
   protected resource without providing the proper authorization. It may have
   provided the wrong credentials or none at all."
-  ([body] (response body 401))
-  ([body headers] (response body 401 headers)))
+  ([body] (http/response body 401))
+  ([body headers] (http/response body 401 headers)))
 
 (defn forbidden
   "HTTP 403 Forbidden
@@ -174,8 +180,8 @@
   client may be authorized to interact with some, but not all of a REST API's
   resources. If the client attempts a resource interaction that is outside of
   its permitted scope, the REST API should respond with 403."
-  ([body] (response body 403))
-  ([body headers] (response body 403 headers)))
+  ([body] (http/response body 403))
+  ([body headers] (http/response body 403 headers)))
 
 (defn not-found
   "HTTP 404 Not Found
@@ -183,41 +189,41 @@
 
   The 404 error status code indicates that the REST API can't map the
   client's URI to a resource."
-  ([body] (response body 404))
-  ([body headers] (response body 404 headers)))
+  ([body] (http/response body 404))
+  ([body headers] (http/response body 404 headers)))
 
 (defn method-not-allowed
-  ([body] (response body 405))
-  ([body headers] (response body 405 headers)))
+  ([body] (http/response body 405))
+  ([body headers] (http/response body 405 headers)))
 
 (defn not-acceptable
-  ([body] (response body 406))
-  ([body headers] (response body 406 headers)))
+  ([body] (http/response body 406))
+  ([body headers] (http/response body 406 headers)))
 
 (defn conflict
-  ([body] (response body 409))
-  ([body headers] (response body 409 headers)))
+  ([body] (http/response body 409))
+  ([body headers] (http/response body 409 headers)))
 
 (defn gone
-  ([body] (response body 410))
-  ([body headers] (response body 410 headers)))
+  ([body] (http/response body 410))
+  ([body headers] (http/response body 410 headers)))
 
 (defn precondition-failed
-  ([body] (response body 412))
-  ([body headers] (response body 412 headers)))
+  ([body] (http/response body 412))
+  ([body headers] (http/response body 412 headers)))
 
 (defn unsupported-mediatype
-  ([body] (response body 415))
-  ([body headers] (response body 415 headers)))
+  ([body] (http/response body 415))
+  ([body headers] (http/response body 415 headers)))
 
 (defn too-many-requests
-  ([body] (response body 429))
-  ([body headers] (response body 429 headers)))
+  ([body] (http/response body 429))
+  ([body headers] (http/response body 429 headers)))
 
 (defn internal-server-error
-  ([body] (response body 500))
-  ([body headers] (response body 500 headers)))
+  ([body] (http/response body 500))
+  ([body headers] (http/response body 500 headers)))
 
 (defn not-implemented
-  ([body] (response body 501))
-  ([body headers] (response body 501 headers)))
+  ([body] (http/response body 501))
+  ([body headers] (http/response body 501 headers)))

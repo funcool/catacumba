@@ -108,8 +108,8 @@
     (if (string? path)
       (let [^Handler handler (combine-handlers (rest handlers-and-path))]
         (case method
-          :any (.prefix chain path (hp/fn->action #(.all % handler)))
-          :all (.prefix chain path (hp/fn->action #(.all % handler)))
+          :any (.path chain path handler)
+          :all (.path chain path handler)
           :get (.get chain path handler)
           :post (.post chain path handler)
           :put (.put chain path handler)

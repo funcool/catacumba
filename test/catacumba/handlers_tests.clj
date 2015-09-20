@@ -11,11 +11,14 @@
             [buddy.core.hash :as hash]
             [slingshot.slingshot :refer [try+]]
             [cheshire.core :as json]
+            [cats.core :as m]
+            [cats.monad.exception :as exc]
             [catacumba.core :as ct]
             [catacumba.http :as http]
             [catacumba.handlers :as hs]
             [catacumba.handlers.session :as session]
             [catacumba.handlers.auth :as auth]
+            [catacumba.handlers.restfull :as rest]
             [catacumba.testing :as test-utils :refer [with-server]]
             [catacumba.core-tests :refer [base-url]]))
 
@@ -404,3 +407,77 @@
               headers {"Authorization" (str "Token " token)}
               response (client/get base-url {:headers headers})]
           (is (= (:status response) 200)))))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Restfull
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- sample-method
+  ([code] (sample-method code ""))
+  ([code body]
+   (fn [context]
+     (http/response body code))))
+
+(def simple-resource-1
+  {:index (sample-method 200 "1")
+   :show (sample-method 200 "2")
+   :create (sample-method 200 "3")
+   :update (sample-method 200 "4")
+   :delete (sample-method 200 "5")})
+
+(def simple-resource-2
+  {:show (sample-method 200 "2")})
+
+(deftest restfull-resources-tests
+  (testing "Resource with all methods"
+    (let [app (ct/routes [[:restfull/resource "foo" simple-resource-1]])]
+      (with-server {:handler app}
+        (let [response (client/get (str base-url "/foo"))]
+          (is (= (:body response) "1"))
+          (is (= (:status response) 200)))
+        (let [response (client/post (str base-url "/foo"))]
+          (is (= (:body response) "3"))
+          (is (= (:status response) 200)))
+        (let [response (client/get (str base-url "/foo/1"))]
+          (is (= (:body response) "2"))
+          (is (= (:status response) 200)))
+        (let [response (client/put (str base-url "/foo/1"))]
+          (is (= (:body response) "4"))
+          (is (= (:status response) 200)))
+        (let [response (client/delete (str base-url "/foo/1"))]
+          (is (= (:body response) "5"))
+          (is (= (:status response) 200)))
+        (try
+          (client/put (str base-url "/foo"))
+          (throw (Exception. "unexpected"))
+          (catch clojure.lang.ExceptionInfo e
+            (let [response (ex-data e)]
+              (is (= (:status response) 405)))))
+        (try
+          (client/delete (str base-url "/foo"))
+          (throw (Exception. "unexpected"))
+          (catch clojure.lang.ExceptionInfo e
+            (let [response (ex-data e)]
+              (is (= (:status response) 405)))))
+        )))
+
+  (testing "Resource with some methods"
+    (let [app (ct/routes [[:restfull/resource "foo" simple-resource-2]])]
+      (with-server {:handler app}
+        (let [response (client/get (str base-url "/foo/1"))]
+          (is (= (:body response) "2"))
+          (is (= (:status response) 200)))
+        (try
+          (client/get (str base-url "/foo"))
+          (throw (Exception. "unexpected"))
+          (catch clojure.lang.ExceptionInfo e
+            (let [response (ex-data e)]
+              (is (= (:status response) 405)))))
+        (try
+          (client/delete (str base-url "/foo"))
+          (throw (Exception. "unexpected"))
+          (catch clojure.lang.ExceptionInfo e
+            (let [response (ex-data e)]
+              (is (= (:status response) 405)))))
+        ))))

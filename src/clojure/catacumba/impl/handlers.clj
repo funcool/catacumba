@@ -201,8 +201,10 @@
   metadata found on the given var or anonymous
   handler."
   (fn [handler & args]
-    (let [metadata (meta handler)]
-      (:handler-type metadata)))
+    (if (instance? Handler handler)
+      :catacumba/native
+      (let [metadata (meta handler)]
+        (:handler-type metadata))))
   :default :catacumba/default)
 
 (defn send!
@@ -257,6 +259,10 @@
                              (let [response (handler context)]
                                (when (satisfies? IHandlerResponse response)
                                  (-handle-response response context))))))))
+
+(defmethod adapter :catacumba/native
+  [handler]
+  handler)
 
 (defmethod adapter :catacumba/blocking
   [handler]

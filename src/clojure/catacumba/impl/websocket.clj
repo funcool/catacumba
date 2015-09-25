@@ -24,7 +24,7 @@
 
 (ns catacumba.impl.websocket
   "Websocket handler adapter implementation."
-  (:require [clojure.core.async :refer [chan go-loop close! >! <! put!] :as async]
+  (:require [clojure.core.async :as a]
             [promissum.core :as p]
             [catacumba.impl.context :as ctx]
             [catacumba.impl.handlers :as hs])
@@ -44,37 +44,38 @@
 
 (defn- send!
   [ws data]
-  (let [c (async/chan)]
+  (let [c (a/chan)]
     (p/then (.send ws data)
             (fn [_]
-              (async/close! c)))
+              (a/close! c)))
     c))
 
 (deftype WebSocketSession [in out ctrl context handler]
   java.io.Closeable
   (close [_]
-    (async/close! in)
-    (async/close! out)
-    (async/close! ctrl))
+    (a/close! in)
+    (a/close! out)
+    (a/close! ctrl))
 
   WebSocketHandler
   (^void onOpen [this ^WebSocket ws]
     (let [^Context ctx (:catacumba/context context)]
-      (async/go-loop []
-        (if-let [value (async/<! out)]
+      (a/put! ctrl :open)
+      (a/go-loop []
+        (if-let [value (a/<! out)]
           (do
-            (async/<! (send! ws (str value)))
+            (a/<! (send! ws (str value)))
             (recur))
           (.close ws)))
-      (handler {:in in :out out :ctrl ctrl
-                :ws ws :session this
-                :context context})))
+      (handler (merge context
+                      {:in in :out out :ctrl ctrl
+                       :ws ws :wssession this}))))
 
   (^void onMessage [_ ^WebSocketMessage msg ^Action callback]
-    (async/put! in (.getData msg) (fn [_] (.execute callback nil))))
+    (a/put! in (.getData msg) (fn [_] (.execute callback nil))))
 
   (^void onClose [this]
-    (async/put! ctrl [:close nil])
+    (a/put! ctrl :close)
     (.close this)))
 
 (defn websocket

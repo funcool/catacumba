@@ -68,8 +68,12 @@
             (a/<! (send! ws (str value)))
             (recur))
           (do
-            (.close ws)
-            (.close this))))
+            (try
+              (.close ws)
+              (.close this)
+              (catch java.util.concurrent.RejectedExecutionException e
+                ;; noop
+                )))))
       (handler (merge context
                       {:in in :out out :ctrl ctrl
                        :ws ws :wssession this}))))

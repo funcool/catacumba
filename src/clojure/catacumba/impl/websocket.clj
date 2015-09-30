@@ -91,4 +91,4 @@
   (reify Handler
     (^void handle [_ ^Context ctx]
       (hs/hydrate-context ctx (fn [^DefaultContext context]
-                             (websocket context handler))))))
+                                (websocket context handler))))))

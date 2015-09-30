@@ -34,7 +34,7 @@
 ;; Public Api
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- str->bytes
+(defn str->bytes
   [data]
   (.getBytes data "UTF-8"))
 

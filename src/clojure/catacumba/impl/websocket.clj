@@ -80,9 +80,9 @@
 
 (defn websocket
   [^DefaultContext context handler]
-  (let [in (chan 256)
-        out (chan)
-        ctrl (chan)]
+  (let [in (a/chan 256)
+        out (a/chan 1)
+        ctrl (a/chan 1)]
     (->> (WebSocketSession. in out ctrl context handler)
          (WebSockets/websocket ^Context (:catacumba/context context)))))
 

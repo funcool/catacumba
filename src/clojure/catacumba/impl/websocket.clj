@@ -53,6 +53,7 @@
 (deftype WebSocketSession [in out ctrl context handler]
   java.io.Closeable
   (close [_]
+    (a/put! ctrl :close)
     (a/close! in)
     (a/close! out)
     (a/close! ctrl))
@@ -66,7 +67,9 @@
           (do
             (a/<! (send! ws (str value)))
             (recur))
-          (.close ws)))
+          (do
+            (.close ws)
+            (.close this))))
       (handler (merge context
                       {:in in :out out :ctrl ctrl
                        :ws ws :wssession this}))))
@@ -75,7 +78,6 @@
     (a/put! in (.getData msg) (fn [_] (.execute callback nil))))
 
   (^void onClose [this]
-    (a/put! ctrl :close)
     (.close this)))
 
 (defn websocket

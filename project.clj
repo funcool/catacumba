@@ -21,7 +21,7 @@
                  [cheshire "5.5.0"]
                  [ns-tracker "0.3.0"]
                  [slingshot "0.12.2"]
-                 [com.stuartsierra/component "0.2.3"]
+                 [com.stuartsierra/component "0.3.0"]
                  [commons-io/commons-io "2.4"]
                  [buddy/buddy-sign "0.7.0"]
                  [funcool/cuerdas "0.6.0"]

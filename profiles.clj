@@ -28,7 +28,7 @@
             :target "doc/dist/latest/api"
             :src-uri "http://github.com/funcool/catacumba/blob/master/"
             :src-uri-prefix "#L"}
-  :plugins [[funcool/codeina "0.2.0"]
+  :plugins [[funcool/codeina "0.3.0"]
             [lein-ancient "0.6.7" :exclusions [org.clojure/tools.reader]]]
   :dependencies [[clj-http "1.1.2"]
                  [aleph "0.4.0" :exclusions [io.netty/netty-all]]

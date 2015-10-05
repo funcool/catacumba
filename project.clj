@@ -21,6 +21,7 @@
                  [cheshire "5.5.0"]
                  [ns-tracker "0.3.0"]
                  [slingshot "0.12.2"]
+                 [manifold "0.1.0" :exclusions [riddley]]
                  [com.stuartsierra/component "0.3.0"]
                  [commons-io/commons-io "2.4"]
                  [buddy/buddy-sign "0.7.0"]

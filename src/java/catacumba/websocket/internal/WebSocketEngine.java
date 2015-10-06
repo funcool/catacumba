@@ -92,6 +92,14 @@ public class WebSocketEngine {
         final DirectChannelAccess directChannelAccess = context.getDirectChannelAccess();
         final Channel channel = directChannelAccess.getChannel();
 
+        channel.closeFuture().addListener(fu -> {
+            try {
+              handler.onClose();
+            } catch (Exception e) {
+              throw uncheck(e);
+            }
+          });
+
         final WebSocket webSocket = new DefaultWebSocket(channel, open, () -> {
             try {
               handler.onClose();

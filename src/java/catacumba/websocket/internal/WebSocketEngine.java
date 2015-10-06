@@ -58,7 +58,7 @@ public class WebSocketEngine {
       throw uncheck(e);
     }
 
-    WebSocketServerHandshakerFactory factory = new WebSocketServerHandshakerFactory(wsPath.toString(), null, false, maxLength);
+    WebSocketServerHandshakerFactory factory = new WebSocketServerHandshakerFactory(wsPath.toString(), null, true, maxLength);
 
     Request request = context.getRequest();
     HttpMethod method = valueOf(request.getMethod().getName());

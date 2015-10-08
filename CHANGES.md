@@ -15,6 +15,11 @@ Date: Unreleased
   should not cause regressions).
 - Add restful handlers. This will allow build and expose
   restful resources in a simpler way.
+- Fix wrong connection close handling when it is abruptly
+  closed by peer (issue inherited from ratpack).
+- Allow websocket extensions to be used.
+- Update component to 0.3.0.
+- Allow setup native ratpack handlers directly in router.
 
 
 ## Version 0.7.1 ##

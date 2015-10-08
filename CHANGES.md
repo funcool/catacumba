@@ -18,8 +18,10 @@ Date: Unreleased
 - Fix wrong connection close handling when it is abruptly
   closed by peer (issue inherited from ratpack).
 - Allow websocket extensions to be used.
-- Update component to 0.3.0.
 - Allow setup native ratpack handlers directly in router.
+- Update component to 0.3.0.
+- Update environ to 1.0.1.
+- Update buddy-sign to 0.7.1.
 
 
 ## Version 0.7.1 ##

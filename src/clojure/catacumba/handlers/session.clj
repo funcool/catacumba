@@ -169,7 +169,6 @@
            (if (nil? dkey)
              (deliver [(jws/sign {} pkey opts) {}])
              (try
-               (println 2222 dkey)
                (deliver [dkey (jws/unsign dkey pkey opts)])
                (catch clojure.lang.ExceptionInfo e
                  (deliver [(jws/sign {} pkey opts) {}])))))))

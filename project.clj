@@ -24,7 +24,7 @@
                  [manifold "0.1.0" :exclusions [riddley]]
                  [com.stuartsierra/component "0.3.0"]
                  [commons-io/commons-io "2.4"]
-                 [buddy/buddy-sign "0.7.0"]
+                 [buddy/buddy-sign "0.7.1"]
                  [funcool/cuerdas "0.6.0"]
                  [funcool/promissum "0.3.1"]
                  [funcool/cats "1.0.0"]

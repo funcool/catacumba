@@ -21,7 +21,7 @@
                  [cheshire "5.5.0"]
                  [ns-tracker "0.3.0"]
                  [slingshot "0.12.2"]
-                 [manifold "0.1.0" :exclusions [riddley]]
+                 [manifold "0.1.1" :exclusions [riddley]]
                  [com.stuartsierra/component "0.3.0"]
                  [commons-io/commons-io "2.4"]
                  [buddy/buddy-sign "0.7.1"]
@@ -31,4 +31,4 @@
                  [danlentz/clj-uuid "0.1.6"]
                  [environ "1.0.1"]
                  [potemkin "0.4.1"]
-                 [com.cognitect/transit-clj "0.8.281"]])
+                 [com.cognitect/transit-clj "0.8.283"]])

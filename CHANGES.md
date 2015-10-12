@@ -2,7 +2,7 @@
 
 ## Version 0.8.0 ##
 
-Date: Unreleased
+Date: 2015-10-12
 
 - Session handler and storage abstraction refactored
   to be more flexible and support cookie signed like

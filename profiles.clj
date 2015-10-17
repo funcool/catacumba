@@ -1,6 +1,16 @@
 {:dev
  {:global-vars {*warn-on-reflection* false}
   :source-paths ["dev"]
+  :dependencies [[clj-http "1.1.2"]
+                 [aleph "0.4.0" :exclusions [io.netty/netty-all]]
+                 [org.clojure/tools.namespace "0.2.11"]
+                 [ring/ring-core "1.4.0" :exclusions [javax.servlet/servlet-api
+                                                      org.clojure/clojure
+                                                      clj-time]]]
+  :plugins [[lein-ancient "0.6.7" :exclusions [org.clojure/tools.reader]]]}
+
+ :doc
+ {:plugins [[funcool/codeina "0.3.0"]]
   :codeina {:sources ["src/clojure"]
             :exclude [catacumba.impl.context
                       catacumba.impl.atomic
@@ -27,14 +37,7 @@
             :reader :clojure
             :target "doc/dist/latest/api"
             :src-uri "http://github.com/funcool/catacumba/blob/master/"
-            :src-uri-prefix "#L"}
-  :plugins [[funcool/codeina "0.3.0"]
-            [lein-ancient "0.6.7" :exclusions [org.clojure/tools.reader]]]
-  :dependencies [[clj-http "1.1.2"]
-                 [aleph "0.4.0" :exclusions [io.netty/netty-all]]
-                 [org.clojure/tools.namespace "0.2.11"]
-                 [ring/ring-core "1.4.0"
-                  :exclusions [javax.servlet/servlet-api clj-time org.clojure/clojure]]]}
+            :src-uri-prefix "#L"}}
 
  :bench
  [:dev
@@ -43,6 +46,8 @@
                         "-Xmx4g"
                         "-Xms4g"]
    :main ^:skip-aot bench}]
+
+ :1.8 {:dependencies [[org.clojure/clojure "1.8.0-beta1"]]}
 
  ;; Examples
  :examples
@@ -79,6 +84,5 @@
   {:source-paths ["examples/website/src"]
    :resource-paths ["examples/website/resources"]
    :main ^:skip-aot website.core}]
-
  }
 

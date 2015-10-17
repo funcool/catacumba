@@ -1,5 +1,15 @@
 # Changelog #
 
+## Version 0.8.1 ##
+
+Date: 2015-10-17
+
+- Add support for handlers chaining on `:by-method` routing
+  directive.
+- Add .travis.yml and test catacumba using clojure 1.7 and 1.8.
+- Update promissum to 0.3.2.
+
+
 ## Version 0.8.0 ##
 
 Date: 2015-10-12

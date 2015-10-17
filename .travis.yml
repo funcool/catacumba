@@ -1,7 +1,7 @@
 language: clojure
 lein: lein
 script:
-  - lein with-profile +dev:+dev,1.8 test
+  - lein with-profile +dev:+dev,+1.8 test
 
 jdk:
   - oraclejdk8

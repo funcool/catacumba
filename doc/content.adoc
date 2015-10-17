@@ -1,6 +1,6 @@
 = Catacumba - Web toolkit for Clojure.
 Andrey Antukh, <niwi@niwi.nz>
-v0.8.0
+v0.8.1
 :toc: left
 :!numbered:
 :idseparator: -
@@ -66,7 +66,7 @@ dependency vector on your *_project.clj_* file:
 
 [source,clojure]
 ----
-[funcool/catacumba "0.8.0"]
+[funcool/catacumba "0.8.1"]
 [org.slf4j/slf4j-simple "1.7.12"] ;; (optional, only for show ratpack info messages)
 ----
 

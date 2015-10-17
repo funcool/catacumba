@@ -26,7 +26,7 @@
                  [commons-io/commons-io "2.4"]
                  [buddy/buddy-sign "0.7.1"]
                  [funcool/cuerdas "0.6.0"]
-                 [funcool/promissum "0.3.1"]
+                 [funcool/promissum "0.3.2"]
                  [funcool/cats "1.0.0"]
                  [danlentz/clj-uuid "0.1.6"]
                  [environ "1.0.1"]

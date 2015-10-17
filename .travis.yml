@@ -1,0 +1,18 @@
+language: clojure
+lein: lein
+script:
+  - lein with-profile +dev:+dev,1.8 test
+
+jdk:
+  - oraclejdk8
+
+branches:
+  only:
+    - master
+
+notifications:
+  email:
+    recipients:
+      - niwi@niwi.nz
+    on_success: change
+    on_failure: change

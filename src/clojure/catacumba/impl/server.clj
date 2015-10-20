@@ -64,19 +64,21 @@
     (setup spec)))
 
 (defn- build-ssl-context
-  [{:keys [path secret]}]
-  (when (and path secret)
-    (let [keystore (io/resource path)]
-      (SSLContexts/sslContext keystore secret))))
+  [{:keys [keystore-secret keystore-path]}]
+  (when (and keystore-secret keystore-path)
+    (let [keystore (io/resource keystore-path)]
+      (SSLContexts/sslContext keystore keystore-secret))))
 
 (defn- build-server-config
   "Given user specified options, return a `ServerConfig` instance."
-  [{:keys [port debug threads basedir keystore public-address max-body-size] :or {debug false}}]
+  [{:keys [port debug threads basedir public-address max-body-size]
+    :or {debug false}
+    :as options}]
   (let [port (or (:catacumba-port env) port ServerConfig/DEFAULT_PORT)
         threads (or (:catacumba-threads env) threads ServerConfig/DEFAULT_THREADS)
         basedir (or (:catacumba-basedir env) basedir)
         debug (or (:catacumba-debug env) debug)
-        sslcontext (build-ssl-context keystore)
+        sslcontext (build-ssl-context options)
         config (ServerConfig/builder)]
     (if (string? basedir)
       (.baseDir config ^Path (hp/str->path basedir))

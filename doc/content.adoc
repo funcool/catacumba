@@ -22,15 +22,6 @@ I start writting this library as a research project to provide a simple, non
 obstructive (a la ring) but without constrains of the existing spec (ring spec),
 web toolkit for build asynchronous and non-blocking web services.
 
-In the Clojure ecosystem there are several existing solutions for that purpose. For
-mention some of them, we have Pedestal, Aleph, Jet, Immutant, etc. With the
-exception of Pedestal, the rest are build on top of the ring spec, that something I
-want exclude from the equation. And Pedestal is to much high level and opinionated,
-so it not fits very well with the initial constraints.
-
-Some detailed explanation of differencies with few of them are explained in the FAQ
-section of this documentation.
-
 Here a incomplete list of things that _catacumba_ aims to archieve:
 
 * Have a flexible and extensible way to setup different kind of handlers

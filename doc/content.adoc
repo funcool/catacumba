@@ -1585,6 +1585,8 @@ experiment with real code. See the <<examples,examples>> section for it.
 [[launching-the-server]]
 === Launching the server
 
+==== Getting Started
+
 As you can see in the quick start section, the main entry point for start the
 server is the `run-server` function that receives a handler chain and a map
 with options.
@@ -1593,15 +1595,17 @@ with options.
 ----
 (require '[catacumba.core :as ct])
 
-;; ... handler definition
+;; handler definition goes here
 
 (ct/run-server #'my-handler {:port 4040 :debug true})
 ----
 
+==== Configuration Options
+
 Here a complete reference of the currently supported options that can be passed
 to the `run-server` function:
 
-[options="header", cols="^1,^1,^2"]
+[options="header", cols="^1,^1,3"]
 |===========================================================================
 | Keyword   | Default | Description
 | `:port`   | `5050` | The port to listen on.
@@ -1609,6 +1613,8 @@ to the `run-server` function:
 | `:debug` | `false` | Start in development mode.
 | `:setup` | nil    | A callback for configuration step (low level ratpack access).
 | `:basedir` | nil | The application base directory, used mainly for resolving relative paths and assets.
+| `:keystore-path` | nil | A relative path in the classpath to the ssl keystore.
+| `:keystore-secret` | nil | A secret for the ssl key store
 |===========================================================================
 
 All supported options of this function, can be overwritten at JVM startup, using
@@ -1635,6 +1641,39 @@ java -Dcatacumba.port=8000 -Dcatacumba.debug=true -jar yourjarhere.jar
 
 NOTE: if no `:basedir` is specified, catacumba will try to find a `.catacumba` file
 in the classpath and will set a base dir to its directory.
+
+==== SSL Configuration
+
+_Catacumba_ server can be configured to use TLS (commonly known as SSL). The process
+is pretty simple but it requires to have a proper key and certificate.
+
+The first thinkg that you should care about is that _catacumba_ is built on jvm
+that the default ssl certificate/key format used by nginx/apache it isn't compatible
+but is very easy create a compatible file using the `openssl` commandline.
+
+Having a key and the certificate, just execute this command:
+
+[source, bash]
+----
+openssl pkcs12 -export -in cert.pem -inkey key.pem -out store.p12
+----
+
+This process will ask you for a password that you must memorize and later
+provide it to catacumba. Now, having the properly formated trusted store,
+just pass some additional parameters on starting the server:
+
+
+[source, clojure]
+----
+(ct/run-server #'my-handler {:port 4040
+                             :keystore-secret "yoursecrethere"
+                             :keystore-path "path/to/store.p12"})
+----
+
+NOTE: _catacumba_ at this moment does not has the "upgrade" approach so if
+you setup ssl, only ssl connections will be accepted. So the most recommended
+way to use ssl on your application is put catacumba behind nginx or haproxi
+and make them handle the ssl.
 
 
 === Instrumentation

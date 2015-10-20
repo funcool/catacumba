@@ -1,5 +1,12 @@
 # Changelog #
 
+## Version 0.9.0 ##
+
+Date: Unreleased
+
+- Add proper support for tls/ssl
+
+
 ## Version 0.8.1 ##
 
 Date: 2015-10-17

@@ -84,5 +84,11 @@
   {:source-paths ["examples/website/src"]
    :resource-paths ["examples/website/resources"]
    :main ^:skip-aot website.core}]
+
+ :website-ssl-example
+ [:examples
+  {:source-paths ["examples/website-ssl/src"]
+   :resource-paths ["examples/website-ssl/resources"]
+   :main ^:skip-aot website.core}]
  }
 

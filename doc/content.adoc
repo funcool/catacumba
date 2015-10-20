@@ -1834,23 +1834,14 @@ link:https://github.com/funcool/catacumba/tree/master/examples/single-file[here]
 [[difference-with-aleph]]
 === What is the difference between _catacumba_ and Aleph?
 
-First of all, Aleph is one of the most robust libraries in the Clojure ecosystem for
-building asynchronous servers. Here is an incomplete list of differences and
-motivations why I wrote _catacumba_ instead of using _aleph_ directly in my
-applications:
+First of all, Aleph is not a real alternative to catacumba, because its approach is
+so much low level and its web server support is a little bit constrained by ring.
+Furthermore, aleph is already used in catacumba as http client in tests code and
+manifold (async abstractions behind aleph) as one of the first class abstractions
+for handle async vales.
 
-- Aleph with manifold offers good abstractions for creating async servers but they
-  are much too low level and only provide the basic building blocks. _catacumba_
-  intends to be a toolkit that is highly focused on web development by providing
-  a good collection of features that matter to web developers.
-- I wrote _catacumba_ to have an alternative to ring and _Aleph_ that uses ring's
-  abstractions for handling web requests.
-- Aleph has a good path to have an easily readable  and user friendly documentation.
-- Aleph is build on manifold streams and _catacumba_ uses reactive-streams
-  abstractions.
-
-_Catacumba_ does not intend to be a replacement for it, it simply has different 
-focus.
+So, I'm happy to tell you that you can use the both libraries together because
+they are very complementary.
 
 
 == Developers Guide

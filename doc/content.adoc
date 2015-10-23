@@ -628,7 +628,6 @@ provides a more clojure friendly api on top of JDK8 `CompletableFuture` and a gr
 sugar syntax for composing them thanks to the
 link:https://github.com/funcool/cats[cats library].
 
-
 .A example using the _promissum_ library api for create a `CompletableFuture` instance and return it as body.
 [source, clojure]
 ----
@@ -1449,6 +1448,87 @@ More information:
 
 * https://en.wikipedia.org/wiki/Cross-site_request_forgery
 * https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)
+
+
+=== Postal
+
+This handlers offers a message based communication on top of http. You can read
+the link:postal.html[entire protocol specification here].
+
+The *postal* handler looks like a default _catacumba_ handler with one extra
+argument: frame. The frame is a meesage received from the client and has the
+following aspect:
+
+[source, clojure]
+----
+{:type :query
+ :dest :users
+ :data {:id 1}}
+----
+
+The `:type` and `:dest` is the only unique keys mandatory in a message because
+them are very important in message routing process.
+
+Knowing the frame structure, the best way to define a postal handler is using
+multimethods, because they allow easy dispatch by value:
+
+[source, clojure]
+----
+(require '[catacumba.handlers.postal :as pc])
+
+(defmulti myhandler
+  (comp (juxt :type :dest) second vector))
+
+(defmethod myhandler [:query :users]
+  [context {:keys [data] :as frame}]
+  (let [id (:id data)
+        user (repo/get-user-by-id id)]
+    (pc/response user)))
+
+(defmethod myhandler [:novelty :users]
+  [context frame]
+  (let [status (create-new-user frame)]
+    (pc/response user)))
+----
+
+The `response` function is just a helper for create response hashmaps:
+
+[source, clojure]
+----
+(pc/response {:foo 1})
+;; => {:type :response :data {:foo 1}}
+----
+
+Additionally, you can return a promise (from *promissum* library) or deferred (from
+*manifold* library). If that abstractions does not satisfies you, you can
+extend the catacumba behavior with own types and abstractions.
+
+And finally, for use that handler, just attach it on the router:
+
+[source, clojure]
+----
+(def app
+  (ct/routes [[:any "api" (pc/router myhandler)]]))
+
+;; As standalone handler
+(ct/run-server #'app)
+----
+
+
+[NOTE]
+====
+This documention will explain only the backend related stuff. For client usage,
+please refer to the client documentation.
+====
+
+[NOTE]
+====
+Take care that this not analogous to websockets emulation on top of http. Is
+just a message protocol that allows take aside the REST api and build your own
+one based on your own messages and your own semantics.
+
+It can be considered a low-level layer for build graphql like endpoints.
+====
 
 
 == Advanced topics

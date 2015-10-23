@@ -1,0 +1,236 @@
+= POSTAL - Protocol Spec.
+Andrey Antukh, <niwi@niwi.nz>
+Version 1.0
+:toc:
+:toc-title:
+:toclevels: 2
+:!numbered:
+:idseparator: -
+:idprefix:
+:source-highlighter: pygments
+:pygments-style: friendly
+:sectlinks:
+
+
+== Protocol Overview
+
+POSTAL is a message based protocol with messages modeled as structured messages
+encoded using `transit+json` encoding. This protocol intends to be a low-level
+transport layer for build graphql like endpoints. And it is not replacement for
+websockets or other bi-directional transports/protocols.
+
+The main objective of this protocol is take aside the http rest api semantics and
+build own ones on top of http protocol.
+
+It comes with a set of predefined messages with specified semantics but that not
+limits the user to define own messages on top of that protocol.
+
+WARNING: this document is under design and is considered in pre-alpha state.
+
+
+=== Messages
+
+
+A *postal* message consists in a structured data serialized using `transit+json`.
+This is aspect of a message:
+
+[source, clojure]
+----
+{:type :query
+ :dest :users
+ :data {:some :data}}
+----
+
+The previus message looks like this when it is encoded using `transit+json`
+serialization format:
+
+[source, json]
+----
+"[\"^ \",\"~:type\",\"~:query\",\"~:dest\",\"~:users\",\"~:data\",[\"^ \",\"~:some\",\"^4\"]]"
+----
+
+
+== Common Messages
+
+=== :response
+
+This is a generic message that represents a server response to some kind of request.
+
+This is aspect of the `:response` message:
+
+[source, clojure]
+----
+{:type :response
+ :data {:id 1, :firstname "Yennefer"}}
+----
+
+=== :error
+
+Is a generic message that represents a error situation. This kind of messages can be
+send by server when something goes wrong.
+
+This is aspect of the `:error` message:
+
+[source, clojure]
+----
+{:type :error
+ :data {:message "Does not exists"}}
+----
+
+
+=== :message
+
+This is a generic message that represents a server push notification and its
+aspect is almost identical to the `:response` but has very different semantics.
+
+This message type can be send by server in some kind of subscriptions using long
+polling http requests. The ransport layer for this kind of messages is explicitly
+undefined.
+
+This is aspect of this message:
+
+[source, clojure]
+----
+{:type :message
+ :data {:id 1, :firstname "Yennefer"}}
+----
+
+
+== REQ/REP
+
+This section will explain messages defined for *request*/*reply* pattern.
+
+
+=== :query
+
+This is a message that should be used for request data from specified resource. It
+is analogous to the HTTP GET.
+
+This is the aspect of the `:query` message:
+
+[source, clojure]
+----
+{:type :query
+ :dest :users
+ :data {:id 2}}
+----
+
+After sending a `:query` message we should expect an `:response` message to be
+sent back or `:error` if an error is ocurred. The `:dest` property is mandatory.
+
+
+=== :novelty
+
+This is a message that serves for submit data to be processed to a specified
+resource. It is analogous to the HTTP POST/PUT.
+
+This is the aspect of the `novelty` message:
+
+[source, clojure]
+----
+{:type :novelty
+ :dest :users
+ :data [[:db/add 857582744 :username "foobar"]
+        [:db/add 857582744 :password "secret"]]}
+----
+
+After sending a `:novelty` message we should expect an `:response` message to be
+sent back or `:error` if an error is ocurred. The `:dest` property is mandatory.
+
+
+== PUB/SUB
+
+This section will contain messages that are part ot the PUB/SUB scalability protocol.
+
+
+=== :subscribe
+
+This is a message that's should be used for notify the server that a client want
+subscribe to a specific topic.
+
+[source, clojure]
+----
+{:type :subscribe
+ :dest :user/notification
+ :data {:id 2}}
+----
+
+The behavior of the backend and the transport layer is explicitly undefined. The
+most basic approach is just do a long-polling or using server side events.
+
+
+=== :publish
+
+This is a message that should be used for publish a message in a specified topic.
+If a client is also subscribed to the topic, it will receive the published message.
+
+[source, clojure]
+----
+{:type :publish
+ :dest :user/notification
+ :data {:foo "bar"}}
+----
+
+After sending a `:publish` message we should expect an `:response` message to be
+sent back or `:error` if an error is ocurred. The `:dest` property is mandatory.
+
+
+== PUSH/PULL
+
+This section will contain messages that are part ot the PUSH/PULL scalability
+protocol.
+
+
+=== PUT
+
+TBD
+
+
+=== TAKE
+
+TBD
+
+
+== Recommendations
+
+=== Start using http2/spdy
+
+As this protocol is based to work on top of HTTP, is highly recommended deploy
+your application using http2 or spdy. It is not necesary that you application
+server support it, most of the http proxies aready has support for spdy and/or
+http2 (such as nginx).
+
+http2/spdy offers connection multiplexing allowing use one unique persistent
+connection handle all required context, comptly eliminating the overhead of
+creating and destroyng connectons. With that you can make multiple and repeated
+http connections without performance issues.
+
+
+== License
+
+----
+This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+In jurisdictions that recognize copyright laws, the author or authors
+of this software dedicate any and all copyright interest in the
+software to the public domain. We make this dedication for the benefit
+of the public at large and to the detriment of our heirs and
+successors. We intend this dedication to be an overt act of
+relinquishment in perpetuity of all present and future rights to this
+software under copyright law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+For more information, please refer to <http://unlicense.org/>
+----

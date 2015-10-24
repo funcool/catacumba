@@ -1455,6 +1455,8 @@ More information:
 This handlers offers a message based communication on top of http. You can read
 the link:postal.html[entire protocol specification here].
 
+==== Getting Started
+
 The *postal* handler looks like a default _catacumba_ handler with one extra
 argument: frame. The frame is a meesage received from the client and has the
 following aspect:
@@ -1514,11 +1516,42 @@ And finally, for use that handler, just attach it on the router:
 (ct/run-server #'app)
 ----
 
+==== Server Push
+
+The way how this protocol offers server push is using server-sent-events. One of the
+goodnes of using this approach is that just works over http without any additional
+configuration in your http proxy/load balancer. (If you send messages to server just
+use the previously defined messages).
+
+Let see how you can create a handler for use it:
+
+[source, clojure]
+----
+(require '[clojure.core.async :as a])
+
+(defn now
+  []
+  (System/currentTimeMillis))
+
+(defmethod myhandler [:subscribe :timeupdate]
+  [context frame]
+  (pc/stream context
+             (fn [context out]
+               (a/go-loop []
+                 (when-let [_ (a/>! out (pc/response :message {:time (now)}))]
+                   (a/<! (a/timeout 100))
+                   (recur))))))
+----
+
+The `catacumba.handlers.postal/stream` function is analgous to the
+`catacumba.core/sse` with the difference that it encodes the messages properly
+using *postal* protocol.
+
 
 [NOTE]
 ====
 This documention will explain only the backend related stuff. For client usage,
-please refer to the client documentation.
+please refer to the link:https://github.com/funcool/postal[client documentation].
 ====
 
 [NOTE]

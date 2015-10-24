@@ -26,6 +26,7 @@
   (:require [catacumba.helpers :as hp]
             [catacumba.impl.websocket :as websocket]
             [catacumba.impl.handlers :as handlers]
+            [catacumba.helpers :as hp]
             [clojure.java.io :as io]
             [environ.core :refer [env]])
   (:import ratpack.server.RatpackServer
@@ -82,12 +83,9 @@
         config (ServerConfig/builder)]
     (if (string? basedir)
       (.baseDir config ^Path (hp/str->path basedir))
-      (try
+      (hp/with-ignore-exception IllegalStateException
         (let [^Path path (BaseDir/find ".catacumba")]
-          (.baseDir config path))
-        (catch IllegalStateException e
-          ;; Do Nothing explicitly
-          )))
+          (.baseDir config path))))
     (when sslcontext (.ssl config sslcontext))
     (when public-address (.publicAddress config (java.net.URI. public-address)))
     (when max-body-size (.maxContentLength config max-body-size))

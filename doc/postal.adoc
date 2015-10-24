@@ -30,16 +30,12 @@ The main objective of this protocol is take aside the http rest api semantics an
 build own ones on top of http protocol. Allowing build rich and powerful api's
 without any restrictions of the the REST API's.
 
-The general idea is borowed from link:https://facebook.github.io/relay/. So is
-this a ideal protocol for build a declarative queries and use this transport
-protocol for client<->server communication.
-
-It comes with a set of predefined messages with specified semantics but that not
-limits the user to define own messages on top of that protocol.
+The general idea is borowed from link:https://facebook.github.io/relay/[Facebook Relay].
+So is this a ideal protocol for build a declarative queries and use this transport
+protocol for `client-server` communication.
 
 
 === Messages
-
 
 A *postal* message consists in a structured data serialized using `transit+json`.
 This is aspect of a message:
@@ -58,6 +54,9 @@ serialization format:
 ----
 "[\"^ \",\"~:type\",\"~:query\",\"~:dest\",\"~:users\",\"~:data\",[\"^ \",\"~:some\",\"^4\"]]"
 ----
+
+*postal* comes with a set of predefined messages with specified semantics but that
+not limits the user to define own messages on top of that protocol.
 
 
 == Common Messages

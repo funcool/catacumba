@@ -340,26 +340,26 @@
 ;; Interceptors
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(deftest interceptors-tests
-  (let [counter (atom 0)
-        p1 (promise)]
-    (letfn [(interceptor [_ type continuation]
-              (swap! counter inc)
-              (continuation)
-              (swap! counter inc))
-            (handler2 [context]
-              (ct/delegate context))
-            (handler3 [context]
-              (deliver p1 nil)
-              "hello world")]
-      (with-server {:handler (ct/routes [[:interceptor interceptor]
-                                         [:any handler2]
-                                         [:any handler3]])}
-        (let [response (client/get base-url)]
-          (is (nil? (deref p1 1000 nil)))
-          (is (= (:body response) "hello world"))
-          (is (= (:status response) 200))
-          (is (= @counter 2)))))))
+;; (deftest interceptors-tests
+;;   (let [counter (atom 0)
+;;         p1 (promise)]
+;;     (letfn [(interceptor [_ type continuation]
+;;               (swap! counter inc)
+;;               (continuation)
+;;               (swap! counter inc))
+;;             (handler2 [context]
+;;               (ct/delegate context))
+;;             (handler3 [context]
+;;               (deliver p1 nil)
+;;               "hello world")]
+;;       (with-server {:handler (ct/routes [[:interceptor interceptor]
+;;                                          [:any handler2]
+;;                                          [:any handler3]])}
+;;         (let [response (client/get base-url)]
+;;           (is (nil? (deref p1 1000 nil)))
+;;           (is (= (:body response) "hello world"))
+;;           (is (= (:status response) 200))
+;;           (is (= @counter 2)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Auth

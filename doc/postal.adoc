@@ -22,7 +22,7 @@ WARNING: this document is under design and is considered in pre-alpha state.
 
 === Rationale
 
-The tipical web application follows the api REST architecture, but the main
+The tipical web application usually follows the api REST architecture, but the main
 problem of that is that is bound directly to the HTTP semantics that are not
 always coherent or not always clear how to use.
 
@@ -147,9 +147,58 @@ After sending a `:novelty` message we should expect an `:response` message to be
 sent back or `:error` if an error is ocurred. The `:dest` property is mandatory.
 
 
+
+== PUSH/PULL
+
+This section will explain messages defined for *push*/*pull* pattern. In other words
+it allows implement a queue like communication.
+
+
+=== PUT
+
+This is a message that should be used for put the data to the server.
+
+This is the aspect of the `:put` message:
+
+[source, clojure]
+----
+{:type :put
+ :dest :some-queue
+ :data {:id 2}}
+----
+
+After sending a `:put` message we should expect an `:response` message to be
+sent back or `:error` if an error is ocurred. The `:dest` property is mandatory.
+
+NOTE: the server behavior is specifically not defined. It can just not block
+and return a response or block the http connection (not clossing it) until
+the message is accepted.
+
+
+=== TAKE
+
+This is a message that should be used for get the data from server.
+
+This is the aspect of the `:take` message:
+
+[source, clojure]
+----
+{:type :take
+ :dest :some-queue}
+----
+
+After sending a `:take` message we should expect an `:response` message to be
+sent back or `:error` if an error is ocurred. The `:dest` property is mandatory.
+
+NOTE: the server behavior is specifically not defined. It can just not block
+and return a response or block the http connection (not clossing it) until
+the message is available.
+
+
 == PUB/SUB
 
-This section will contain messages that are part ot the PUB/SUB scalability protocol.
+
+This section will explain messages defined for *publish*/*subscribe* pattern.
 
 
 === :subscribe
@@ -182,22 +231,6 @@ If a client is also subscribed to the topic, it will receive the published messa
 
 After sending a `:publish` message we should expect an `:response` message to be
 sent back or `:error` if an error is ocurred. The `:dest` property is mandatory.
-
-
-== PUSH/PULL
-
-This section will contain messages that are part ot the PUSH/PULL scalability
-protocol.
-
-
-=== PUT
-
-TBD
-
-
-=== TAKE
-
-TBD
 
 
 == Clients & Servers

@@ -6,6 +6,7 @@
             [byte-streams :as bs]
             [manifold.deferred :as md]
             [promissum.core :as p]
+            [buddy.core.codecs :as codecs]
             [cats.core :as m]
             [cats.monad.exception :as exc]
             [catacumba.core :as ct]
@@ -27,16 +28,21 @@
     (pc/decode data :application/transit+json)))
 
 (defn- send-raw-frame
-  [uri frame content-type]
+  [uri method frame content-type]
   (let [headers {"content-type" content-type}]
-    (http/put uri {:body frame :headers headers})))
+    (condp = method
+      :put (http/put uri {:body frame :headers headers})
+      :get (http/get (str uri "?d=" (codecs/bytes->safebase64 frame))
+                     {:headers headers}))))
 
 (defn- send-frame
-  [uri frame]
-  (let [data (pc/encode frame :application/transit+json)]
-    @(md/chain
-      (send-raw-frame uri data "application/transit+json")
-      response->frame)))
+  ([uri frame]
+   (send-frame uri frame :put))
+  ([uri frame method]
+   (let [data (pc/encode frame :application/transit+json)]
+     @(md/chain
+       (send-raw-frame uri method data "application/transit+json")
+       response->frame))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helpers
@@ -61,7 +67,7 @@
   (with-server {:handler (pc/router (constantly {}))}
     (let [frame (pr-str {:type :query :data nil})
           response (exc/try-on
-                    @(send-raw-frame base-url frame "application/edn"))]
+                    @(send-raw-frame base-url :put frame "application/edn"))]
       (is (exc/failure? response))
       (let [response (m/extract response)
             data (ex-data response)]
@@ -104,3 +110,11 @@
         (is (= (:type response) :response))
         (is (= (:data response) {:foo [1]}))))))
 
+(deftest request-using-get-method-spec
+  (letfn [(handler [context frame]
+            {:data frame})]
+    (with-server {:handler (pc/router handler)}
+      (let [frame {:type :query :data nil}
+            response (send-frame base-url frame :get)]
+        (is (= (:type response) :response))
+        (is (= (:data response) frame))))))

@@ -26,10 +26,9 @@
   "A postal protocol implementation on top of http."
   (:require [catacumba.serializers :as sz]
             [catacumba.http :as http]
+            [buddy.core.codecs :as codecs]
             [manifold.deferred :as md]
-            [promissum.core :as p]
-            [cats.core :as m]
-            [cats.monad.exception :as exc])
+            [promissum.core :as p])
   (:import ratpack.http.TypedData
            java.util.concurrent.CompletableFuture))
 
@@ -53,17 +52,14 @@
   [data _]
   (sz/encode data :transit+json))
 
-(defmethod decode :default
-  [_ _]
-  nil)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Implementation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- get-content-type
-  [^TypedData body]
-  (let [^String content-type (.. body getContentType getType)]
+  [context]
+  (let [^TypedData body (:body context)
+        ^String content-type (.. body getContentType getType)]
     (when content-type
       (keyword (.toLowerCase content-type)))))
 
@@ -147,6 +143,13 @@
           (encode content-type)
           (frame->http content-type)))))
 
+(defn- get-incoming-data
+  [context]
+  (if (= (:method context) :get)
+    (let [data (get-in context [:query-params :d] nil)]
+      (codecs/safebase64->bytes data))
+    (.getBytes ^TypedData (:body context))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Public Api
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -165,10 +168,10 @@
    (router handler {}))
   ([handler options]
    (fn [context]
-     (let [body (:body context)
-           data (.getBytes ^TypedData (:body context))
-           content-type (get-content-type body)
-           frame (exc/try-on (decode data content-type))]
-       (if (and (exc/success? frame) (not (nil? @frame)))
-         (dispatch handler context content-type @frame)
-         (http/unsupported-mediatype (str (m/extract frame))))))))
+     (try
+       (let [content-type (get-content-type context)
+             data (get-incoming-data context)
+             frame (decode data content-type)]
+         (dispatch handler context content-type frame))
+       (catch Exception e
+         (http/unsupported-mediatype (str e)))))))

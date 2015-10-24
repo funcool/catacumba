@@ -1,4 +1,4 @@
-= POSTAL - Protocol Spec.
+= postal - protocol spec.
 Andrey Antukh, <niwi@niwi.nz>
 Version 1.0
 :toc:
@@ -15,17 +15,27 @@ Version 1.0
 == Protocol Overview
 
 POSTAL is a message based protocol with messages modeled as structured messages
-encoded using `transit+json` encoding. This protocol intends to be a low-level
-transport layer for build graphql like endpoints. And it is not replacement for
-websockets or other bi-directional transports/protocols.
+encoded using `transit+json` serialization format.
+
+WARNING: this document is under design and is considered in pre-alpha state.
+
+
+=== Rationale
+
+The tipical web application follows the api REST architecture, but the main
+problem of that is that is bound directly to the HTTP semantics that are not
+always coherent or not always clear how to use.
 
 The main objective of this protocol is take aside the http rest api semantics and
-build own ones on top of http protocol.
+build own ones on top of http protocol. Allowing build rich and powerful api's
+without any restrictions of the the REST API's.
+
+The general idea is borowed from link:https://facebook.github.io/relay/. So is
+this a ideal protocol for build a declarative queries and use this transport
+protocol for client<->server communication.
 
 It comes with a set of predefined messages with specified semantics but that not
 limits the user to define own messages on top of that protocol.
-
-WARNING: this document is under design and is considered in pre-alpha state.
 
 
 === Messages
@@ -191,6 +201,17 @@ TBD
 TBD
 
 
+== Clients & Servers
+
+=== Clients
+
+- link:https://github.com/funcool/postal[postal (clojurescript)]
+
+=== Servers
+
+- link:https://github.com/funcool/catacumba[catacumba (clojure)]
+
+
 == Recommendations
 
 === Start using http2/spdy
@@ -201,7 +222,7 @@ server support it, most of the http proxies aready has support for spdy and/or
 http2 (such as nginx).
 
 http2/spdy offers connection multiplexing allowing use one unique persistent
-connection handle all required context, comptly eliminating the overhead of
+connection handle all required context, completly eliminating the overhead of
 creating and destroyng connectons. With that you can make multiple and repeated
 http connections without performance issues.
 

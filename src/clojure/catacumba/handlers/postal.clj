@@ -24,8 +24,10 @@
 
 (ns catacumba.handlers.postal
   "A postal protocol implementation on top of http."
-  (:require [catacumba.serializers :as sz]
+  (:require [clojure.core.async :as a]
+            [catacumba.serializers :as sz]
             [catacumba.http :as http]
+            [catacumba.impl.sse :as implsse]
             [buddy.core.codecs :as codecs]
             [manifold.deferred :as md]
             [promissum.core :as p])
@@ -175,3 +177,13 @@
          (dispatch handler context content-type frame))
        (catch Exception e
          (http/unsupported-mediatype (str e)))))))
+
+(defn stream
+  [context handler]
+  (let [content-type (::content-type context)]
+    (letfn [(inner-handler [context out]
+              (let [xf (map #(encode % content-type))
+                    out' (a/chan 1 xf)]
+                (a/pipe out' out true)
+                (handler context out')))]
+      (implsse/sse context inner-handler))))

@@ -283,11 +283,13 @@
                              (-> (hp/promise (fn [resolve] (handler context #(resolve %))))
                                  (hp/then #(-handle-response % context))))))))
 
-(defn build-request
+(defn build-ring-request
   [^Request request]
-   (let [local-address (.getLocalAddress request)
-         remote-address (.getRemoteAddress request)
-         body (Blocking/on (.getBody request))]
+  (let [local-address (.getLocalAddress request)
+        remote-address (.getRemoteAddress request)
+        body (Blocking/on (.getBody request))
+        headers (ct/get-headers* request false)]
+    (merge
      {:server-port (.getPort local-address)
       :server-name (.getHostText local-address)
       :remote-addr (.getHostText remote-address)
@@ -295,11 +297,12 @@
       :query-string (.getQuery request)
       :scheme :http
       :request-method (keyword (.. request getMethod getName toLowerCase))
-      :headers (ct/get-headers* request false)
+      :headers headers
       :content-type (.. body getContentType getType)
-      :content-length (Integer/parseInt (.. request getHeaders (get "Content-Length")))
       :character-encoding (.. body getContentType (getCharset "utf-8"))
-      :body (.. body getInputStream)}))
+      :body (.. body getInputStream)}
+     (let [ctl (get headers "content-length" "0")]
+       {:content-length (Integer/parseInt ctl)}))))
 
 (defn- basic-context
   {:internal true :no-doc true}
@@ -313,7 +316,7 @@
   (reify Handler
     (^void handle [_ ^Context ctx]
       (let [promise (hp/blocking
-                     (let [request (build-request (.getRequest ctx))]
+                     (let [request (build-ring-request (.getRequest ctx))]
                        (handler request)))]
         (hp/then promise (fn [response]
                            (when (satisfies? IHandlerResponse response)

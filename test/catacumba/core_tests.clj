@@ -315,8 +315,8 @@
                       (deliver p (slurp body)))
                     "hello world")]
       (with-server {:handler handler}
-        (let [response (client/get base-url {:body "Hello world"
-                                             :content-type "application/zip"})]
+        (let [response (client/post base-url {:body "Hello world"
+                                              :content-type "text/plain"})]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))
           (let [bodydata (deref p 1000 nil)]

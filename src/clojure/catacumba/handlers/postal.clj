@@ -136,10 +136,11 @@
 (defn- dispatch
   [handler context content-type frame]
   (try
-    (as-> frame frame
-      (validate-frame frame)
-      (handler context frame)
-      (-handle-response-message frame content-type))
+    (let [response (->> frame
+                        (validate-frame)
+                        (handler context))]
+      (when response
+        (-handle-response-message response content-type)))
     (catch Throwable error
       (-> (-adapt-exception error)
           (encode content-type)
@@ -172,6 +173,7 @@
    (fn [context]
      (try
        (let [content-type (get-content-type context)
+             context (assoc context ::content-type content-type)
              data (get-incoming-data context)
              frame (decode data content-type)]
          (dispatch handler context content-type frame))
@@ -181,8 +183,12 @@
 (defn stream
   [context handler]
   (let [content-type (::content-type context)]
-    (letfn [(inner-handler [context out]
-              (let [xf (map #(encode % content-type))
+    (letfn [(encode-message [msg]
+              (-> (normalize-frame msg)
+                  (encode content-type)
+                  (codecs/bytes->str)))
+            (inner-handler [context out]
+              (let [xf (map encode-message)
                     out' (a/chan 1 xf)]
                 (a/pipe out' out true)
                 (handler context out')))]

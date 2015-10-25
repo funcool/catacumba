@@ -2,7 +2,9 @@
   (:require [clojure.test :refer :all]
             [clojure.java.io :as io]
             [clojure.pprint :refer [pprint]]
+            [clojure.core.async :as a]
             [aleph.http :as http]
+            [clj-http.client :as client]
             [byte-streams :as bs]
             [manifold.deferred :as md]
             [promissum.core :as p]
@@ -35,6 +37,14 @@
       :get (http/get (str uri "?d=" (codecs/bytes->safebase64 frame))
                      {:headers headers}))))
 
+(defn- send-raw-frame2
+  [uri method frame content-type]
+  (let [headers {"content-type" content-type}]
+    (condp = method
+      :put (client/put uri {:body frame :headers headers})
+      :get (client/get (str uri "?d=" (codecs/bytes->safebase64 frame))
+                       {:headers headers}))))
+
 (defn- send-frame
   ([uri frame]
    (send-frame uri frame :put))
@@ -48,7 +58,7 @@
 ;; Helpers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def base-url "http://localhost:5050")
+(def base-url "http://localhost:5050/")
 
 (deftest basic-communication-spec
   (let [p (promise)
@@ -118,3 +128,19 @@
             response (send-frame base-url frame :get)]
         (is (= (:type response) :response))
         (is (= (:data response) frame))))))
+
+(deftest stream-like-handler-spec
+  (letfn [(handler [context frame]
+            (pc/stream context stream-handler))
+          (stream-handler [context out]
+            (a/go
+              (a/>! out {:data [1]})
+              (a/close! out)))]
+    (with-server {:handler (pc/router handler)}
+      (let [frame {:type :subscribe :dest :foobar}
+            frame (pc/encode frame :application/transit+json)
+            response (send-raw-frame2 base-url :get frame
+                                      "application/transit+json")]
+        (is (= (:status response) 200))
+        (is (= (:body response)
+               "data: [\"^ \",\"~:data\",[1],\"~:type\",\"~:response\"]\n\n"))))))

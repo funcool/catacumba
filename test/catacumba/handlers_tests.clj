@@ -258,7 +258,6 @@
         (let [response (client/get (str base-url "/h1")
                                    {:cookies {"sessionid" {:value "foobar"}}})
               cookie (get-in response [:cookies "sessionid"])]
-          (println 2222 cookie)
           (is (= (:status response) 200))
           (is (not= (:value cookie) "foobar"))))))
 

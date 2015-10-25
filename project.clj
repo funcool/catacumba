@@ -17,7 +17,7 @@
                   :exclusions [io.netty/netty-codec-http
                                io.netty/netty-handler
                                io.netty/netty-transport-native-epoll]]
-                 [io.netty/netty-all "4.1.0.Beta5"]
+                 [io.netty/netty-all "4.1.0.Beta7"]
                  [cheshire "5.5.0"]
                  [ns-tracker "0.3.0"]
                  [slingshot "0.12.2"]

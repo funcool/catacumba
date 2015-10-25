@@ -1,5 +1,6 @@
 {:dev
  {:global-vars {*warn-on-reflection* false}
+  :aliases {"test-all" ["with-profile" "dev,1.8:dev" "test"]}
   :source-paths ["dev"]
   :dependencies [[clj-http "1.1.2"]
                  [aleph "0.4.0" :exclusions [io.netty/netty-all]]

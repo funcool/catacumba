@@ -1455,11 +1455,12 @@ More information:
 This handlers offers a message based communication on top of http. You can read
 the link:postal.html[entire protocol specification here].
 
+
 ==== Getting Started
 
 The *postal* handler looks like a default _catacumba_ handler with one extra
-argument: frame. The frame is a meesage received from the client and has the
-following aspect:
+argument: frame. The frame is a message received from the client and has this
+aspect:
 
 [source, clojure]
 ----
@@ -1468,8 +1469,7 @@ following aspect:
  :data {:id 1}}
 ----
 
-The `:type` and `:dest` is the only unique keys mandatory in a message because
-them are very important in message routing process.
+The `:type` and `:dest` keys are mandatory to be present in the frame.
 
 Knowing the frame structure, the best way to define a postal handler is using
 multimethods, because they allow easy dispatch by value:
@@ -1503,18 +1503,18 @@ The `response` function is just a helper for create response hashmaps:
 
 Additionally, you can return a promise (from *promissum* library) or deferred (from
 *manifold* library). If that abstractions does not satisfies you, you can
-extend the catacumba behavior with own types and abstractions.
+extend the catacumba behavior with your own types and abstractions.
 
-And finally, for use that handler, just attach it on the router:
+And finally, attach the handler on the router:
 
 [source, clojure]
 ----
 (def app
   (ct/routes [[:any "api" (pc/router myhandler)]]))
 
-;; As standalone handler
 (ct/run-server #'app)
 ----
+
 
 ==== Server Push
 

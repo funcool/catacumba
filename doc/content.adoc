@@ -42,7 +42,7 @@ And _catacumba_ goals are not:
 
 The result of this research project is an powerfull, lightweight, and fully
 extensible asynchronous web toolkit built on top of existing and well designed
-components such as Ratpack, Netty, Rective-Streams and core.async.
+components such as Ratpack, Netty.
 
 
 === Project Maturity

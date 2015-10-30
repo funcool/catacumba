@@ -27,7 +27,8 @@
   (:require [clojure.core.async :as a]
             [catacumba.serializers :as sz]
             [catacumba.http :as http]
-            [catacumba.impl.sse :as implsse]
+            [catacumba.helpers :as hp]
+            [catacumba.impl.websocket :as implws]
             [buddy.core.codecs :as codecs]
             [manifold.deferred :as md]
             [promissum.core :as p])
@@ -62,8 +63,17 @@
   [context]
   (let [^TypedData body (:body context)
         ^String content-type (.. body getContentType getType)]
-    (when content-type
-      (keyword (.toLowerCase content-type)))))
+    (if content-type
+      (keyword (.toLowerCase content-type))
+      :application/transit+json)))
+
+(defn- get-incoming-data
+  [context]
+  (if (= (:method context) :get)
+    (if-let [data (get-in context [:query-params :d] nil)]
+      (codecs/safebase64->bytes data)
+      (byte-array 0))
+    (.getBytes ^TypedData (:body context))))
 
 (defn- normalize-frame
   [frame]
@@ -146,18 +156,11 @@
           (encode content-type)
           (frame->http content-type)))))
 
-(defn- get-incoming-data
-  [context]
-  (if (= (:method context) :get)
-    (let [data (get-in context [:query-params :d] nil)]
-      (codecs/safebase64->bytes data))
-    (.getBytes ^TypedData (:body context))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Public Api
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn response
+(defn frame
   "A convenience helper for easy
   create postal response messages."
   ([data]
@@ -175,21 +178,51 @@
        (let [content-type (get-content-type context)
              context (assoc context ::content-type content-type)
              data (get-incoming-data context)
-             frame (decode data content-type)]
+             frame (if (empty? data)
+                     {}
+                     (decode data content-type))]
          (dispatch handler context content-type frame))
        (catch Exception e
          (http/unsupported-mediatype (str e)))))))
 
-(defn stream
+(defn socket
+  "Start a websocket connection from the standard
+  postal handler.
+
+  The difference with the default implementation
+  this encodes messages using the requested
+  contentype (only :application/transit+json at this
+  moment) and handles keep-alive messages."
   [context handler]
   (let [content-type (::content-type context)]
     (letfn [(encode-message [msg]
               (-> (normalize-frame msg)
                   (encode content-type)
                   (codecs/bytes->str)))
-            (inner-handler [context out]
-              (let [xf (map encode-message)
-                    out' (a/chan 1 xf)]
-                (a/pipe out' out true)
-                (handler context out')))]
-      (implsse/sse context inner-handler))))
+
+            (decode-message [msg]
+              (-> (codecs/str->bytes msg)
+                  (decode content-type)))
+
+            (inner-handler [{:keys [in out ctrl] :as context}]
+              (let [out-xf (map encode-message)
+                    in-xf (comp (map decode-message)
+                                (filter #(not= (:type %) :ping)))
+                    out' (a/chan 1 out-xf)
+                    in' (a/chan 1 in-xf)]
+
+                ;; Connect transformatons
+                (hp/connect-chans out' out)
+                (hp/connect-chans in in')
+
+                ;; keep-alive loop
+                (a/go-loop [n 1]
+                  (when (a/>! out' {:type :ping :n n})
+                    (a/<! (a/timeout 5000))
+                    (recur (inc n))))
+
+                ;; Forward context to the next handler
+                (-> context
+                    (assoc :out out' :in in')
+                    (handler))))]
+      (implws/websocket context inner-handler))))

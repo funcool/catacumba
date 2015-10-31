@@ -53,7 +53,8 @@
   [^Chain chain [_ ^String path {:keys [dir indexes]}]]
   (.files chain (hp/fn->action
                  (fn [^FileHandlerSpec spec]
-                   (.path spec path)
+                   (when-not (empty? path)
+                     (.path spec path))
                    (when indexes (.indexFiles spec (into-array String indexes)))
                    (when dir (.dir spec dir))))))
 

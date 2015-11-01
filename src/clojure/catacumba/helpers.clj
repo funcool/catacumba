@@ -24,7 +24,8 @@
 
 (ns catacumba.helpers
   (:refer-clojure :exclude [promise])
-  (:require [promissum.protocols :as pt])
+  (:require [promissum.protocols :as pt]
+            [clojure.core.async :as a])
   (:import ratpack.func.Action
            ratpack.func.Function
            ratpack.func.Block
@@ -170,3 +171,20 @@
      ~@body
      (catch ~exception e#
        nil)))
+
+(defmacro try
+  [& body]
+  `(try ~@body (catch Throwable e# e#)))
+
+(defn connect-chans
+  "Like core.async pipe but reacts on close
+  in both sides."
+  [from to]
+  (a/go-loop []
+    (let [v (a/<! from)]
+      (if (nil? v)
+        (a/close! to)
+        (if (a/>! to v)
+          (recur)
+          (a/close! from)))))
+  to)

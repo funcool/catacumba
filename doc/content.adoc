@@ -42,7 +42,7 @@ And _catacumba_ goals are not:
 
 The result of this research project is an powerfull, lightweight, and fully
 extensible asynchronous web toolkit built on top of existing and well designed
-components such as Ratpack, Netty, Rective-Streams and core.async.
+components such as Ratpack, Netty.
 
 
 === Project Maturity
@@ -627,7 +627,6 @@ link:https://github.com/funcool/promissum[promissum library] is used. That libra
 provides a more clojure friendly api on top of JDK8 `CompletableFuture` and a great
 sugar syntax for composing them thanks to the
 link:https://github.com/funcool/cats[cats library].
-
 
 .A example using the _promissum_ library api for create a `CompletableFuture` instance and return it as body.
 [source, clojure]
@@ -1449,6 +1448,135 @@ More information:
 
 * https://en.wikipedia.org/wiki/Cross-site_request_forgery
 * https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)
+
+
+=== Postal
+
+The tipical web application usually follows the api REST architecture, but the main
+problem of that is that is bound directly to the HTTP semantics that are not
+always coherent or not always clear how to use.
+
+This is a backend side implementation
+link:https://funcool.github.io/catacumba/latest/postal.html[postal protocol],
+that allows expose rich apis based on the user needs on top of http/websockets.
+
+The general idea behind the protocol and this library is borrowed from
+link:https://facebook.github.io/relay/[Facebook Relay] and
+link:http://netflix.github.io/falcor/[Netflix's Falcor].
+The main differents with them is that this library only represents the transport and
+message routing layer layer, so it's is nonobstructive and not copupled with
+concrete framework and persistence.
+
+One of the great examples where this library fits in a perfection is a
+transport and message routing layer for
+link:https://github.com/omcljs/om/wiki/Quick-Start-(om.next)[Om.Next].
+
+
+==== Getting Started
+
+The *postal* handler looks like a default _catacumba_ handler with one extra
+argument: frame. The frame is a structurd message received from the client that
+has this aspect:
+
+[source, clojure]
+----
+{:type :query
+ :dest :users
+ :data {:id 1}}
+----
+
+NOTE: The `:type` and `:dest` keys are mandatory to be present in the frame.
+
+The messages are by default serialized using transit+json serialization format
+but the system is open to be extended with other formats. The serialization is
+completelly transparent to the user, the catacumba will do all the hard work for
+you.
+
+Knowing the frame structure, the best way to define a postal handler is using
+multimethods, because they allow easy dispatch by value:
+
+[source, clojure]
+----
+(require '[catacumba.handlers.postal :as pc])
+
+(defmulti myhandler
+  (comp (juxt :type :dest) second vector))
+
+(defmethod myhandler [:query :users]
+  [context {:keys [data] :as frame}]
+  (let [id (:id data)
+        user (repo/get-user-by-id id)]
+    (pc/frame user)))
+
+(defmethod myhandler [:novelty :users]
+  [context frame]
+  (let [status (create-new-user frame)]
+    (pc/frame user)))
+----
+
+The `message` function is just a helper for create response hashmaps:
+
+[source, clojure]
+----
+(pc/frame {:foo 1})
+;; => {:type :response :data {:foo 1}}
+----
+
+In addition to plain return value, you can freely return a promise or deferred
+(from *promissum* and *manifold* libraries respecively). And if that abstractions
+dors not satisfies you, the system is completly open to be extended with your
+own abstractions.
+
+And finally, attach the handler on the router:
+
+[source, clojure]
+----
+(def app
+  (ct/routes [[:any "api" (pc/router myhandler)]]))
+
+(ct/run-server #'app)
+----
+
+
+==== Server Push
+
+The way how this protocol server side push or bi-directional communication is
+just using websockets. Them now are widelly supported so use it directy should
+not suppose any problem.
+
+You can start websocket connection from any postal handler just using the
+`catacumba.handlers.postal/socket` function:
+
+[source, clojure]
+----
+(require '[clojure.core.async :as a])
+
+(defn now
+  []
+  (System/currentTimeMillis))
+
+(defmethod myhandler [:subscribe :timeupdate]
+  [context frame]
+  (letfn [(on-connect [{:keys [in out] :as context}]
+            (a/go-loop []
+              (when-let [_ (a/>! out (pc/response :message {:time (now)}))]
+                (a/<! (a/timeout 100))
+                 (recur))))]
+    (pc/socket context on-connect))
+----
+
+The `socket` function is analogous to the `catacumba.core/websocket` with the 
+difference that it encodes the messages properly using *postal* protocol.
+
+Additionally, behind the scenes, catacumba sends a ping frames to the client for
+keep alive the connection. This is happens every 5 seconds. At this moment
+this value it is not configurable but it will change in a future.
+
+[NOTE]
+====
+This documention will explain only the backend related stuff. For client usage,
+please refer to the link:https://github.com/funcool/postal[client documentation].
+====
 
 
 == Advanced topics

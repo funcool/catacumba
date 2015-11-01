@@ -28,6 +28,7 @@
   (:require [clojure.core.async :refer [chan go-loop close! >! <! put!] :as async]
             [catacumba.stream :as stream]
             [catacumba.helpers :as hp]
+            [catacumba.impl.executor :as exec]
             [catacumba.impl.handlers :as handlers]
             [catacumba.impl.stream.channel :as schannel])
   (:import ratpack.handling.Handler
@@ -73,10 +74,8 @@
         pub (->> (schannel/publisher out {:close true})
                  (stream/bind-exec))
         tfm (hp/fn->action transform-event)]
-
-    ;; TODO: use own executors instead of core.async thread
-    (async/thread
-      (handler context out))
+    (exec/execute
+     #(handler context out))
     (->> (ServerSentEvents/serverSentEvents pub tfm)
          (.render ctx))))
 

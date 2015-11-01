@@ -24,7 +24,8 @@
 
 (ns catacumba.helpers
   (:refer-clojure :exclude [promise])
-  (:require [promissum.protocols :as pt])
+  (:require [promissum.protocols :as pt]
+            [clojure.core.async :as a])
   (:import ratpack.func.Action
            ratpack.func.Function
            ratpack.func.Block
@@ -54,9 +55,9 @@
     (execute [_]
       (callable))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Promise & Async blocks
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defprotocol IPromiseAcceptor
   (-accept [v ds]))
@@ -112,9 +113,9 @@
   [^Promise promise callback]
   (.then promise (fn->action callback)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Bytebuffer coersions.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defprotocol IByteBuffer
   (bytebuffer [_] "Coerce to byte buffer."))
@@ -124,9 +125,9 @@
   (bytebuffer [s]
     (Unpooled/wrappedBuffer (.getBytes s "UTF-8"))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Internal usage transducers
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def ^:no-doc
   lowercase-keys-t (map (fn [[^String key value]]
@@ -136,9 +137,9 @@
   keywordice-keys-t (map (fn [[^String key value]]
                            [(keyword key) value])))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Misc
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn str->path
   {:internal true :no-doc true}
@@ -163,3 +164,27 @@
        (filter #(= "invoke" (.getName %)))
        (map #(-> % .getParameterTypes alength))
        (set)))
+
+(defmacro with-ignore-exception
+  [exception & body]
+  `(try
+     ~@body
+     (catch ~exception e#
+       nil)))
+
+(defmacro try-on
+  [& body]
+  `(try (do ~@body) (catch Throwable e# nil)))
+
+(defn connect-chans
+  "Like core.async pipe but reacts on close
+  in both sides."
+  [from to]
+  (a/go-loop []
+    (let [v (a/<! from)]
+      (if (nil? v)
+        (a/close! to)
+        (if (a/>! to v)
+          (recur)
+          (a/close! from)))))
+  to)

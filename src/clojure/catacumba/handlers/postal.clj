@@ -217,8 +217,8 @@
 
                 ;; keep-alive loop
                 (a/go-loop [n 1]
+                  (a/<! (a/timeout 5000))
                   (when (a/>! out' {:type :ping :n n})
-                    (a/<! (a/timeout 5000))
                     (recur (inc n))))
 
                 ;; Forward context to the next handler

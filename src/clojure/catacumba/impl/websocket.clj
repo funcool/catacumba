@@ -69,14 +69,14 @@
            (recur))
          (do
            (a/put! ctrl [:close])
-           (hp/try (.close ws))
-           (hp/try (.close this)))))
+           (hp/try-on (.close ws))
+           (hp/try-on (.close this)))))
      (try
        (handler context)
        (catch Throwable e
          (a/put! ctrl [:error e])
-         (hp/try (.close ws))
-         (hp/try (.close this))))))
+         (hp/try-on (.close ws))
+         (hp/try-on (.close this))))))
 
   (^void onMessage [_ ^WebSocketMessage msg ^Action callback]
    (a/put! in (.getData msg) (fn [_] (.execute callback nil))))

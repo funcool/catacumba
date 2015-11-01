@@ -172,9 +172,9 @@
      (catch ~exception e#
        nil)))
 
-(defmacro try
+(defmacro try-on
   [& body]
-  `(try ~@body (catch Throwable e# e#)))
+  `(try (do ~@body) (catch Throwable e# nil)))
 
 (defn connect-chans
   "Like core.async pipe but reacts on close

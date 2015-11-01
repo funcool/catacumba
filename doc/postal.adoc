@@ -14,31 +14,31 @@ Version 1.0
 
 == Protocol Overview
 
-POSTAL is a message based protocol with messages modeled as structured messages
-encoded using `transit+json` serialization format.
+POSTAL is a message based protocol with structured messages encoded using
+`transit+json` serialization format.
 
 WARNING: this document is under design and is considered in pre-alpha state.
 
 
 === Rationale
 
-The tipical web application usually follows the api REST architecture, but the main
+The tipical web application usually follows the REST API architecture, but the main
 problem of that is that is bound directly to the HTTP semantics that are not
 always coherent or not always clear how to use.
 
-The main objective of this protocol is take aside the http rest api semantics and
-build own ones on top of http protocol. Allowing build rich and powerful api's
+The main goal of this protocol is to put aside the REST API semantics and
+build own ones on top of the HTTP protocol. Allowing to build rich and powerful API's
 without any restrictions of the the REST API's.
 
-The general idea is borowed from link:https://facebook.github.io/relay/[Facebook Relay].
-So is this a ideal protocol for build a declarative queries and use this transport
-protocol for `client-server` communication.
+The general idea is borrowed from link:https://facebook.github.io/relay/[Facebook Relay].
+So it is an ideal protocol for building declarative data-fetching apps and using this
+transport protocol for `client-server` communication.
 
 
 === Messages
 
-A *postal* message consists in a structured data serialized using `transit+json`.
-This is aspect of a message:
+A *postal* message consists of a structured data serialized using `transit+json`.
+This is how a message looks like:
 
 [source, clojure]
 ----
@@ -55,8 +55,8 @@ serialization format:
 "[\"^ \",\"~:type\",\"~:query\",\"~:dest\",\"~:users\",\"~:data\",[\"^ \",\"~:some\",\"^4\"]]"
 ----
 
-*postal* comes with a set of predefined messages with specified semantics but that
-not limits the user to define own messages on top of that protocol.
+*postal* comes with a set of predefined types of messages with specified semantics but that
+doesn't limit the user to define their own messages on top of the protocol.
 
 
 == Common Messages
@@ -65,7 +65,7 @@ not limits the user to define own messages on top of that protocol.
 
 This is a generic message that represents a server response to some kind of request.
 
-This is aspect of the `:response` message:
+This is how a `:response` message looks like:
 
 [source, clojure]
 ----
@@ -75,10 +75,10 @@ This is aspect of the `:response` message:
 
 === :error
 
-Is a generic message that represents a error situation. This kind of messages can be
-send by server when something goes wrong.
+It's a generic message that represents an error situation. This kind of messages can be
+sent by a server when something goes wrong.
 
-This is aspect of the `:error` message:
+This how an `:error` message looks like:
 
 [source, clojure]
 ----
@@ -92,11 +92,11 @@ This is aspect of the `:error` message:
 This is a generic message that represents a server push notification and its
 aspect is almost identical to the `:response` but has very different semantics.
 
-This message type can be send by server in some kind of subscriptions using long
-polling http requests. The ransport layer for this kind of messages is explicitly
+This message type can be sent by server in some kind of subscriptions using long
+polling HTTP requests. The transport layer for this kind of messages is explicitly
 undefined.
 
-This is aspect of this message:
+This is how this message looks like:
 
 [source, clojure]
 ----
@@ -112,10 +112,10 @@ This section will explain messages defined for *request*/*reply* pattern.
 
 === :query
 
-This is a message that should be used for request data from specified resource. It
+This is a message that should be used for requesting data from a specified resource. It
 is analogous to the HTTP GET.
 
-This is the aspect of the `:query` message:
+This is how a `:query` message looks like:
 
 [source, clojure]
 ----
@@ -125,15 +125,15 @@ This is the aspect of the `:query` message:
 ----
 
 After sending a `:query` message we should expect an `:response` message to be
-sent back or `:error` if an error is ocurred. The `:dest` property is mandatory.
+sent back or `:error` if an error has ocurred. The `:dest` property is mandatory.
 
 
 === :novelty
 
-This is a message that serves for submit data to be processed to a specified
+This is a message that is used to submit data to be processed by a specified
 resource. It is analogous to the HTTP POST/PUT.
 
-This is the aspect of the `novelty` message:
+This how a `:novelty` message looks like:
 
 [source, clojure]
 ----
@@ -143,22 +143,22 @@ This is the aspect of the `novelty` message:
         [:db/add 857582744 :password "secret"]]}
 ----
 
-After sending a `:novelty` message we should expect an `:response` message to be
-sent back or `:error` if an error is ocurred. The `:dest` property is mandatory.
+After sending a `:novelty` message we should expect a `:response` message to be
+sent back or `:error` if an error has ocurred. The `:dest` property is mandatory.
 
 
 
 == PUSH/PULL
 
 This section will explain messages defined for *push*/*pull* pattern. In other words
-it allows implement a queue like communication.
+it allows to implement a queue like communication.
 
 
 === PUT
 
-This is a message that should be used for put the data to the server.
+This is a message that should be used for puting the data to the server.
 
-This is the aspect of the `:put` message:
+This is how a `:put` message looks like:
 
 [source, clojure]
 ----
@@ -167,19 +167,19 @@ This is the aspect of the `:put` message:
  :data {:id 2}}
 ----
 
-After sending a `:put` message we should expect an `:response` message to be
-sent back or `:error` if an error is ocurred. The `:dest` property is mandatory.
+After sending a `:put` message we should expect a `:response` message to be
+sent back or `:error` if an error has ocurred. The `:dest` property is mandatory.
 
 NOTE: the server behavior is specifically not defined. It can just not block
-and return a response or block the http connection (not clossing it) until
+and return a response or block the HTTP connection (without clossing it) until
 the message is accepted.
 
 
 === TAKE
 
-This is a message that should be used for get the data from server.
+This is a message that should be used for geting the data from server.
 
-This is the aspect of the `:take` message:
+This is how a `:take` message looks like:
 
 [source, clojure]
 ----
@@ -187,11 +187,11 @@ This is the aspect of the `:take` message:
  :dest :some-queue}
 ----
 
-After sending a `:take` message we should expect an `:response` message to be
-sent back or `:error` if an error is ocurred. The `:dest` property is mandatory.
+After sending a `:take` message we should expect a `:response` message to be
+sent back or `:error` if an error has ocurred. The `:dest` property is mandatory.
 
 NOTE: the server behavior is specifically not defined. It can just not block
-and return a response or block the http connection (not clossing it) until
+and return a response or block the HTTP connection (not clossing it) until
 the message is available.
 
 
@@ -203,8 +203,8 @@ This section will explain messages defined for *publish*/*subscribe* pattern.
 
 === :subscribe
 
-This is a message that's should be used for notify the server that a client want
-subscribe to a specific topic.
+This is a message that should be used for notifying the server that a client wants
+to subscribe to a specific topic.
 
 [source, clojure]
 ----
@@ -214,13 +214,13 @@ subscribe to a specific topic.
 ----
 
 The behavior of the backend and the transport layer is explicitly undefined. The
-most basic approach is just do a long-polling or using server side events.
+most basic approach is to just do a long-polling or using server sent events.
 
 
 === :publish
 
-This is a message that should be used for publish a message in a specified topic.
-If a client is also subscribed to the topic, it will receive the published message.
+This is a message that should be used for publishing a message to a specified topic.
+If a client is subscribed to the topic, it will receive the published message.
 
 [source, clojure]
 ----
@@ -229,8 +229,8 @@ If a client is also subscribed to the topic, it will receive the published messa
  :data {:foo "bar"}}
 ----
 
-After sending a `:publish` message we should expect an `:response` message to be
-sent back or `:error` if an error is ocurred. The `:dest` property is mandatory.
+After sending a `:publish` message we should expect a `:response` message to be
+sent back or `:error` if an error has ocurred. The `:dest` property is mandatory.
 
 
 == Clients & Servers
@@ -246,17 +246,17 @@ sent back or `:error` if an error is ocurred. The `:dest` property is mandatory.
 
 == Recommendations
 
-=== Start using http2/spdy
+=== Start using HTTP2/SPDY
 
-As this protocol is based to work on top of HTTP, is highly recommended deploy
-your application using http2 or spdy. It is not necesary that you application
-server support it, most of the http proxies aready has support for spdy and/or
-http2 (such as nginx).
+As this protocol is designed to work on top of HTTP, is highly recommended to deploy
+your application using HTTP2 or SPDY. It is not necesary that you application
+server supports it, most of the HTTP proxies such as Nginx aready have support for
+SPDY and/or HTTP2.
 
-http2/spdy offers connection multiplexing allowing use one unique persistent
-connection handle all required context, completly eliminating the overhead of
-creating and destroyng connectons. With that you can make multiple and repeated
-http connections without performance issues.
+HTTP2/SPDY offers connection multiplexing, allowing to use a unique persistent
+connection to handle all required context, completly eliminating the overhead of
+creating and destroyng connections. With that you can make multiple and repeated
+HTTP connections without performance issues.
 
 
 == License

@@ -50,13 +50,17 @@
     method))
 
 (defmethod attach-route :assets
-  [^Chain chain [_ ^String path {:keys [dir indexes]}]]
+  [^Chain chain [_ ^String path {:keys [dir indexes index]}]]
   (.files chain (hp/fn->action
                  (fn [^FileHandlerSpec spec]
                    (when-not (empty? path)
                      (.path spec path))
-                   (when indexes (.indexFiles spec (into-array String indexes)))
-                   (when dir (.dir spec dir))))))
+                   (when index
+                     (.indexFiles spec (into-array String [index])))
+                   (when indexes
+                     (.indexFiles spec (into-array String indexes)))
+                   (when dir
+                     (.dir spec dir))))))
 
 (defmethod attach-route :prefix
   [^Chain chain [_ ^String path & handlers]]

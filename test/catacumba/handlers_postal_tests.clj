@@ -7,6 +7,7 @@
             [clj-http.client :as client]
             [byte-streams :as bs]
             [manifold.deferred :as md]
+            [manifold.stream :as ms]
             [promissum.core :as p]
             [buddy.core.codecs :as codecs]
             [cats.core :as m]
@@ -108,7 +109,6 @@
         (is (= (:type response) :error))
         (is (= (:data response) {:error true}))))))
 
-
 (deftest response-as-deferred-spec
   (letfn [(handler [context frame]
             (md/future
@@ -131,16 +131,17 @@
 
 (deftest stream-like-handler-spec
   (letfn [(handler [context frame]
-            (pc/stream context stream-handler))
-          (stream-handler [context out]
+            (pc/socket context socket-handler))
+          (socket-handler [{:keys [out]}]
             (a/go
               (a/>! out {:data [1]})
               (a/close! out)))]
     (with-server {:handler (pc/router handler)}
-      (let [frame {:type :subscribe :dest :foobar}
+      (let [frame {:type :subscribe :data nil}
             frame (pc/encode frame :application/transit+json)
-            response (send-raw-frame2 base-url :get frame
-                                      "application/transit+json")]
-        (is (= (:status response) 200))
-        (is (= (:body response)
-               "data: [\"^ \",\"~:data\",[1],\"~:type\",\"~:response\"]\n\n"))))))
+            conn @(http/websocket-client (str "ws://localhost:5050/?d="
+                                              (codecs/bytes->safebase64 frame)))
+            result @(ms/take! conn)
+            frame (pc/decode (codecs/str->bytes result)
+                             :application/transit+json)]
+        (is (= frame {:data [1], :type :response}))))))

@@ -48,7 +48,7 @@
                         "-Xms4g"]
    :main ^:skip-aot bench}]
 
- :1.8 {:dependencies [[org.clojure/clojure "1.8.0-beta1"]]}
+ :1.8 {:dependencies [[org.clojure/clojure "1.8.0-beta2"]]}
 
  ;; Examples
  :examples
@@ -66,6 +66,27 @@
   {:source-paths ["examples/component-chat/src"]
    :resource-paths ["examples/component-chat/resources"]
    :main ^:skip-aot compchat.core}]
+
+ :component-chat-postal-example
+ [:examples
+  {:source-paths ["examples/component-chat-postal/src/clj"]
+   :resource-paths ^:replace ["examples/component-chat-postal/resources"]
+   :dependencies [[org.clojure/clojurescript "1.7.145"]
+                  [funcool/postal "0.2.0-SNAPSHOT"]]
+   :plugins [[lein-cljsbuild "1.1.1-SNAPSHOT"]]
+
+   :main ^:skip-aot compchat.core
+   :cljsbuild
+   {:builds
+    [{:source-paths ["examples/component-chat-postal/src/cljs"]
+      :compiler
+      {:output-to "examples/component-chat-postal/resources/public/app.js"
+       :verbose true
+       :language-in :ecmascript5
+       :optimizations :whitespace
+       :main 'compchat.core
+       :pretty-print true}}]}
+   }]
 
  :debugging-example
  [:examples

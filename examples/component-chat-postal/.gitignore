@@ -5,14 +5,8 @@ pom.xml
 pom.xml.asc
 *.jar
 *.class
-*.swp
 /.lein-*
 /.nrepl-port
-/doc/index.html
-/doc/api
-/doc/dist
-\#*\#
-*~
-.\#*
-/.nrepl-history
-/*-init.clj
+.hgignore
+.hg/
+/resources/public/app.js

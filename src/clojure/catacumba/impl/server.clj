@@ -33,6 +33,7 @@
            ratpack.server.ServerConfig
            ratpack.server.BaseDir
            ratpack.server.RatpackServerSpec
+           ratpack.handling.HandlerDecorator
            ratpack.registry.RegistrySpec
            ratpack.ssl.SSLContexts
            ratpack.func.Action
@@ -60,9 +61,12 @@
   "A bootstrap server hook for setup initial
   registry entries and execute a user provided
   hook for do the same thing."
-  [^RegistrySpec spec {:keys [setup debug]}]
+  [^RegistrySpec spec {:keys [setup debug decorators]}]
   (when (fn? setup)
-    (setup spec)))
+    (setup spec))
+  (when (seq decorators)
+    (doseq [item decorators]
+      (.add spec (HandlerDecorator/prepend (handlers/adapter item))))))
 
 (defn- build-ssl-context
   [{:keys [keystore-secret keystore-path]}]
@@ -96,7 +100,7 @@
 
 (defn- configure-server
   "The ratpack server configuration callback."
-  [^RatpackServerSpec spec handler {:keys [setup] :as options}]
+  [^RatpackServerSpec spec handler options]
   (.serverConfig spec ^ServerConfig (build-server-config options))
   (.registryOf spec (hp/fn->action #(bootstrap-registry % options)))
   (setup-handler handler spec))
@@ -110,6 +114,7 @@
   - `:debug`: start in development mode or not (default: `true`).
   - `:setup`: callback for add additional entries in ratpack registry.
   - `:basedir`: the application base directory. Used mainly for resolve relative paths and assets.
+  - `:decorators`: a list of handlers that will be chained at the first of the request pipeline.
   - `:public-address`: force a specific public address (default: `nil`).
   - `:max-body-size`: set the maximum size of the body (default: 1048576 bytes (1mb))
 

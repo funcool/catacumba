@@ -294,6 +294,20 @@
           (is (= (:body response) "from get"))
           (is (= (:status response) 200))))))
 
+  (testing "Server with routing and decorators"
+    (let [p1 (promise)
+          p2 (promise)
+          decorator1 (fn [ctx] (deliver p1 1) (ct/delegate))
+          decorator2 (fn [ctx] (deliver p2 1) (ct/delegate))
+          handler (fn [ctx] "from get")
+          router (ct/routes [[:all "foo" handler]])]
+      (with-server {:handler router :decorators [decorator1 decorator2]}
+        (let [response (client/get (str base-url "/foo"))]
+          (is (= (:body response) "from get"))
+          (is (= (:status response) 200))
+          (is (= 1 (deref p1 1000 nil)))
+          (is (= 1 (deref p2 1000 nil)))))))
+
   (testing "Routing with regex matchig"
     (letfn [(handler [ctx]
               (let [params (:route-params ctx)]

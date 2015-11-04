@@ -7,6 +7,7 @@ Date: Unreleased
 - Add proper support for tls/ssl
 - Update ratpack to 1.1.1
 - Update netty to 4.1.0.Beta7
+- Add postal handlers.
 
 
 ## Version 0.8.1 ##

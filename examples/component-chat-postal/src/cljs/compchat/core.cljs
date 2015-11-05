@@ -7,15 +7,17 @@
             [promesa.core :as p])
   (:import [goog.date DateTime]))
 
-(declare client)
-(enable-console-print!)
+;; Instanciate the postal client
+(def client (pc/client "http://localhost:5050/api"))
 
 (defn- timestamp
+  "Return a iso string formated the current time."
   []
   (let [d (DateTime.)]
     (.toIsoString d)))
 
 (defn- build-entry
+  "Build chat entry dom node."
   [author text]
   (let [author (if (empty? author)
                  "Anonymous"
@@ -26,6 +28,7 @@
                    (dom/createDom "span" #js {"class" "text"} text))))
 
 (defn- append-message
+  "Append a new received message into the chat box."
   [{:keys [data]}]
   (let [entry (build-entry (:author data)
                            (:text data))
@@ -33,23 +36,27 @@
     (dom/appendChild el entry)
     (style/scrollIntoContainerView entry el)))
 
-(defn- on-key-up
-  [event]
-  (when (= 13 (.-keyCode event))
-    (let [author-node (dom/getElement "author-input")
-          author (.-value author-node)
-          target (.-target event)
-          text (.-value target)
-          data {:author author
-                :text text}]
+(defn main
+  []
+  (enable-console-print!)
 
-      (pc/novelty client :chats data)
-      (set! (.-value target) ""))))
+  (letfn [(on-key-up [event]
+            (when (= 13 (.-keyCode event))
+              (let [author-node (dom/getElement "author-input")
+                    author (.-value author-node)
+                    target (.-target event)
+                    text (.-value target)
+                    data {:author author
+                          :text text}]
+                ;; Send data to the backend
+                (pc/novelty client :chats data)
 
-(def client (pc/client "http://localhost:5050/api"))
+                ;; Empty the text input
+                (set! (.-value target) ""))))]
 
-;; Entry point
-(let [input (dom/getElement "message-input")
-      bus (pc/subscribe client :chats)]
-  (events/listen input "keyup" on-key-up)
-  (s/on-value bus append-message))
+    (let [input (dom/getElement "message-input")
+          bus (pc/subscribe client :chats)]
+      (events/listen input "keyup" on-key-up)
+      (s/on-value bus append-message))))
+
+(main)

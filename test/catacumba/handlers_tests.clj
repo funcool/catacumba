@@ -19,6 +19,7 @@
             [catacumba.handlers.session :as session]
             [catacumba.handlers.auth :as auth]
             [catacumba.handlers.restful :as rest]
+            [catacumba.handlers.logging :as logging]
             [catacumba.testing :as test-utils :refer [with-server]]
             [catacumba.core-tests :refer [base-url]]))
 
@@ -480,3 +481,32 @@
             (let [response (ex-data e)]
               (is (= (:status response) 405)))))
         ))))
+
+(defn with-logged [handler f]
+  (let [p   (promise)
+        app (ct/routes [[:any (logging/log #(deliver p %&))]
+                        [:get handler]])]
+    (with-server {:handler app}
+      (f p))))
+
+(deftest logging-tests
+  (testing "Custom log function"
+    (with-logged (constantly (http/ok "" {:x "hi"}))
+      (fn [p]
+        (client/get base-url)
+        (let [[context {:keys [headers] :as outcome}] (deref p 1000 nil)]
+          (is (= "/" (:path context)))
+          (is (= "hi" (:x headers)))))))
+  (testing "Custom log function w/ error"
+    (with-logged (fn [_] (throw (Exception. "oops")))
+      (fn [p]
+        (try+
+          (client/get base-url)
+          (catch [:status 500] _))
+        (let [[_ {{:keys [code]} :status}] (deref p 1000 nil)]
+          (is (= 500 code))))))
+  (testing "Default log function"
+    (with-server {:handler (ct/routes [[:any (logging/log)]
+                                       [:get (constantly "")]])}
+      ;; Having it not explode is about the best we can do
+      (client/get base-url))))

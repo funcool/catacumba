@@ -171,11 +171,8 @@
   [^DefaultContext context]
   (get-route-params* (:catacumba/context context)))
 
-(defn get-headers*
-  [^Request request keywordize]
-  (let [^Headers headers (.getHeaders request)
-        ^MultiValueMap headers (.asMultiValueMap headers)]
-    (persistent!
+(defn headers->map [^MultiValueMap headers keywordize]
+  (persistent!
      (reduce (fn [acc ^String key]
                (let [values (.getAll headers key)
                      key (if keywordize
@@ -183,7 +180,12 @@
                            (.toLowerCase key))]
                  (reduce #(hp/assoc-conj! %1 key %2) acc values)))
              (transient {})
-             (.keySet headers)))))
+             (.keySet headers))))
+
+(defn get-headers*
+  [^Request request keywordize]
+  (let [^Headers headers (.getHeaders request)]
+    (headers->map (.asMultiValueMap headers) keywordize)))
 
 (defn get-headers
   [^DefaultContext context]

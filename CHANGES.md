@@ -9,6 +9,7 @@ Date: Unreleased
 - Update netty to 4.1.0.Beta7
 - Update promissum to 0.3.3
 - Add postal handlers.
+- Add request logging facilities.
 
 
 ## Version 0.8.1 ##

@@ -1579,6 +1579,44 @@ please refer to the link:https://github.com/funcool/postal[client documentation]
 ====
 
 
+=== Request logging
+
+*catacumba* by default does not logs almost anything in console, and the request
+logging is not an exception. This is a good default and is very recommended use
+reverse proxy logging facilities.
+
+But, if you want request logging in *catacumba*, you can easy activate it just
+attaching additional handler to your routing chain:
+
+[source, clojure]
+----
+(require '[catacumba.handlers.logging :as log])
+
+(def app
+  (ct/routes [[(logging/log)]
+              ;; here your handlers
+              ]))
+----
+
+The default implementation in most cases is more than enough, but if you don't happy
+with it you can provide your own function for logging:
+
+[source, clojure]
+----
+(defn my-logging-handler
+  [context, outcome]
+  (println context outcome))
+
+(def app
+  (ct/routes [[(logging/log my-logging-handler)]
+              ;; here your handlers
+              ]))
+----
+
+The `context` parameter is just a context that you have already used previously,
+and `outcome` is hash map that contains additional data such as: response headers, respose status and request duration time.
+
+
 == Advanced topics
 
 === Handler delegation

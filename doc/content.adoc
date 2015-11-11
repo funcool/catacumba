@@ -1777,10 +1777,11 @@ to the `run-server` function:
 | `:port`   | `5050` | The port to listen on.
 | `:threads` | (num of cores * 2) | The number of threads for handler requests.
 | `:debug` | `false` | Start in development mode.
-| `:setup` | nil    | A callback for configuration step (low level ratpack access).
-| `:basedir` | nil | The application base directory, used mainly for resolving relative paths and assets.
-| `:keystore-path` | nil | A relative path in the classpath to the ssl keystore.
-| `:keystore-secret` | nil | A secret for the ssl key store
+| `:setup` | `nil`    | A callback for configuration step (low level ratpack access).
+| `:basedir` | `nil` | The application base directory, used mainly for resolving relative paths and assets.
+| `:keystore-path` | `nil` | A relative path in the classpath to the ssl keystore.
+| `:keystore-secret` | `nil` | A secret for the ssl key store
+| `:decorators` | `nil` | A vector of handlers to attach at the start of the pipeline
 |===========================================================================
 
 All supported options of this function, can be overwritten at JVM startup, using

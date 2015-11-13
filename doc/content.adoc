@@ -948,7 +948,7 @@ chain:
 
 [source, clojure]
 ----
-(require '[catacumba.handlers :as hs])
+(require '[catacumba.handlers.parse :as parse])
 
 (defn example-handler
   [context]
@@ -957,7 +957,7 @@ chain:
     (http/no-content)))
 
 (def app
-  (ct/routes [[:any (hs/body-params)]
+  (ct/routes [[:any (parse/body-params)]
               [:any example-handler]]))
 
 ;; ...
@@ -974,11 +974,11 @@ implementation to the parse multimethod with your content-type as dispatch tag.
 
 [source, clojure]
 ----
-(require '[catacumba.handlers.parsing :as parsing])
+(require '[catacumba.handlers.parse :as parse])
 (import 'ratpack.http.TypedData
         'ratpack.handling.Context)
 
-(defmethod parsing/parse :application/xml
+(defmethod parse/parse-body :application/xml
   [^Context ctx ^TypedData body]
   ;; your parsing logic here
   )
@@ -995,10 +995,10 @@ For use it, just attach it to your routing chain:
 
 [source, clojure]
 ----
-(require '[catacumba.handlers :as hs])
+(require '[catacumba.handlers.misc :as misc])
 
 (def app
-  (ct/routes [[:any (hs/autoreloader)]
+  (ct/routes [[:any (misc/autoreloader)]
               [:get "foo" #'somens/your-handler]
               [:get "bar" #'somens/other-handler]
               [:post ...]]))
@@ -1017,10 +1017,10 @@ routing chain:
 
 [source, clojure]
 ----
-(require '[catacumba.handlers :as hs])
+(require '[catacumba.handlers.session :as session])
 
 (def app
-  (ct/routes [[:any (hs/session {:storage :inmemory})]
+  (ct/routes [[:any (session/session {:storage :inmemory})]
               [:get your-handler]]))
 ----
 
@@ -1053,7 +1053,7 @@ unnecesary code execution for handlers that do not need sessions:
 ----
 (def app
   (ct/routes [[:prefix "admin"
-               [:any (hs/session {:storage :inmemory})]
+               [:any (session/session {:storage :inmemory})]
                [:get your-handler]]
               [:prefix "api"
                [:get "users" other-handler]
@@ -1086,7 +1086,7 @@ the `:storage` key in a session handler constructor:
 
 [source, clojure]
 ----
-(hs/session {:storage (my-storage-constructor)})
+(session/session {:storage (my-storage-constructor)})
 ----
 
 If you want implement own session storage, take a look to the `:inmemory` builtin
@@ -1122,11 +1122,10 @@ of the authentication backend:
 [source, clojure]
 ----
 (require '[catacumba.http :as http])
-(require '[catacumba.handlers :as hs])
-(require '[catacumba.handlers.auth :as auth])
+(require '[catacumba.handlers.auth :as cauth])
 
 (def auth-backend
-  (auth/session-backend))
+  (cauth/session-backend))
 ----
 
 Now, continue defining a handler for the login action. It consists in receive
@@ -1155,11 +1154,11 @@ authentication handler to the routing chain:
 ;; parsing chain handlers
 
 (def app
-  (ct/routes [[:any (hs/session {:storage :inmemory})] ;; Http Session
-              [:any (hs/auth auth-backend)]            ;; Auth backend
-              [:any (hs/body-params)]                  ;; Body parsing
+  (ct/routes [[:any (session/session {:storage :inmemory})] ;; Http Session
+              [:any (cauth/auth auth-backend)]              ;; Auth backend
+              [:any (parse/body-params)]                  ;; Body parsing
               [:get "login" login-handler]
-              [:get some-handler]]))                   ;; (implementation ommited)
+              [:get some-handler]]))                     ;; (implementation ommited)
 ----
 
 You can see a working example using auth facilities <<website-example,here>>.
@@ -1183,7 +1182,7 @@ Let start creating a backend instance:
 ----
 (def secret "mysecret")
 (def auth-backend
-  (auth/jws-backend {:secret secret}))
+  (cauth/jws-backend {:secret secret}))
 ----
 
 Following of our new login handler:
@@ -1207,10 +1206,10 @@ And finally, put the new backend into the routing chain:
 [source, clojure]
 ----
 (def app
-  (ct/routes [[:any (hs/auth auth-backend)]            ;; Auth backend
-              [:any (hs/body-params)]                  ;; Body parsing
+  (ct/routes [[:any (cauth/auth auth-backend)]     ;; Auth backend
+              [:any (parse/body-params)]           ;; Body parsing
               [:get "login" login-handler]
-              [:get some-handler]]))                   ;; (implementation ommited)
+              [:get some-handler]]))               ;; (implementation ommited)
 ----
 
 
@@ -1288,7 +1287,7 @@ _Catacumba_ has builtin support for CORS, and this is how you can use it:
 
 [source, clojure]
 ----
-(require '[catacumba.handlers :refer [cors]])
+(require '[catacumba.handlers.misc :as misc])
 
 (def cors-conf {:origin #{"http://website.com"}                       ;; mandatory
                 :max-age 3600                                         ;; optional
@@ -1296,7 +1295,7 @@ _Catacumba_ has builtin support for CORS, and this is how you can use it:
 
 (def app
   (ct/routes [[:prefix "api/v1"
-               [:any (cors cors-conf)]
+               [:any (misc/cors cors-conf)]
                [:get "foo" some-handler]
                [:post "foo" some-save-handler]]]))
 ----
@@ -1354,11 +1353,11 @@ Example:
 
 [source, clojure]
 ----
-(require '[catacumba.handlers :as handlers])
+(require '[catacumba.handlers.security :as sec])
 
 (def app
   (ct/routes [[:prefix "web"
-               [:any (handlers/frame-options-headers {:policy :deny})]
+               [:any (sec/frame-options-headers {:policy :deny})]
                [:get your-handler]]]))
 ----
 
@@ -1381,11 +1380,11 @@ Usage example:
 
 [source, clojure]
 ----
-(require '[catacumba.handlers :as handlers])
+(require '[catacumba.handlers.security :as sec])
 
 (def app
   (ct/routes [[:prefix "web"
-               [:any (handlers/hsts-headers {:max-age 31536000 :subdomains true })]
+               [:any (sec/hsts-headers {:max-age 31536000 :subdomains true })]
                [:get your-handler]]]))
 ----
 
@@ -1404,11 +1403,11 @@ how you can use it:
 
 [source, clojure]
 ----
-(require '[catacumba.handlers :as handlers])
+(require '[catacumba.handlers.security :as sec])
 
 (def app
   (ct/routes [[:prefix "web"
-               [:any handlers/content-type-options-headers]
+               [:any sec/content-type-options-headers]
                [:get your-handler]]]))
 ----
 
@@ -1428,11 +1427,11 @@ For use it, just add it to your routing pipeline:
 
 [source, clojure]
 ----
-(require '[catacumba.handlers :as handlers])
+(require '[catacumba.handlers.security :as sec])
 
 (def app
   (ct/routes [[:prefix "web"
-               [:any (handlers/csrf-protect)]
+               [:any (sec/csrf-protect)]
                [:get your-handler]]]))
 ----
 
@@ -1590,10 +1589,10 @@ attaching additional handler to your routing chain:
 
 [source, clojure]
 ----
-(require '[catacumba.handlers.logging :as log])
+(require '[catacumba.handlers.misc :as misc])
 
 (def app
-  (ct/routes [[(logging/log)]
+  (ct/routes [[(misc/log)]
               ;; here your handlers
               ]))
 ----
@@ -1608,7 +1607,7 @@ with it you can provide your own function for logging:
   (println context outcome))
 
 (def app
-  (ct/routes [[(logging/log my-logging-handler)]
+  (ct/routes [[(misc/log my-logging-handler)]
               ;; here your handlers
               ]))
 ----

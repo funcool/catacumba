@@ -48,7 +48,7 @@
                         "-Xms4g"]
    :main ^:skip-aot bench}]
 
- :1.8 {:dependencies [[org.clojure/clojure "1.8.0-beta2"]]}
+ :1.8 {:dependencies [[org.clojure/clojure "1.8.0-RC1"]]}
 
  ;; Examples
  :examples

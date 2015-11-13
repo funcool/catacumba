@@ -4,6 +4,21 @@
 
 Date: Unreleased
 
+Important changes:
+
+- The `catacumba.handlers` namespace is no longuer available. It was a some
+  kind of aggregator of different sub namespaces. The problem with it has
+  includes some sub namespaces and some not. For remove the inconsistences
+  it was removed. Now you should include the concrete namespace for use
+  a concrete functionallity (**BREAKING CHANGE**).
+- The `catacumba.handlers.interceptor`, `catacumba.handlers.cors` and
+  `catacumba.handlers.autoreload` has moved into one unique namespace called
+  `catacumba.handlers.misc` (**BREAKING CHANGE**).
+- Add the decorators concept for attach some "root" handlers on the server
+  startup.
+
+Other changes:
+
 - Add proper support for tls/ssl
 - Update ratpack to 1.1.1
 - Update netty to 4.1.0.Beta7

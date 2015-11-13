@@ -14,7 +14,7 @@
             [catacumba.core :as ct]
             [catacumba.http :as http]
             [catacumba.testing :refer [with-server]]
-            [catacumba.handlers.interceptor])
+            [catacumba.handlers.misc])
   (:import ratpack.exec.Execution
            ratpack.func.Action
            ratpack.func.Block

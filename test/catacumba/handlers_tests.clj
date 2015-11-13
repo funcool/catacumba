@@ -15,11 +15,12 @@
             [cats.monad.exception :as exc]
             [catacumba.core :as ct]
             [catacumba.http :as http]
-            [catacumba.handlers :as hs]
-            [catacumba.handlers.session :as session]
-            [catacumba.handlers.auth :as auth]
+            [catacumba.handlers.session :as cses]
+            [catacumba.handlers.security :as sec]
+            [catacumba.handlers.parse :as parse]
+            [catacumba.handlers.auth :as cauth]
             [catacumba.handlers.restful :as rest]
-            [catacumba.handlers.logging :as logging]
+            [catacumba.handlers.misc :as misc]
             [catacumba.testing :as test-utils :refer [with-server]]
             [catacumba.core-tests :refer [base-url]]))
 
@@ -55,7 +56,7 @@
 
   (testing "Form encoded body parsing using chain handler"
     (let [p (promise)
-          app (ct/routes [[:any (hs/body-params)]
+          app (ct/routes [[:any (parse/body-params)]
                           [:any #(do
                                    (deliver p (:data %))
                                    "hello world")]])]
@@ -65,7 +66,7 @@
 
   (testing "Json encoded body parsing using chain handler"
     (let [p (promise)
-          app (ct/routes [[:any (hs/body-params)]
+          app (ct/routes [[:any (parse/body-params)]
                           [:any #(do
                                    (deliver p (:data %))
                                    "hello world")]])]
@@ -76,7 +77,7 @@
 
   (testing "Transit + json encoded body parsing using chain handler"
     (let [p (promise)
-          app (ct/routes [[:any (hs/body-params)]
+          app (ct/routes [[:any (parse/body-params)]
                           [:any #(do
                                    (deliver p (:data %))
                                    "hello world")]])]
@@ -87,7 +88,7 @@
 
   (testing "Transit + msgpack encoded body parsing using chain handler"
     (let [p (promise)
-          app (ct/routes [[:any (hs/body-params)]
+          app (ct/routes [[:any (parse/body-params)]
                           [:any #(do
                                    (deliver p (:data %))
                                    "hello world")]])]
@@ -104,7 +105,7 @@
 (deftest csrf-protect-tests
   (testing "Post with csrf using form param"
     (let [p (promise)
-          app (ct/routes [[:any (hs/csrf-protect)]
+          app (ct/routes [[:any (sec/csrf-protect)]
                           [:any (fn [context]
                                   (deliver p (:catacumba.handlers.security/csrftoken context))
                                   "hello world")]])]
@@ -116,7 +117,7 @@
           (is (= (deref p 1000 nil) "baz"))))))
 
   (testing "Post with csrf using header"
-    (let [app (ct/routes [[:any (hs/csrf-protect)]
+    (let [app (ct/routes [[:any (sec/csrf-protect)]
                           [:any (fn [context] "hello world")]])]
       (with-server {:handler app}
         (let [response (client/get base-url {:form-params {:foo "bar"}
@@ -125,7 +126,7 @@
           (is (= (:status response) 200))))))
 
   (testing "Post without csrf"
-    (let [app (ct/routes [[:any (hs/csrf-protect)]
+    (let [app (ct/routes [[:any (sec/csrf-protect)]
                           [:any (fn [context] "hello world")]])]
       (with-server {:handler app}
         (let [response (client/get base-url)]
@@ -150,7 +151,7 @@
 (deftest cors-handler
   (testing "Simple cors request"
     (let [handler (fn [ctx] "hello world")
-          handler (ct/routes [[:any (hs/cors cors-config1)]
+          handler (ct/routes [[:any (misc/cors cors-config1)]
                               [:get handler]])]
       (with-server {:handler handler}
         (let [response (client/get base-url {:headers {:origin "http://localhost/"}})
@@ -162,7 +163,7 @@
 
   (testing "Options cors request"
     (let [handler (fn [ctx] "hello world")
-          handler (ct/routes [[:any (hs/cors cors-config1)]
+          handler (ct/routes [[:any (misc/cors cors-config1)]
                               [:get handler]])]
       (with-server {:handler handler}
         (let [response (client/options base-url {:headers {:origin "http://localhost/"
@@ -175,7 +176,7 @@
 
   (testing "Wrong cors request"
     (let [handler (fn [ctx] "hello world")
-          handler (ct/routes [[:any (hs/cors cors-config2)]
+          handler (ct/routes [[:any (misc/cors cors-config2)]
                               [:get handler]])]
       (with-server {:handler handler}
         (let [response (client/options base-url {:headers {"Origin" "http://localhast/"
@@ -219,7 +220,7 @@
 (deftest session-handler-with-inmemmory-storage
   (testing "Simple session access in memory storage"
     (let [p (promise)
-          storage (session/memory-storage)
+          storage (cses/memory-storage)
           handler1 (fn [ctx]
                     (let [session (:session ctx)]
                       (swap! session assoc :foo 2)
@@ -232,7 +233,7 @@
                     (let [session (:session ctx)]
                       (deliver p @session)
                       "hello world"))
-          app (ct/routes [[:any (hs/session {:storage storage})]
+          app (ct/routes [[:any (cses/session {:storage storage})]
                           [:get "h1" handler1]
                           [:get "h2" handler2]
                           [:get "h3" handler3]])]
@@ -250,10 +251,10 @@
 
   (testing "Inject not existing key"
     (let [p (promise)
-          storage (session/memory-storage)
+          storage (cses/memory-storage)
           handler (fn [ctx]
                     "hello world")
-          app (ct/routes [[:any (hs/session {:storage storage})]
+          app (ct/routes [[:any (cses/session {:storage storage})]
                           [:get "h1" handler]])]
       (with-server {:handler app}
         (let [response (client/get (str base-url "/h1")
@@ -264,7 +265,7 @@
 
   (testing "Remove empty session"
     (let [p (promise)
-          storage (session/memory-storage)
+          storage (cses/memory-storage)
           handler1 (fn [ctx]
                     (let [session (:session ctx)]
                       (swap! session assoc :foo 2)
@@ -273,7 +274,7 @@
                     (let [session (:session ctx)]
                       (swap! session dissoc :foo)
                       "hello world"))
-          app (ct/routes [[:any (hs/session {:storage storage})]
+          app (ct/routes [[:any (cses/session {:storage storage})]
                           [:get "h1" handler1]
                           [:get "h2" handler2]])]
       (with-server {:handler app}
@@ -287,26 +288,26 @@
       )))
 
 (deftest session-object-interface
-  (let [s (#'session/->session "foobar")]
-    (is (not (session/-accessed? s)))
-    (is (not (session/-modified? s)))
-    (is (session/-empty? s)))
+  (let [s (#'cses/->session "foobar")]
+    (is (not (cses/-accessed? s)))
+    (is (not (cses/-modified? s)))
+    (is (cses/-empty? s)))
 
-  (let [s (#'session/->session "foobar")]
+  (let [s (#'cses/->session "foobar")]
     (deref s)
-    (is (session/-accessed? s))
-    (is (not (session/-modified? s)))
-    (is (session/-empty? s)))
+    (is (cses/-accessed? s))
+    (is (not (cses/-modified? s)))
+    (is (cses/-empty? s)))
 
-  (let [s (#'session/->session "foobar")]
+  (let [s (#'cses/->session "foobar")]
     (swap! s assoc :foo 2)
-    (is (session/-accessed? s))
-    (is (session/-modified? s))
-    (is (not (session/-empty? s)))))
+    (is (cses/-accessed? s))
+    (is (cses/-modified? s))
+    (is (not (cses/-empty? s)))))
 
 (deftest session-handler-with-signed-cookie-storage
   (let [p (promise)
-        storage (session/signed-cookie :key "test")
+        storage (cses/signed-cookie :key "test")
         handler1 (fn [ctx]
                    (let [session (:session ctx)]
                      (swap! session assoc :foo 2)
@@ -319,7 +320,7 @@
                    (let [session (:session ctx)]
                      (deliver p @session)
                      "hello world"))
-        app (ct/routes [[:any (hs/session {:storage storage})]
+        app (ct/routes [[:any (cses/session {:storage storage})]
                         [:get "h1" handler1]
                         [:get "h2" handler2]
                         [:get "h3" handler3]])]
@@ -368,8 +369,8 @@
 (def jws-secret "secret")
 (def jwe-secret (hash/sha256 jws-secret))
 
-(def jws-backend (auth/jws-backend {:secret jws-secret}))
-(def jwe-backend (auth/jwe-backend {:secret jwe-secret}))
+(def jws-backend (cauth/jws-backend {:secret jws-secret}))
+(def jwe-backend (cauth/jwe-backend {:secret jwe-secret}))
 
 (deftest auth-tests
   (testing "JWS"
@@ -484,7 +485,7 @@
 
 (defn with-logged [handler f]
   (let [p   (promise)
-        app (ct/routes [[:any (logging/log #(deliver p %&))]
+        app (ct/routes [[:any (misc/log #(deliver p %&))]
                         [:get handler]])]
     (with-server {:handler app}
       (f p))))
@@ -506,7 +507,7 @@
         (let [[_ {{:keys [code]} :status}] (deref p 1000 nil)]
           (is (= 500 code))))))
   (testing "Default log function"
-    (with-server {:handler (ct/routes [[:any (logging/log)]
+    (with-server {:handler (ct/routes [[:any (misc/log)]
                                        [:get (constantly "")]])}
       ;; Having it not explode is about the best we can do
       (client/get base-url))))

@@ -24,7 +24,6 @@
 
 (ns catacumba.core
   (:require [catacumba.impl server routing context handlers websocket sse]
-            [catacumba.handlers]
             [potemkin.namespaces :refer [import-vars]]))
 
 (import-vars

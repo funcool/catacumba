@@ -22,7 +22,7 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(ns catacumba.handlers.parsing
+(ns catacumba.handlers.parse
   (:require [catacumba.impl.context :as ct]
             [cheshire.core :as json]
             [cognitect.transit :as transit])
@@ -30,7 +30,7 @@
            ratpack.http.TypedData
            ratpack.handling.Context))
 
-(defmulti parse
+(defmulti parse-body
   "A polymorophic method for parse body into clojure
   friendly data structure."
   (fn [^Context ctx ^TypedData body]
@@ -40,29 +40,29 @@
         :application/octet-stream)))
   :default :application/octet-stream)
 
-(defmethod parse :multipart/form-data
+(defmethod parse-body :multipart/form-data
   [^Context ctx ^TypedData body]
   (ct/get-formdata* ctx body))
 
-(defmethod parse :application/x-www-form-urlencoded
+(defmethod parse-body :application/x-www-form-urlencoded
   [^Context ctx ^TypedData body]
   (ct/get-formdata* ctx body))
 
-(defmethod parse :application/json
+(defmethod parse-body :application/json
   [^Context ctx ^TypedData body]
   (let [^String data (slurp body)]
     (json/parse-string data true)))
 
-(defmethod parse :application/octet-stream
+(defmethod parse-body :application/octet-stream
   [^Context ctx ^TypedData body]
   nil)
 
-(defmethod parse :application/transit+json
+(defmethod parse-body :application/transit+json
   [^Context ctx ^TypedData body]
   (let [reader (transit/reader (.getInputStream body) :json)]
     (transit/read reader)))
 
-(defmethod parse :application/transit+msgpack
+(defmethod parse-body :application/transit+msgpack
   [^Context ctx ^TypedData body]
   (let [reader (transit/reader (.getInputStream body) :msgpack)]
     (transit/read reader)))
@@ -74,7 +74,7 @@
   This function optionally accept a used defined method
   or multimethod where to delegate the body parsing."
   ([] (body-params {}))
-  ([{:keys [parsefn attr] :or {parsefn parse attr :data}}]
+  ([{:keys [parsefn attr] :or {parsefn parse-body attr :data}}]
    (fn [context]
      (let [^Context ctx (:catacumba/context context)
            ^TypedData body (:body context)]

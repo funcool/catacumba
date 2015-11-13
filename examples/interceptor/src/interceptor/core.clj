@@ -1,7 +1,7 @@
 (ns interceptor.core
   (:require [catacumba.core :as ct]
             [catacumba.http :as http]
-            [catacumba.handlers :as hs])
+            [catacumba.handlers.misc])
   (:gen-class))
 
 (defn index

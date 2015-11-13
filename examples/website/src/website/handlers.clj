@@ -2,8 +2,6 @@
   (:require [clojure.java.io :as io]
             [hiccup.page :as hc]
             [catacumba.core :as ct]
-            [catacumba.handlers :as hs]
-            [catacumba.handlers.auth :as auth]
             [catacumba.http :as http]))
 
 

@@ -1,7 +1,8 @@
 (ns website.core
   (:require [catacumba.core :as ct]
-            [catacumba.handlers :as hs]
-            [catacumba.handlers.auth :as auth]
+            [catacumba.handlers.misc :as misc]
+            [catacumba.handlers.auth :as cauth]
+            [catacumba.handlers.session :as cses]
             [website.handlers :as handlers])
   (:gen-class))
 
@@ -22,9 +23,9 @@
 
 (def app
   (ct/routes [[:assets "assets" {:dir "public"}]
-              [:any (hs/autoreloader)]
-              [:any (hs/session {:storage :inmemory})]
-              [:any (hs/auth auth-backend)]
+              [:any (misc/autoreloader)]
+              [:any (cses/session {:storage :inmemory})]
+              [:any (cauth/auth auth-backend)]
               [:get #'handlers/home-page]
               [:get "logout" #'handlers/logout-page]
               [:prefix "login"

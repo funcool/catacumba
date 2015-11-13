@@ -22,10 +22,27 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(ns catacumba.handlers.cors
+(ns catacumba.handlers.misc
   (:require [cuerdas.core :as str]
+            [ns-tracker.core :refer [ns-tracker]]
+            [catacumba.core :refer [on-close]]
+            [catacumba.impl.routing :as routing]
             [catacumba.impl.context :as ct]
-            [catacumba.impl.handlers :as hs]))
+            [catacumba.impl.handlers :as hs])
+  (:import ratpack.handling.RequestLogger
+           ratpack.handling.RequestOutcome
+           ratpack.handling.Chain
+           ratpack.handling.Context
+           ratpack.handling.Handler
+           ratpack.exec.Execution
+           ratpack.http.Status
+           ratpack.func.Block
+           ratpack.exec.ExecInterceptor
+           ratpack.exec.ExecInterceptor$ExecType))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; CORS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- allow-origin?
   [value {:keys [origin]}]
@@ -74,3 +91,78 @@
       (if (cors-preflight? context headers)
         (handle-preflight context headers opts)
         (handle-response context headers opts)))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Autorealoader
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn autoreloader
+  ([] (autoreloader {}))
+  ([{:keys [dirs] :or {dirs ["src"]}}]
+   (let [tracker (ns-tracker dirs)]
+     (fn [context]
+       (doseq [ns-sym (tracker)]
+         (println "=> reload:" ns-sym)
+         (require ns-sym :reload))
+       (ct/delegate)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Logging
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- status->map [^Status status]
+  {:code (.getCode status)
+   :message (.getMessage status)})
+
+(defn- outcome->map [^RequestOutcome outcome]
+  (let [response (.getResponse outcome)]
+    {:headers  (ct/headers->map
+                (.. response getHeaders asMultiValueMap)
+                true)
+     :status   (status->map (.getStatus response))
+     :sent-at  (.getSentAt outcome)
+     :duration (.getDuration outcome)}))
+
+(defn log
+  ([] (RequestLogger/ncsa))
+  ([log-fn]
+   (fn [context]
+     (on-close context #(log-fn context (outcome->map %)))
+     (ct/delegate))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Interceptors
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- exec-interceptor
+  [interceptor]
+  (reify ExecInterceptor
+    (^void intercept [_ ^Execution exc ^ExecInterceptor$ExecType t ^Block b]
+      (let [continuation #(.execute b)
+            exectype (if (= t ExecInterceptor$ExecType/BLOCKING)
+                       :blocking
+                       :compute)]
+        (interceptor exc exectype continuation)))))
+
+(defn interceptor
+  "Start interceptor from current context.
+
+  It wraps the rest of route chain the execution. It receive a
+  continuation (as a cloure function) that must be called in
+  order for processing to proceed."
+  [context interceptor]
+  (let [^Context ctx (:catacumba/context context)
+        ^Execution exec (.getExecution ctx)]
+    (.addInterceptor exec
+                     (exec-interceptor interceptor)
+                     (reify Block
+                       (^void execute [_]
+                         (.next ctx))))))
+
+(defmethod routing/attach-route :interceptor
+  [^Chain chain [_ interceptor']]
+  (let [handler #(interceptor % interceptor')]
+    (.all chain ^Handler (hs/adapter handler))))
+

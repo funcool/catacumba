@@ -1708,7 +1708,7 @@ Let see a little example on how it can be used:
   component/Lifecycle
   (start [this]
     (let [routes [[:get "foo" some-handler]
-                  [:get "bar" other-handler]]
+                  [:get "bar" other-handler]]]
       (assoc-routes! server ::web routes)))
 
   (stop [this]

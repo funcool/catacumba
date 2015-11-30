@@ -42,7 +42,7 @@
       (assoc component :server (run-server handler options))))
 
   (stop [component]
-    (.stop ^RatpackServer server)
+    (when server (.stop ^RatpackServer server))
     (assoc component :server nil)))
 
 (alter-meta! #'->Server assoc :private true)

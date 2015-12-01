@@ -22,13 +22,15 @@ Important changes:
   have to mandatory use `:by-method` for solving that. The `:by-method`
   routing directive is now deprecated becuase is not longuer necessary.
   This is mostly backward compatible change.
+- Replace promissum with promesa, that is now cross-platform promise
+  library (before it was only for cljs).
+
 
 Other changes:
 
 - Add proper support for tls/ssl
 - Update ratpack to 1.1.1
 - Update netty to 4.1.0.Beta7
-- Update promissum to 0.3.3
 - Add postal handlers.
 - Add request logging facilities.
 

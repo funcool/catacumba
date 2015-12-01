@@ -25,7 +25,7 @@
 (ns catacumba.impl.websocket
   "Websocket handler adapter implementation."
   (:require [clojure.core.async :as a]
-            [promissum.core :as p]
+            [promesa.core :as p]
             [catacumba.helpers :as hp]
             [catacumba.impl.context :as ctx]
             [catacumba.impl.handlers :as hs])

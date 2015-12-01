@@ -5,7 +5,7 @@
             [clojure.pprint :refer [pprint]]
             [clojure.core.async :as async]
             [clj-http.client :as client]
-            [promissum.core :as p]
+            [promesa.core :as p]
             [catacumba.stream :as stream]
             [cats.core :as m]
             [cuerdas.core :as str]
@@ -101,7 +101,7 @@
 
   (testing "Using completable future as response."
     (letfn [(handler [ctx]
-              (p/promise (fn [resolve]
+              (p/promise (fn [resolve reject]
                            (async/<!! (async/timeout 1000))
                            (resolve (http/ok "hello world")))))]
       (with-server {:handler handler}
@@ -111,7 +111,7 @@
 
   (testing "Using completable future as body."
     (letfn [(handler [ctx]
-              (http/ok (p/promise (fn [resolve]
+              (http/ok (p/promise (fn [resolve reject]
                                     (async/<!! (async/timeout 1000))
                                     (resolve "hello world")))))]
       (with-server {:handler handler}

@@ -27,7 +27,7 @@
             [clojure.core.async :as a]
             [manifold.stream :as ms]
             [manifold.deferred :as md]
-            [promissum.core :as p]
+            [promesa.core :as p]
             [catacumba.stream :as stream]
             [catacumba.helpers :as hp]
             [catacumba.impl.context :as ct]

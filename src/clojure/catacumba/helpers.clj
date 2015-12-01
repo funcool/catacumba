@@ -24,8 +24,7 @@
 
 (ns catacumba.helpers
   (:refer-clojure :exclude [promise])
-  (:require [promissum.protocols :as pt]
-            [clojure.core.async :as a])
+  (:require [clojure.core.async :as a])
   (:import ratpack.func.Action
            ratpack.func.Function
            ratpack.func.Block

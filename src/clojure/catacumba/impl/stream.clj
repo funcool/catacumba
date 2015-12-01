@@ -30,7 +30,7 @@
             [catacumba.impl.stream.promise :as promise]
             [catacumba.impl.stream.channel :as channel]
             [catacumba.impl.stream.pushstream :as pushstream]
-            [promissum.core :as p])
+            [promesa.core :as p])
   (:import java.util.concurrent.CompletableFuture
            org.reactivestreams.Publisher))
 

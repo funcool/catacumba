@@ -24,7 +24,7 @@
 
 (ns catacumba.impl.executor
   "A basic abstraction for executor services."
-  (:require [promissum.core :as p])
+  (:require [promesa.core :as p])
   (:import java.util.concurrent.ForkJoinPool
            java.util.concurrent.Executor
            java.util.concurrent.Executors
@@ -51,13 +51,12 @@
 
   IExecutorService
   (submit* [this task]
-    (let [promise (p/promise)]
-      (execute* this (fn []
-                       (try
-                         (p/deliver promise (task))
-                          (catch Throwable e
-                            (p/deliver promise e)))))
-      promise)))
+    (p/promise
+     (fn [resolve reject]
+       (execute* this #(try
+                         (resolve (task))
+                         (catch Throwable e
+                           (reject e))))))))
 
 (defn- thread-factory-adapter
   "Adapt a simple clojure function into a

@@ -30,7 +30,7 @@
             [catacumba.impl.atomic :as atomic]
             [catacumba.impl.stream.common :as common]
             [catacumba.impl.stream.channel :as channel]
-            [promissum.core :as p])
+            [promesa.core :as p])
   (:import clojure.lang.Seqable
            org.reactivestreams.Publisher
            org.reactivestreams.Subscriber))
@@ -57,13 +57,11 @@
      (reify
        IPushStream
        (push [_ v]
-         (let [p (p/promise)]
-           (async/put! source v (fn [res]
-                                  (if res
-                                    (p/deliver p true)
-                                    (p/deliver p false))))
-           p))
-
+         (p/promise (fn [resolve reject]
+                      (async/put! source v (fn [res]
+                                             (if res
+                                               (resolve true)
+                                               (resolve false)))))))
        (complete [_]
          (async/close! source))
 

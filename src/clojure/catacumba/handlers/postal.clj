@@ -31,7 +31,7 @@
             [catacumba.impl.websocket :as implws]
             [buddy.core.codecs :as codecs]
             [manifold.deferred :as md]
-            [promissum.core :as p])
+            [promesa.core :as p])
   (:import ratpack.http.TypedData
            java.util.concurrent.CompletableFuture))
 
@@ -140,7 +140,7 @@
   manifold.deferred.IDeferred
   (-handle-response-message [data content-type]
     (-handle-response-message
-     (p/promise #(md/on-realized data % %))
+     (p/promise #(md/on-realized data %1 %2))
      content-type)))
 
 (defn- dispatch

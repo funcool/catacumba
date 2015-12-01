@@ -1,4 +1,5 @@
 (ns catacumba.handlers-postal-tests
+  (:refer-clojure :exclude [future])
   (:require [clojure.test :refer :all]
             [clojure.java.io :as io]
             [clojure.pprint :refer [pprint]]
@@ -8,17 +9,27 @@
             [byte-streams :as bs]
             [manifold.deferred :as md]
             [manifold.stream :as ms]
-            [promissum.core :as p]
+            [promesa.core :as p]
             [buddy.core.codecs :as codecs]
             [cats.core :as m]
             [cats.monad.exception :as exc]
             [catacumba.core :as ct]
+            [catacumba.impl.executor :as exec]
             [catacumba.handlers.postal :as pc]
             [catacumba.testing :refer [with-server]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helpers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmacro future
+  "Takes a body of expressions and yields a promise object that will
+  invoke the body in another thread.
+  This is a drop in replacement for the clojure's builtin `future`
+  function that return composable promises."
+  [& body]
+  `(let [fun# (fn [] ~@body)]
+     (exec/submit fun#)))
 
 (defn- response->data
   [response]
@@ -86,7 +97,7 @@
 
 (deftest response-as-promise-spec
   (letfn [(handler [context frame]
-            (m/mlet [_ (p/future
+            (m/mlet [_ (future
                          (Thread/sleep 500))]
               (m/return {:data {:foo [1]}})))]
 
@@ -98,7 +109,7 @@
 
 (deftest response-as-rejected-promise-spec
   (letfn [(handler [context frame]
-            (m/mlet [_ (p/future
+            (m/mlet [_ (future
                          (Thread/sleep 500))]
               (throw (ex-info "foobar" {:error true}))
               (m/return {:data {:foo [1]}})))]

@@ -26,7 +26,7 @@
   "Defines a common subset of functions and hepers that
   works with all kind of subscription objects."
   (:require [catacumba.impl.atomic :as atomic]
-            [promissum.core :as p]
+            [promesa.core :as p]
             [clojure.core.async :as async]
             [clojure.core.async.impl.protocols :as asyncp])
   (:import clojure.lang.Seqable
@@ -81,10 +81,9 @@
       IPullStream
       (pull [_]
         (.await lc)
-        (let [p (p/promise)]
-          (async/take! sr #(p/deliver p %))
-          (.request @ss 1)
-          p))
+        (p/promise (fn [resolve reject]
+                     (async/take! sr resolve)
+                     (.request @ss 1))))
 
       asyncp/ReadPort
       (take! [_ handler]

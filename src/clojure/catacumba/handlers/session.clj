@@ -25,11 +25,10 @@
 (ns catacumba.handlers.session
   "Http Sessions support for Catacumba."
   (:refer-clojure :exclude [empty?])
-  (:require [promissum.core :as p]
+  (:require [promesa.core :as p]
             [buddy.core.nonce :as nonce]
             [buddy.core.codecs :as codecs]
             [buddy.sign.jws :as jws]
-            [promissum.core :as p]
             [catacumba.impl.atomic :as atomic]
             [catacumba.impl.handlers :as hs]
             [catacumba.impl.context :as ct]
@@ -137,27 +136,27 @@
 
       (-read [_ key]
         (p/promise
-         (fn [deliver]
+         (fn [resolve reject]
            (if (nil? key)
              (let [key (codecs/bytes->safebase64 (nonce/random-nonce 48))]
-               (deliver [key {}]))
+               (resolve [key {}]))
              (let [data (get @internalstore key nil)]
                (if (nil? data)
                  (let [key (codecs/bytes->safebase64 (nonce/random-nonce 48))]
-                   (deliver [key {}]))
-                 (deliver [key data])))))))
+                   (resolve [key {}]))
+                 (resolve [key data])))))))
 
       (-write [_ key data]
         (p/promise
-         (fn [deliver]
+         (fn [resolve reject]
            (swap! internalstore assoc key data)
-           (deliver key))))
+           (resolve key))))
 
       (-delete [_ key]
         (p/promise
-         (fn [deliver]
+         (fn [resolve reject]
            (swap! internalstore dissoc key)
-           (deliver key)))))))
+           (resolve key)))))))
 
 (defn signed-cookie
   [& {:keys [key] :as opts}]
@@ -165,23 +164,23 @@
     (reify ISessionStorage
       (-read [_ dkey]
         (p/promise
-         (fn [deliver]
+         (fn [resolve reject]
            (if (nil? dkey)
-             (deliver [(jws/sign {} pkey opts) {}])
+             (resolve [(jws/sign {} pkey opts) {}])
              (try
-               (deliver [dkey (jws/unsign dkey pkey opts)])
+               (resolve [dkey (jws/unsign dkey pkey opts)])
                (catch clojure.lang.ExceptionInfo e
-                 (deliver [(jws/sign {} pkey opts) {}])))))))
+                 (resolve [(jws/sign {} pkey opts) {}])))))))
 
       (-write [_ key data]
         (p/promise
-         (fn [deliver]
-           (deliver (jws/sign data pkey opts)))))
+         (fn [resolve reject]
+           (resolve (jws/sign data pkey opts)))))
 
       (-delete [_ key]
         (p/promise
-         (fn [deliver]
-           (deliver key)))))))
+         (fn [resolve reject]
+           (resolve key)))))))
 
 (defn lookup-storage
   "A helper for create session storages with

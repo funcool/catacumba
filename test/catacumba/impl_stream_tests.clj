@@ -3,7 +3,7 @@
             [clojure.test :refer :all]
             [manifold.stream :as ms]
             [catacumba.stream :as stream]
-            [promissum.core :as p])
+            [promesa.core :as p])
   (:import org.reactivestreams.Publisher
            org.reactivestreams.Subscriber
            org.reactivestreams.Subscription))
@@ -52,8 +52,8 @@
 
 (deftest push-stream
   (let [p (stream/publisher 2)]
-    (stream/put! p 1)
-    (stream/put! p 2)
+    @(stream/put! p 1)
+    @(stream/put! p 2)
     (with-open [s (stream/subscribe p)]
       (is (= @(stream/take! s) 1))
       (is (= @(stream/take! s) 2)))))

@@ -33,7 +33,7 @@
             [buddy.sign.jws :as jws]
             [buddy.sign.jwe :as jwe]
             [slingshot.slingshot :refer [try+]]
-            [promissum.core :as p])
+            [promesa.core :as p])
   (:import catacumba.impl.context.DefaultContext
            ratpack.exec.Downstream
            ratpack.exec.Promise
@@ -88,7 +88,7 @@
     (-parse [_ context]
       (parse-authorization-header context token-name))
     (-authenticate [_ context token]
-      (p/promise (fn [resolve]
+      (p/promise (fn [resolve reject]
                    (try+
                     (resolve (jws/unsign token secret options))
                     (catch [:type :validation] e
@@ -105,7 +105,7 @@
     (-parse [_ context]
       (parse-authorization-header context token-name))
     (-authenticate [_ context token]
-      (p/promise (fn [resolve]
+      (p/promise (fn [resolve reject]
                    (try+
                     (resolve (jwe/decrypt token secret options))
                     (catch [:type :validation] e
@@ -151,8 +151,8 @@
   {:pre [(pos? (count backends))]}
   (fn [context]
     (p/promise
-     (fn [next]
-       (let [callback #(next (ct/delegate %))]
+     (fn [resolve reject]
+       (let [callback #(resolve (ct/delegate %))]
          (do-auth context callback backends))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

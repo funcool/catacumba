@@ -25,7 +25,7 @@
 (ns catacumba.impl.stream.promise
   (:require [catacumba.impl.atomic :as atomic]
             [catacumba.impl.stream.common :as common]
-            [promissum.core :as p])
+            [promesa.core :as p])
   (:import org.reactivestreams.Subscriber
            catacumba.impl.stream.common.IPullStream
            java.util.Set))

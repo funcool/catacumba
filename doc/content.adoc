@@ -627,15 +627,15 @@ The `CompletableFuture` is an other asynchronous primitive supported out of the 
 by _catacumba_; so you can return it as body or as response.
 
 For more pleasant usage of `CompletableFuture` in clojure, the
-link:https://github.com/funcool/promissum[promissum library] is used. That library
+link:https://github.com/funcool/promesa[promesa library] is used. That library
 provides a more clojure friendly api on top of JDK8 `CompletableFuture` and a great
 sugar syntax for composing them thanks to the
 link:https://github.com/funcool/cats[cats library].
 
-.A example using the _promissum_ library api for create a `CompletableFuture` instance and return it as body.
+.A example using the _promesa_ library api for create a `CompletableFuture` instance and return it as body.
 [source, clojure]
 ----
-(require '[promissum.core :as p])
+(require '[promesa.core :as p])
 
 (defn my-async-handler
   [context]
@@ -647,7 +647,7 @@ Like as usual, you can return an instance of `CompletableFuture` as response:
 
 [source, clojure]
 ----
-(require '[promissum.core :as p])
+(require '[promesa.core :as p])
 
 (defn my-async-handler
   [context]
@@ -657,7 +657,7 @@ Like as usual, you can return an instance of `CompletableFuture` as response:
                  (resolve (http/ok "hello world"))))))
 ----
 
-One of the advantages of using `CompletableFuture` abstraction with _promissum_ and
+One of the advantages of using `CompletableFuture` abstraction with _promesa_ and
 _cats_ libraries is that them both exposes additional sugar syntax that work with
 promises in a more painless way.
 
@@ -666,7 +666,7 @@ Let see an example that thaks to the link:https://github.com/funcool/cats[cats]
 
 [source, clojure]
 ----
-(require '[promissum.core :as p])
+(require '[promesa.core :as p])
 (require '[cats.core :as m])
 
 (defn my-async-handler
@@ -1083,7 +1083,7 @@ If you are familiar with the ring based session storages, you can observe that t
 _catacumba_ session storage abstraction is almost identical to the ring session
 abstraction, so migrating from or adapting the ring session storages is really
 easy. The unique difference is that functions should return a promise (from
-promissum library).
+promesa library).
 
 To use a concrete session storage, just pass a instance of it as value of
 the `:storage` key in a session handler constructor:
@@ -1526,7 +1526,7 @@ The `message` function is just a helper for create response hashmaps:
 ----
 
 In addition to plain return value, you can freely return a promise or deferred
-(from *promissum* and *manifold* libraries respecively). And if that abstractions
+(from *promesa* and *manifold* libraries respecively). And if that abstractions
 dors not satisfies you, the system is completly open to be extended with your
 own abstractions.
 

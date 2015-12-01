@@ -27,7 +27,6 @@
             [manifold.stream :as ms]
             [manifold.deferred :as md]
             [catacumba.impl.stream.common :as common]
-            [catacumba.impl.stream.promise :as promise]
             [catacumba.impl.stream.channel :as channel]
             [catacumba.impl.stream.pushstream :as pushstream]
             [promesa.core :as p])
@@ -69,10 +68,6 @@
   clojure.core.async.impl.channels.ManyToManyChannel
   (publisher [source]
     (channel/publisher source))
-
-  CompletableFuture
-  (publisher [source]
-    (promise/publisher source))
 
   Publisher
   (publisher [source]

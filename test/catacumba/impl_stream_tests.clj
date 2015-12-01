@@ -29,9 +29,9 @@
 )
 
 (deftest publisher-constructors
-  (testing "Publisher sourced with promise"
-    (let [p (stream/publisher (p/promise 1))]
-      (is (= [1] (into [] p)))))
+  ;; (testing "Publisher sourced with promise"
+  ;;   (let [p (stream/publisher (p/promise 1))]
+  ;;     (is (= [1] (into [] p)))))
 
   (testing "Publisher sourced with vector"
     (let [p (stream/publisher [1 2 3])]

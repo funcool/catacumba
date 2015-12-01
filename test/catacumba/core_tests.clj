@@ -268,7 +268,7 @@
           (is (= (:status response1) 200))
           (is (= (:status response2) 200))))))
 
-  (testing "Chaining handlers by request method"
+  (testing "Chaining handlers by request method 1"
     (let [p (promise)
           handler1 (fn [ctx] "from get")
           handler2 (fn [ctx] "from post")
@@ -277,6 +277,23 @@
                               [:by-method
                                {:get [handler3 handler1]
                                 :post handler2}]]])]
+      (with-server {:handler router}
+        (let [response (client/get (str base-url "/foo"))]
+          (is (= (:body response) "from get"))
+          (is (= (:status response) 200))
+          (is (true? (deref p 1000 nil))))
+        (let [response (client/post (str base-url "/foo"))]
+          (is (= (:body response) "from post"))
+          (is (= (:status response) 200))))))
+
+  (testing "Chaining handlers by request method 2"
+    (let [p (promise)
+          handler1 (fn [ctx] "from get")
+          handler2 (fn [ctx] "from post")
+          handler3 (fn [ctx] (deliver p true) (ct/delegate))
+          router (ct/routes [[:prefix "foo"
+                              [:get handler3 handler1]
+                              [:post handler2]]])]
       (with-server {:handler router}
         (let [response (client/get (str base-url "/foo"))]
           (is (= (:body response) "from get"))

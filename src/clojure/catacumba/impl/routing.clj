@@ -45,6 +45,16 @@
   [handlers]
   (Handlers/chain (mapv hs/adapter handlers)))
 
+(defn wrap-handler
+  [handler method]
+  (let [handler (hs/adapter handler)]
+    (reify Handler
+      (^void handle [_ ^Context ctx]
+       (let [current-method (keyword (.. ctx getRequest getMethod getName toLowerCase))]
+         (if (identical? current-method method)
+           (.insert ctx (into-array Handler [handler]))
+           (.next ctx)))))))
+
 (defmulti attach-route
   (fn [chain [method & args]]
     method))
@@ -107,29 +117,72 @@
   [^Chain chain [_ ^String path setup]]
   (.prefix chain path (hp/fn->action setup)))
 
-(defmethod attach-route :default
-  [chain [method & handlers-and-path]]
-  (let [path (first handlers-and-path)]
-    (if (string? path)
-      (let [^Handler handler (combine-handlers (rest handlers-and-path))]
-        (case method
-          :any (.path chain path handler)
-          :all (.path chain path handler)
-          :get (.get chain path handler)
-          :post (.post chain path handler)
-          :put (.put chain path handler)
-          :patch (.patch chain path handler)
-          :delete (.delete chain path handler)))
-      (let [^Handler handler (-> (mapv hs/adapter handlers-and-path)
-                                 (Handlers/chain))]
-        (case method
-          :any (.all chain handler)
-          :all (.all chain handler)
-          :get (.get chain handler)
-          :post (.post chain handler)
-          :put (.put chain handler)
-          :patch (.patch chain handler)
-          :delete (.delete chain handler))))))
+(defn- split-path-from-handlers
+  [handlers]
+  (if (string? (first handlers))
+    [(first handlers) (rest handlers)]
+    [nil handlers]))
+
+(defmethod attach-route :any
+  [^Chain chain [method & handlers]]
+  (let [[path handlers] (split-path-from-handlers handlers)
+        handler (combine-handlers handlers)]
+    (if (nil? path)
+      (.all chain ^Handler handler)
+      (.path chain path ^Handler handler))))
+
+(defmethod attach-route :all
+  [^Chain chain [method & handlers]]
+  (let [[path handlers] (split-path-from-handlers handlers)
+        handler (combine-handlers handlers)]
+    (if (nil? path)
+      (.all chain ^Handler handler)
+      (.path chain path ^Handler handler))))
+
+(defmethod attach-route :get
+  [^Chain chain [method & handlers]]
+  (let [[path handlers] (split-path-from-handlers handlers)
+        handler (-> (combine-handlers handlers)
+                    (wrap-handler method))]
+    (if (nil? path)
+      (.all chain ^Handler handler)
+      (.path chain path ^Handler handler))))
+
+(defmethod attach-route :post
+  [^Chain chain [method & handlers]]
+  (let [[path handlers] (split-path-from-handlers handlers)
+        handler (-> (combine-handlers handlers)
+                    (wrap-handler method))]
+    (if (nil? path)
+      (.all chain ^Handler handler)
+      (.path chain path ^Handler handler))))
+
+(defmethod attach-route :put
+  [^Chain chain [method & handlers]]
+  (let [[path handlers] (split-path-from-handlers handlers)
+        handler (-> (combine-handlers handlers)
+                    (wrap-handler method))]
+    (if (nil? path)
+      (.all chain ^Handler handler)
+      (.path chain path ^Handler handler))))
+
+(defmethod attach-route :patch
+  [^Chain chain [method & handlers]]
+  (let [[path handlers] (split-path-from-handlers handlers)
+        handler (-> (combine-handlers handlers)
+                    (wrap-handler method))]
+    (if (nil? path)
+      (.all chain ^Handler handler)
+      (.path chain path ^Handler handler))))
+
+(defmethod attach-route :delete
+  [^Chain chain [method & handlers]]
+  (let [[path handlers] (split-path-from-handlers handlers)
+        handler (-> (combine-handlers handlers)
+                    (wrap-handler method))]
+    (if (nil? path)
+      (.all chain ^Handler handler)
+      (.path chain path ^Handler handler))))
 
 (defn routes
   "Is a high order function that access a routes vector

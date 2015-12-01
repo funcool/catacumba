@@ -400,29 +400,33 @@ This is a complete list of route directives that you can use a part of `:get`:
 ==== Dispatch by method
 
 In some circumstances you may want have different handlers depending on the HTTP
-method used for one concrete endpoint. For this purpose there is the `:by-method`
-route directive:
+method used for one concrete endpoint. You can do it in the following way:
 
 [source, clojure]
 ----
-(ct/routes [:prefix "api/users"
-            [:by-method
-             {:get list-users-handler
-              :post create-users-handler}]])
+(ct/routes [[:prefix "api/users"
+             [:get list-users-handler]
+             [:post create-users-handler]]])
 ----
 
-Like as usual, you can attach a chain of handlers for one or varios methods:
+This also can be done in this an other way:
+
 
 [source, clojure]
 ----
-(ct/routes [:prefix "api/users"
-            [:by-method
-             {:get [some-other-chain-handler list-users-handler]
-              :post create-users-handler}]])
+(ct/routes [[:get "api/users" list-users-handler]
+            [:post "api/users" create-users-handler]])
 ----
 
-Behind the scehenes, the `:by-method` directive will create a handler that in runtime
-will dispatch the request to the corresponding handler by method.
+But is considered not idiomatic and the first example should be considered
+the right way to do it.
+
+[NOTE]
+====
+Before, there was an other way to setup by method using the `:by-method`
+routing directive. It is now deprecated and will be removed in the next
+versions.
+====
 
 
 ==== Routing params

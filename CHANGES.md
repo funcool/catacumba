@@ -16,6 +16,12 @@ Important changes:
   `catacumba.handlers.misc` (**BREAKING CHANGE**).
 - Add the decorators concept for attach some "root" handlers on the server
   startup.
+- The routing policy for methos is changed from catch all to delegate.
+  This is means that if you are declaring `get` and `post` methods to
+  to the same path it will works as expected. Before that change you
+  have to mandatory use `:by-method` for solving that. The `:by-method`
+  routing directive is now deprecated becuase is not longuer necessary.
+  This is mostly backward compatible change.
 
 Other changes:
 

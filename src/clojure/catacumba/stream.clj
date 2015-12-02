@@ -34,8 +34,10 @@
 
 (defn publisher
   "A polymorphic publisher constructor."
-  [source]
-  (stream/publisher source))
+  ([]
+   (stream/-publisher nil))
+  ([source]
+   (stream/-publisher source)))
 
 (defn bind-exec
   [source]

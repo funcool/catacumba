@@ -37,38 +37,37 @@
 ;; Default Abstractions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defprotocol IPublisher
-  (publisher [source] "Create a publisher."))
+(defprotocol IPublisherFactory
+  (-publisher [source] "Create a publisher."))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Implementation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(extend-protocol IPublisher
+(extend-protocol IPublisherFactory
   nil
-  (publisher [source]
+  (-publisher [source]
     (pushstream/publisher source))
 
   java.lang.Long
-  (publisher [source]
+  (-publisher [source]
     (pushstream/publisher source))
 
   java.lang.Iterable
-  (publisher [source]
+  (-publisher [source]
     (let [source' (a/chan)]
       (a/onto-chan source' (seq source))
       (channel/publisher source')))
 
   manifold.stream.default.Stream
-  (publisher [source]
+  (-publisher [source]
     (let [source' (a/chan)]
       (ms/connect source source')
       (channel/publisher source')))
 
   clojure.core.async.impl.channels.ManyToManyChannel
-  (publisher [source]
+  (-publisher [source]
     (channel/publisher source))
 
   Publisher
-  (publisher [source]
-    source))
+  (-publisher [source] source))

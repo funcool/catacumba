@@ -1472,13 +1472,14 @@ concrete framework and persistence.
 
 One of the great examples where this library fits in a perfection is a
 transport and message routing layer for
-link:https://github.com/omcljs/om/wiki/Quick-Start-(om.next)[Om.Next].
+link:https://github.com/omcljs/om/wiki/Quick-Start-(om.next)[Om.Next]
+but it not tied by it.
 
 
 ==== Getting Started
 
 The *postal* handler looks like a default _catacumba_ handler with one extra
-argument: frame. The frame is a structurd message received from the client that
+argument: frame. The frame is a structured message received from the client that
 has this aspect:
 
 [source, clojure]
@@ -1525,9 +1526,9 @@ The `message` function is just a helper for create response hashmaps:
 ;; => {:type :response :data {:foo 1}}
 ----
 
-In addition to plain return value, you can freely return a promise or deferred
+In addition to plain return values, you can freely return a promise or deferred
 (from *promesa* and *manifold* libraries respecively). And if that abstractions
-dors not satisfies you, the system is completly open to be extended with your
+do not satisfies you, the system is completly open to be extended with your
 own abstractions.
 
 And finally, attach the handler on the router:
@@ -1543,12 +1544,11 @@ And finally, attach the handler on the router:
 
 ==== Server Push
 
-The way how this protocol server side push or bi-directional communication is
-just using websockets. Them now are widelly supported so use it directy should
-not suppose any problem.
+Additionally to the traditional rpc, it also offers a server-push or/and
+bi-directional communication with server. 
 
-You can start websocket connection from any postal handler just using the
-`catacumba.handlers.postal/socket` function:
+This is the aspect of the handler that starts the bi-directional communication
+with the client:
 
 [source, clojure]
 ----
@@ -1568,8 +1568,9 @@ You can start websocket connection from any postal handler just using the
     (pc/socket context on-connect))
 ----
 
-The `socket` function is analogous to the `catacumba.core/websocket` with the 
-difference that it encodes the messages properly using *postal* protocol.
+Behind the schenes, the `socket` function just upgrades to websockets and uses
+it as low-level transport layer for message communication between the client and
+the server.
 
 Additionally, behind the scenes, catacumba sends a ping frames to the client for
 keep alive the connection. This is happens every 5 seconds. At this moment

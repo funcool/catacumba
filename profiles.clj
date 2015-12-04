@@ -67,26 +67,15 @@
    :resource-paths ["examples/component-chat/resources"]
    :main ^:skip-aot compchat.core}]
 
- :component-chat-postal-example
+ :postal-chat-example
  [:examples
-  {:source-paths ["examples/component-chat-postal/src/clj"]
-   :resource-paths ^:replace ["examples/component-chat-postal/resources"]
-   :dependencies [[org.clojure/clojurescript "1.7.145"]
-                  [funcool/postal "0.2.0-SNAPSHOT"]]
-   :plugins [[lein-cljsbuild "1.1.1-SNAPSHOT"]]
-
-   :main ^:skip-aot compchat.core
-   :cljsbuild
-   {:builds
-    [{:source-paths ["examples/component-chat-postal/src/cljs"]
-      :compiler
-      {:output-to "examples/component-chat-postal/resources/public/app.js"
-       :verbose true
-       :language-in :ecmascript5
-       :optimizations :whitespace
-       :main 'compchat.core
-       :pretty-print true}}]}
-   }]
+  {:source-paths ["examples/postal-chat/src/clj"
+                  "examples/postal-chat/src/cljs"]
+   :resource-paths ^:replace ["examples/postal-chat/resources"]
+   :dependencies [[funcool/postal "0.2.0"]
+                  [org.clojure/clojurescript "1.7.189"]]
+   :main ^:skip-aot compchat.core}
+  ]
 
  :debugging-example
  [:examples

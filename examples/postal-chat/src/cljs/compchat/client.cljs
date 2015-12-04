@@ -1,4 +1,4 @@
-(ns compchat.core
+(ns compchat.client
   (:require [goog.dom :as dom]
             [goog.events :as events]
             [goog.style :as style]

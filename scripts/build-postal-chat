@@ -1,0 +1,2 @@
+#!/bin/sh
+lein with-profile +postal-chat-example trampoline run -m clojure.main scripts/build-postal-chat.clj

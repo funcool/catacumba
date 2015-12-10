@@ -3,17 +3,15 @@
   :aliases {"test-all" ["with-profile" "dev,1.8:dev" "test"]}
   :source-paths ["dev"]
   :dependencies [[clj-http "1.1.2" :exclusions [org.clojure/tools.reader]]
-                 [org.clojure/clojurescript "1.7.189"]
+                 [org.clojure/clojurescript "1.7.189" :exclusions [org.clojure/tools.reader]]
                  [aleph "0.4.0" :exclusions [io.netty/netty-all]]
                  [org.clojure/tools.namespace "0.2.11"]
                  [ring/ring-core "1.4.0" :exclusions [javax.servlet/servlet-api
                                                       org.clojure/tools.reader
                                                       org.clojure/clojure
                                                       clj-time]]]
-  :plugins [[lein-ancient "0.6.7" :exclusions [org.clojure/tools.reader]]]}
-
- :doc
- {:plugins [[funcool/codeina "0.3.0"]]
+  :plugins [[lein-ancient "0.6.7" :exclusions [org.clojure/tools.reader]]
+            [funcool/codeina "0.3.0"]]
   :codeina {:sources ["src/clojure"]
             :exclude [catacumba.impl.context
                       catacumba.impl.atomic
@@ -50,7 +48,7 @@
                         "-Xms4g"]
    :main ^:skip-aot bench}]
 
- :1.8 {:dependencies [[org.clojure/clojure "1.8.0-RC1"]]}
+ :1.8 {:dependencies [[org.clojure/clojure "1.8.0-RC3"]]}
 
  ;; Examples
  :examples

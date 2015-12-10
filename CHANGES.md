@@ -2,7 +2,7 @@
 
 ## Version 0.9.0 ##
 
-Date: Unreleased
+Date: 2015-12-10
 
 Important changes:
 

@@ -3,7 +3,6 @@
   :aliases {"test-all" ["with-profile" "dev,1.8:dev" "test"]}
   :source-paths ["dev"]
   :dependencies [[clj-http "1.1.2" :exclusions [org.clojure/tools.reader]]
-                 [org.clojure/clojurescript "1.7.189" :exclusions [org.clojure/tools.reader]]
                  [aleph "0.4.0" :exclusions [io.netty/netty-all]]
                  [org.clojure/tools.namespace "0.2.11"]
                  [ring/ring-core "1.4.0" :exclusions [javax.servlet/servlet-api

@@ -12,47 +12,47 @@ v0.9.0
 
 == Introduction
 
-_Catacumba_ is an asynchronous and non-blocking web toolkit for Clojure built on top
-of ratpack and netty and with design influenced by ring, pedestal and ratpack.
+_Catacumba_ is an asynchronous or non-blocking web toolkit for Clojure built on top
+of ratpack and netty drawing inspiration from ring, pedestal and ratpack.
 
 
 === Rationale
 
-I start writting this library as a research project to provide a simple, non
-obstructive (a la ring) but without constrains of the existing spec (ring spec),
-web toolkit for build asynchronous and non-blocking web services.
+I started writting this library as a research project to provide a simple, non
+obstructive (a la ring) without the constraints of the existing ring spec.
+The aim is to create a web toolkit for building asynchronous web services.
 
-Here a incomplete list of things that _catacumba_ aims to archieve:
+Here is an incomplete list of things that _catacumba_ aims to achieve:
 
-* Have a flexible and extensible way to setup different kind of handlers
+* Allow different types of handlers by being flexible and extensible 
 * Provide a simple and lightweight approach for defining asynchronous web services
-  with support for different abstractions, such as promises, futures, core.async,
-  manifold, reactive-streams, ...
-* Build almost everything up on abstractions for simple and easy extensibility.
-* Provide a built-in, data-based routing.
-* To be flexible and not very opinionated.
-* Have backpressure support out of the box.
+  with support for different abstractions such as promises, futures, core.async,
+  manifold, reactive-streams, etc...
+* Build upon abstractions with simplicity and extensibility in mind.
+* Provide built in declarative style routing.
+* Remain unopinionated and versatile. 
+* Come with backpressure support out of the box.
 
-And _catacumba_ goals are not:
+_catacumba_ is not designed:
 
-* To be a fully integrated full stack solution like immutant or pedestal.
+* To be a fully integrated full stack solution like Immutant or Pedestal.
 * To provide an opinionated way to structure your "bussines logic"
 * To provide all possible features that you might need.
 * To be a low level, ring based library.
 
-The result of this research project is an powerfull, lightweight, and fully
+The result of this research project is a powerfull, lightweight, and fully
 extensible asynchronous web toolkit built on top of existing and well designed
-components such as Ratpack, Netty.
+components such as Ratpack and Netty.
 
 
 === Project Maturity
 
-Since _catacumba_ is a young project there can be some API breakage.
+Since _catacumba_ is a young project there may be some API breakage.
 
 
 === Install
 
-The simplest way to use _catacumba_ in a clojure project, is by including it in the
+The simplest way to use _catacumba_ in a clojure project is by including it in the
 dependency vector on your *_project.clj_* file:
 
 [source,clojure]
@@ -61,7 +61,7 @@ dependency vector on your *_project.clj_* file:
 [org.slf4j/slf4j-simple "1.7.12"] ;; (optional, only for show ratpack info messages)
 ----
 
-_Catacumba_ is only runs with *JDK8* and *Clojure 1.7+* (due to extensive use of
+_Catacumba_ will only run with *JDK8* and *Clojure 1.7+* (due to extensive use of
 transducers and jdk8 concurrency primitives).
 
 
@@ -73,8 +73,8 @@ This section intends to explain how to get _catacumba_ up and running.
 
 === First handler
 
-The handler consists of a function that accepts a "context" as first parameter and
-returns something renderable. Let see an example:
+The handler consists of a function that accepts a "context" as it's first parameter and
+returns something renderable. Let's see an example:
 
 [source, clojure]
 ----
@@ -83,7 +83,7 @@ returns something renderable. Let see an example:
   "Hello World")
 ----
 
-The handler may look very familiar if you have used ring previously. The main
+This handler may look very familiar if you have used ring previously. The main
 difference is that it receives a context object instead of a request object.
 Additionally it may return a string directly.
 
@@ -93,9 +93,9 @@ how handlers work.
 
 === Running the server
 
-Now having defined the simple, hello world handler, it is time to run it. To do it,
-import the `run-server` function from `catacumba.core` ns and execute it with
-handler as first parameter:
+Having defined the simple, hello world handler, it's time to run it. To do this,
+import the `run-server` function from the `catacumba.core` ns and execute it with
+the handler as the first parameter:
 
 [source, clojure]
 ----
@@ -104,7 +104,7 @@ handler as first parameter:
 (ct/run-server my-hello-world-handler)
 ----
 
-TIP: The `run-server` function does not block and you can execute it in a repl
+TIP: The `run-server` function doesn't block so you can execute it in a repl
 without problems.
 
 
@@ -133,24 +133,24 @@ help you setup your first project.
 
 == User Guide
 
-This section intends explain all the different parts of _catacumba_ and how they are
-playing together.
+This section intends explain all the different parts of _catacumba_ and how they work
+together.
 
 
 === Handlers
 
-The idea of handlers is a fundamental piece of the _catacumba_ library. Is a main
-building block for create web services.
+The idea of handlers is a fundamental piece of the _catacumba_ library. It's one of 
+the main building blocks used for creating web services.
 
 As we have seen in the "<<Quick Start,quickstart>>" section, the default handler
 mainly consists of a simple function that acts on the handling context.
 
 Do not worry about the context for now, it will be explained in later sections. The
-only thing that you should known about it at this time, is that is the central part
-of the request and response lifetime. It stores the current state of the http
-request and everything related.
+only thing that you should known about it at this time, is that it's the central part
+of the request and response cycle. It stores the current state of the http
+request and everything related to it.
 
-The hello world handler has this aspect:
+The hello world handler looks like this:
 
 [source, clojure]
 ----
@@ -161,21 +161,21 @@ The hello world handler has this aspect:
 
 
 NOTE: I mention the "default" word because, _catacumba_ comes with different
-<<handler-types,types of handlers>> out of the box. The catacumba's handlers system
+<<handler-types,types of handlers>> out of the box. Catacumba's handler system
 is fully extensible so you can easyly create your own handler types (also called
 adapters the internal terminology).
 
 
 === Context
 
-The second thing most important in the catacumba terminology is a *context*. It can
-be considered a central part of both: IO and the execution flow control (will be
+The second thing most important in the catacumba terminology is the *context*. It can
+be considered a central part of both: IO and the control flow (will be
 explained in advanced section).
 
 
 ==== Send a response
 
-As you can observe from the previous example, no status code is being provided,
+As you can see from the previous example, no status code is being provided,
 only the body of the response. To send a complete response you can use a builtin
 response type:
 
@@ -188,8 +188,8 @@ response type:
   (http/ok "Hello World"))
 ----
 
-The response types exposed under the `catacumba.http` namespace also accepts
-additional parameters such as response http headers:
+The response types exposed under the `catacumba.http` namespace also accept
+additional parameters such as response headers:
 
 [source, clojure]
 ----
@@ -200,11 +200,10 @@ additional parameters such as response http headers:
   (http/ok "<p>Hello World</p>" {:content-type "text/html"}))
 ----
 
-In the previous examples, we have seen how the return value is handled, but behind
-the scenes the context is the responsible of interactions with the request and the
-response.
+In the previous examples, we've seen how the return value is handled, but behind
+the scenes the context is responsible for interacting with both the request and response.
 
-Let see the same example but interacting directly with the context:
+Let's see the same example but interacting directly with the context:
 
 [source, clojure]
 ----
@@ -215,8 +214,8 @@ Let see the same example but interacting directly with the context:
   (ct/send! context "hello world"))
 ----
 
-The return value handling is really a helper for people coming from ring.
-Internally, the context is the main protagonist in IO operations.
+The return value handler is really just a helper for people coming from ring.
+Internally, the context is the main player in IO operations.
 
 So, the handler response is can be:
 

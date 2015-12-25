@@ -167,50 +167,50 @@
 <h2 id="introduction"><a class="link" href="#introduction">Introduction</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><em>Catacumba</em> is an asynchronous and non-blocking web toolkit for Clojure built on top
-of ratpack and netty and with design influenced by ring, pedestal and ratpack.</p>
+<p><em>Catacumba</em> is an asynchronous or non-blocking web toolkit for Clojure built on top
+of ratpack and netty drawing inspiration from ring, pedestal and ratpack.</p>
 </div>
 <div class="sect2">
 <h3 id="rationale"><a class="link" href="#rationale">Rationale</a></h3>
 <div class="paragraph">
-<p>I start writting this library as a research project to provide a simple, non
-obstructive (a la ring) but without constrains of the existing spec (ring spec),
-web toolkit for build asynchronous and non-blocking web services.</p>
+<p>I started writting this library as a research project to provide a simple, non
+obstructive (a la ring) without the constraints of the existing ring spec.
+The aim is to create a web toolkit for building asynchronous web services.</p>
 </div>
 <div class="paragraph">
-<p>Here a incomplete list of things that <em>catacumba</em> aims to archieve:</p>
+<p>Here is an incomplete list of things that <em>catacumba</em> aims to achieve:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Have a flexible and extensible way to setup different kind of handlers</p>
+<p>Allow different types of handlers by being flexible and extensible</p>
 </li>
 <li>
 <p>Provide a simple and lightweight approach for defining asynchronous web services
-with support for different abstractions, such as promises, futures, core.async,
-manifold, reactive-streams, &#8230;&#8203;</p>
+with support for different abstractions such as promises, futures, core.async,
+manifold, reactive-streams, etc&#8230;&#8203;</p>
 </li>
 <li>
-<p>Build almost everything up on abstractions for simple and easy extensibility.</p>
+<p>Build upon abstractions with simplicity and extensibility in mind.</p>
 </li>
 <li>
-<p>Provide a built-in, data-based routing.</p>
+<p>Provide built in declarative style routing.</p>
 </li>
 <li>
-<p>To be flexible and not very opinionated.</p>
+<p>Remain unopinionated and versatile.</p>
 </li>
 <li>
-<p>Have backpressure support out of the box.</p>
+<p>Come with backpressure support out of the box.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>And <em>catacumba</em> goals are not:</p>
+<p><em>catacumba</em> is not designed:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>To be a fully integrated full stack solution like immutant or pedestal.</p>
+<p>To be a fully integrated full stack solution like Immutant or Pedestal.</p>
 </li>
 <li>
 <p>To provide an opinionated way to structure your "bussines logic"</p>
@@ -224,21 +224,21 @@ manifold, reactive-streams, &#8230;&#8203;</p>
 </ul>
 </div>
 <div class="paragraph">
-<p>The result of this research project is an powerfull, lightweight, and fully
+<p>The result of this research project is a powerfull, lightweight, and fully
 extensible asynchronous web toolkit built on top of existing and well designed
-components such as Ratpack, Netty.</p>
+components such as Ratpack and Netty.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="project-maturity"><a class="link" href="#project-maturity">Project Maturity</a></h3>
 <div class="paragraph">
-<p>Since <em>catacumba</em> is a young project there can be some API breakage.</p>
+<p>Since <em>catacumba</em> is a young project there may be some API breakage.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="install"><a class="link" href="#install">Install</a></h3>
 <div class="paragraph">
-<p>The simplest way to use <em>catacumba</em> in a clojure project, is by including it in the
+<p>The simplest way to use <em>catacumba</em> in a clojure project is by including it in the
 dependency vector on your <strong><em>project.clj</em></strong> file:</p>
 </div>
 <div class="listingblock">
@@ -248,7 +248,7 @@ dependency vector on your <strong><em>project.clj</em></strong> file:</p>
 </div>
 </div>
 <div class="paragraph">
-<p><em>Catacumba</em> is only runs with <strong>JDK8</strong> and <strong>Clojure 1.7+</strong> (due to extensive use of
+<p><em>Catacumba</em> will only run with <strong>JDK8</strong> and <strong>Clojure 1.7+</strong> (due to extensive use of
 transducers and jdk8 concurrency primitives).</p>
 </div>
 </div>
@@ -263,8 +263,8 @@ transducers and jdk8 concurrency primitives).</p>
 <div class="sect2">
 <h3 id="first-handler"><a class="link" href="#first-handler">First handler</a></h3>
 <div class="paragraph">
-<p>The handler consists of a function that accepts a "context" as first parameter and
-returns something renderable. Let see an example:</p>
+<p>The handler consists of a function that accepts a "context" as it&#8217;s first parameter and
+returns something renderable. Let&#8217;s see an example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -274,7 +274,7 @@ returns something renderable. Let see an example:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>The handler may look very familiar if you have used ring previously. The main
+<p>This handler may look very familiar if you have used ring previously. The main
 difference is that it receives a context object instead of a request object.
 Additionally it may return a string directly.</p>
 </div>
@@ -286,9 +286,9 @@ how handlers work.</p>
 <div class="sect2">
 <h3 id="running-the-server"><a class="link" href="#running-the-server">Running the server</a></h3>
 <div class="paragraph">
-<p>Now having defined the simple, hello world handler, it is time to run it. To do it,
-import the <code>run-server</code> function from <code>catacumba.core</code> ns and execute it with
-handler as first parameter:</p>
+<p>Having defined the simple, hello world handler, it&#8217;s time to run it. To do this,
+import the <code>run-server</code> function from the <code>catacumba.core</code> ns and execute it with
+the handler as the first parameter:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -304,7 +304,7 @@ handler as first parameter:</p>
 <div class="title">Tip</div>
 </td>
 <td class="content">
-The <code>run-server</code> function does not block and you can execute it in a repl
+The <code>run-server</code> function doesn&#8217;t block so you can execute it in a repl
 without problems.
 </td>
 </tr>
@@ -342,14 +342,14 @@ help you setup your first project.</p>
 <h2 id="user-guide"><a class="link" href="#user-guide">User Guide</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This section intends explain all the different parts of <em>catacumba</em> and how they are
-playing together.</p>
+<p>This section intends explain all the different parts of <em>catacumba</em> and how they work
+together.</p>
 </div>
 <div class="sect2">
 <h3 id="handlers"><a class="link" href="#handlers">Handlers</a></h3>
 <div class="paragraph">
-<p>The idea of handlers is a fundamental piece of the <em>catacumba</em> library. Is a main
-building block for create web services.</p>
+<p>The idea of handlers is a fundamental piece of the <em>catacumba</em> library. It&#8217;s one of
+the main building blocks used for creating web services.</p>
 </div>
 <div class="paragraph">
 <p>As we have seen in the "<a href="#quickstart">quickstart</a>" section, the default handler
@@ -357,12 +357,12 @@ mainly consists of a simple function that acts on the handling context.</p>
 </div>
 <div class="paragraph">
 <p>Do not worry about the context for now, it will be explained in later sections. The
-only thing that you should known about it at this time, is that is the central part
-of the request and response lifetime. It stores the current state of the http
-request and everything related.</p>
+only thing that you should known about it at this time, is that it&#8217;s the central part
+of the request and response cycle. It stores the current state of the http
+request and everything related to it.</p>
 </div>
 <div class="paragraph">
-<p>The hello world handler has this aspect:</p>
+<p>The hello world handler looks like this:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -379,7 +379,7 @@ request and everything related.</p>
 </td>
 <td class="content">
 I mention the "default" word because, <em>catacumba</em> comes with different
-<a href="#handler-types">types of handlers</a> out of the box. The catacumba&#8217;s handlers system
+<a href="#handler-types">types of handlers</a> out of the box. Catacumba&#8217;s handler system
 is fully extensible so you can easyly create your own handler types (also called
 adapters the internal terminology).
 </td>
@@ -390,14 +390,14 @@ adapters the internal terminology).
 <div class="sect2">
 <h3 id="context"><a class="link" href="#context">Context</a></h3>
 <div class="paragraph">
-<p>The second thing most important in the catacumba terminology is a <strong>context</strong>. It can
-be considered a central part of both: IO and the execution flow control (will be
+<p>The second thing most important in the catacumba terminology is the <strong>context</strong>. It can
+be considered a central part of both: IO and the control flow (will be
 explained in advanced section).</p>
 </div>
 <div class="sect3">
 <h4 id="send-a-response"><a class="link" href="#send-a-response">Send a response</a></h4>
 <div class="paragraph">
-<p>As you can observe from the previous example, no status code is being provided,
+<p>As you can see from the previous example, no status code is being provided,
 only the body of the response. To send a complete response you can use a builtin
 response type:</p>
 </div>
@@ -411,8 +411,8 @@ response type:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>The response types exposed under the <code>catacumba.http</code> namespace also accepts
-additional parameters such as response http headers:</p>
+<p>The response types exposed under the <code>catacumba.http</code> namespace also accept
+additional parameters such as response headers:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -424,12 +424,11 @@ additional parameters such as response http headers:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>In the previous examples, we have seen how the return value is handled, but behind
-the scenes the context is the responsible of interactions with the request and the
-response.</p>
+<p>In the previous examples, we&#8217;ve seen how the return value is handled, but behind
+the scenes the context is responsible for interacting with both the request and response.</p>
 </div>
 <div class="paragraph">
-<p>Let see the same example but interacting directly with the context:</p>
+<p>Let&#8217;s see the same example but interacting directly with the context:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -441,8 +440,8 @@ response.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>The return value handling is really a helper for people coming from ring.
-Internally, the context is the main protagonist in IO operations.</p>
+<p>The return value handler is really just a helper for people coming from ring.
+Internally, the context is the main player in IO operations.</p>
 </div>
 <div class="paragraph">
 <p>So, the handler response is can be:</p>
@@ -2838,7 +2837,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-12-10 21:05:31 EET
+Last updated 2015-12-25 13:18:06 EET
 </div>
 </div>
 </body>

@@ -24,13 +24,13 @@ The aim is to create a web toolkit for building asynchronous web services.
 
 Here is an incomplete list of things that _catacumba_ aims to achieve:
 
-* Allow different types of handlers by being flexible and extensible 
+* Allow different types of handlers by being flexible and extensible
 * Provide a simple and lightweight approach for defining asynchronous web services
   with support for different abstractions such as promises, futures, core.async,
   manifold, reactive-streams, etc...
 * Build upon abstractions with simplicity and extensibility in mind.
 * Provide built in declarative style routing.
-* Remain unopinionated and versatile. 
+* Remain unopinionated and versatile.
 * Come with backpressure support out of the box.
 
 _catacumba_ is not designed:
@@ -139,7 +139,7 @@ together.
 
 === Handlers
 
-The idea of handlers is a fundamental piece of the _catacumba_ library. It's one of 
+The idea of handlers is a fundamental piece of the _catacumba_ library. It's one of
 the main building blocks used for creating web services.
 
 As we have seen in the "<<Quick Start,quickstart>>" section, the default handler
@@ -1544,7 +1544,7 @@ And finally, attach the handler on the router:
 ==== Server Push
 
 Additionally to the traditional rpc, it also offers a server-push or/and
-bi-directional communication with server. 
+bi-directional communication with server.
 
 This is the aspect of the handler that starts the bi-directional communication
 with the client:

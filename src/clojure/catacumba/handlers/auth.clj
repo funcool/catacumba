@@ -32,7 +32,6 @@
             [catacumba.helpers :as hp]
             [buddy.sign.jws :as jws]
             [buddy.sign.jwe :as jwe]
-            [slingshot.slingshot :refer [try+]]
             [promesa.core :as p])
   (:import catacumba.impl.context.DefaultContext
            ratpack.exec.Downstream
@@ -89,12 +88,12 @@
       (parse-authorization-header context token-name))
     (-authenticate [_ context token]
       (p/promise (fn [resolve reject]
-                   (try+
-                    (resolve (jws/unsign token secret options))
-                    (catch [:type :validation] e
-                      (if (fn? on-error)
-                        (resolve (on-error context e))
-                        (resolve nil)))))))))
+                   (try
+                     (resolve (jws/decode token secret options))
+                     (catch Exception e
+                       (if (fn? on-error)
+                         (resolve (on-error context e))
+                         (resolve nil)))))))))
 
 (defn jwe-backend
   "The JWS (Json Web Signature) based backend constructor."
@@ -106,12 +105,12 @@
       (parse-authorization-header context token-name))
     (-authenticate [_ context token]
       (p/promise (fn [resolve reject]
-                   (try+
-                    (resolve (jwe/decrypt token secret options))
-                    (catch [:type :validation] e
-                      (if (fn? on-error)
-                        (resolve (on-error context e))
-                        (resolve nil)))))))))
+                   (try
+                     (resolve (jwe/decrypt token secret options))
+                     (catch Exception e
+                       (if (fn? on-error)
+                         (resolve (on-error context e))
+                         (resolve nil)))))))))
 
 (defn session-backend
   "Given some options, create a new instance

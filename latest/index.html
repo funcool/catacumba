@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 1.5.2">
+<meta name="generator" content="Asciidoctor 1.5.3">
 <meta name="author" content="Andrey Antukh, &lt;niwi@niwi.nz&gt;">
 <title>Catacumba - Web toolkit for Clojure.</title>
 <style>
@@ -80,31 +80,34 @@
 <h1>Catacumba - Web toolkit for Clojure.</h1>
 <div class="details">
 <span id="author" class="author">Andrey Antukh, &lt;niwi@niwi.nz&gt;</span><br>
-<span id="revdate">v0.9.0</span>
+<span id="revnumber">version 0.9.0</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
-<li><a href="#introduction">Introduction</a>
-<ul class="sectlevel2">
-<li><a href="#rationale">Rationale</a></li>
-<li><a href="#project-maturity">Project Maturity</a></li>
-<li><a href="#install">Install</a></li>
-</ul>
-</li>
+<li><a href="#introduction">Introduction</a></li>
 <li><a href="#quickstart">Quick Start</a>
 <ul class="sectlevel2">
-<li><a href="#first-handler">First handler</a></li>
-<li><a href="#running-the-server">Running the server</a></li>
-<li><a href="#complete-example">Complete example</a></li>
+<li><a href="#install">Install</a></li>
+<li><a href="#handlers">Handlers</a></li>
+<li><a href="#quick-start-routing">Routing</a></li>
+<li><a href="#run-the-server">Run the server</a></li>
+<li><a href="#put-all-together">Put all together</a></li>
 </ul>
 </li>
 <li><a href="#user-guide">User Guide</a>
 <ul class="sectlevel2">
-<li><a href="#handlers">Handlers</a></li>
+<li><a href="#handlers-2">Handlers</a></li>
 <li><a href="#context">Context</a></li>
 <li><a href="#cookies">Cookies</a></li>
 <li><a href="#routing">Routing</a></li>
+</ul>
+</li>
+<li><a href="#advanced-topics">Advanced topics</a>
+<ul class="sectlevel2">
+<li><a href="#handler-delegation">Handler delegation</a></li>
+<li><a href="#modular-components">Modular components</a></li>
+<li><a href="#launching-the-server">Launching the server</a></li>
 </ul>
 </li>
 <li><a href="#handler-types">Handler types</a>
@@ -125,13 +128,6 @@
 <li><a href="#security">Security</a></li>
 <li><a href="#postal">Postal</a></li>
 <li><a href="#request-logging">Request logging</a></li>
-</ul>
-</li>
-<li><a href="#advanced-topics">Advanced topics</a>
-<ul class="sectlevel2">
-<li><a href="#handler-delegation">Handler delegation</a></li>
-<li><a href="#modular-components">Modular components</a></li>
-<li><a href="#launching-the-server">Launching the server</a></li>
 <li><a href="#instrumentation">Instrumentation</a></li>
 </ul>
 </li>
@@ -148,6 +144,7 @@
 <li><a href="#faq">FAQ</a>
 <ul class="sectlevel2">
 <li><a href="#difference-with-aleph">What is the difference between <em>catacumba</em> and Aleph?</a></li>
+<li><a href="#rationale">What is the rationale behind this project?</a></li>
 </ul>
 </li>
 <li><a href="#developers-guide">Developers Guide</a>
@@ -170,87 +167,24 @@
 <p><em>Catacumba</em> is an asynchronous or non-blocking web toolkit for Clojure built on top
 of ratpack and netty drawing inspiration from ring, pedestal and ratpack.</p>
 </div>
-<div class="sect2">
-<h3 id="rationale"><a class="link" href="#rationale">Rationale</a></h3>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
 <div class="paragraph">
-<p>I started writting this library as a research project to provide a simple, non
-obstructive (a la ring) without the constraints of the existing ring spec.
-The aim is to create a web toolkit for building asynchronous web services.</p>
-</div>
-<div class="paragraph">
-<p>Here is an incomplete list of things that <em>catacumba</em> aims to achieve:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Allow different types of handlers by being flexible and extensible</p>
-</li>
-<li>
-<p>Provide a simple and lightweight approach for defining asynchronous web services
-with support for different abstractions such as promises, futures, core.async,
-manifold, reactive-streams, etc&#8230;&#8203;</p>
-</li>
-<li>
-<p>Build upon abstractions with simplicity and extensibility in mind.</p>
-</li>
-<li>
-<p>Provide built in declarative style routing.</p>
-</li>
-<li>
-<p>Remain unopinionated and versatile.</p>
-</li>
-<li>
-<p>Come with backpressure support out of the box.</p>
-</li>
-</ul>
+<p><strong>Project Maturity</strong>:<br>
+Since <em>catacumba</em> is a young project there may be some API breakage.<br></p>
 </div>
 <div class="paragraph">
-<p><em>catacumba</em> is not designed:</p>
+<p><strong>Rationale</strong>:<br>
+You can read the rationale behind this project <a href="#rationale">here</a>.</p>
 </div>
-<div class="ulist">
-<ul>
-<li>
-<p>To be a fully integrated full stack solution like Immutant or Pedestal.</p>
-</li>
-<li>
-<p>To provide an opinionated way to structure your "bussines logic"</p>
-</li>
-<li>
-<p>To provide all possible features that you might need.</p>
-</li>
-<li>
-<p>To be a low level, ring based library.</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>The result of this research project is a powerfull, lightweight, and fully
-extensible asynchronous web toolkit built on top of existing and well designed
-components such as Ratpack and Netty.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="project-maturity"><a class="link" href="#project-maturity">Project Maturity</a></h3>
-<div class="paragraph">
-<p>Since <em>catacumba</em> is a young project there may be some API breakage.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="install"><a class="link" href="#install">Install</a></h3>
-<div class="paragraph">
-<p>The simplest way to use <em>catacumba</em> in a clojure project is by including it in the
-dependency vector on your <strong><em>project.clj</em></strong> file:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">funcool/catacumba</span> <span class="tok-s">&quot;0.9.0&quot;</span><span class="tok-p">]</span>
-<span class="tok-p">[</span><span class="tok-nv">org.slf4j/slf4j-simple</span> <span class="tok-s">&quot;1.7.12&quot;</span><span class="tok-p">]</span> <span class="tok-c1">;; (optional, only for show ratpack info messages)</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p><em>Catacumba</em> will only run with <strong>JDK8</strong> and <strong>Clojure 1.7+</strong> (due to extensive use of
-transducers and jdk8 concurrency primitives).</p>
-</div>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -261,40 +195,94 @@ transducers and jdk8 concurrency primitives).</p>
 <p>This section intends to explain how to get <em>catacumba</em> up and running.</p>
 </div>
 <div class="sect2">
-<h3 id="first-handler"><a class="link" href="#first-handler">First handler</a></h3>
+<h3 id="install"><a class="link" href="#install">Install</a></h3>
 <div class="paragraph">
-<p>The handler consists of a function that accepts a "context" as it&#8217;s first parameter and
-returns something renderable. Let&#8217;s see an example:</p>
+<p>The simplest way to use <em>catacumba</em> in a clojure project is by including it in the
+dependency vector on your <strong><em>project.clj</em></strong> file:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">my-hello-world-handler</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">funcool/catacumba</span> <span class="tok-s">&quot;0.9.0&quot;</span><span class="tok-p">]</span></code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<em>Catacumba</em> will only run with <strong>JDK8</strong> and <strong>Clojure &gt;= 1.7</strong>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="handlers"><a class="link" href="#handlers">Handlers</a></h3>
+<div class="paragraph">
+<p>The handler consists of a function that accepts a "context" as it&#8217;s first parameter
+and returns something renderable. Let&#8217;s see an example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">example-handler</span>
   <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
   <span class="tok-s">&quot;Hello World&quot;</span><span class="tok-p">)</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>This handler may look very familiar if you have used ring previously. The main
-difference is that it receives a context object instead of a request object.
-Additionally it may return a string directly.</p>
+<p>It looks very similar to ring hand with two main differences:</p>
 </div>
-<div class="paragraph">
-<p>The following sections explain all related concepts and give a full introduction on
-how handlers work.</p>
+<div class="ulist">
+<ul>
+<li>
+<p>instead of request ir receives a <strong>context</strong> that works like request but with
+more responsabilities (explained in other sections).</p>
+</li>
+<li>
+<p>returns a string instead of a hash-map (it is also allowed but is not mandatory,
+also explained later).</p>
+</li>
+</ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="running-the-server"><a class="link" href="#running-the-server">Running the server</a></h3>
+<h3 id="quick-start-routing"><a class="link" href="#quick-start-routing">Routing</a></h3>
 <div class="paragraph">
-<p>Having defined the simple, hello world handler, it&#8217;s time to run it. To do this,
-import the <code>run-server</code> function from the <code>catacumba.core</code> ns and execute it with
-the handler as the first parameter:</p>
+<p>Now knowing how we can define handlers, the next step is define a route (http
+endpoint) for our handler. That can be done with <code>routes</code> function:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">catacumba.core</span> <span class="tok-ss">:as</span> <span class="tok-nv">ct</span><span class="tok-p">])</span>
 
-<span class="tok-p">(</span><span class="tok-nf">ct/run-server</span> <span class="tok-nv">my-hello-world-handler</span><span class="tok-p">)</span></code></pre>
+<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">app</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/routes</span> <span class="tok-p">[[</span><span class="tok-ss">:all</span> <span class="tok-s">&quot;&quot;</span> <span class="tok-nv">example-handler</span><span class="tok-p">]</span>
+              <span class="tok-p">[</span><span class="tok-ss">:get</span> <span class="tok-s">&quot;foobar&quot;</span> <span class="tok-nv">example-handler</span><span class="tok-p">]]))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>routes</code> function receives a vector of ordered entry points for our handlers,
+and in this example we have defined two routes for the same handler (just for
+demostration purposes):</p>
+</div>
+<div class="paragraph">
+<p>The first entry defines a <code>/</code> route for all kind of requests and the second entry
+defines a <code>/foobar</code> route only for <code>GET</code> requests for the same handler.</p>
+</div>
+<div class="paragraph">
+<p>You can read a complete documentation about catacumba&#8217;s routing <a href="#routing">here</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="run-the-server"><a class="link" href="#run-the-server">Run the server</a></h3>
+<div class="paragraph">
+<p>For run the previously defined handler, just use the <code>run-server</code> function:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">ct/run-server</span> <span class="tok-nv">app</span> <span class="tok-p">{</span><span class="tok-ss">:port</span> <span class="tok-mi">3030</span><span class="tok-p">})</span></code></pre>
 </div>
 </div>
 <div class="admonitionblock tip">
@@ -304,15 +292,18 @@ the handler as the first parameter:</p>
 <div class="title">Tip</div>
 </td>
 <td class="content">
-The <code>run-server</code> function doesn&#8217;t block so you can execute it in a repl
-without problems.
+The <code>run-server</code> function doesn&#8217;t block so you can execute it in a repl without problems.
 </td>
 </tr>
 </table>
 </div>
+<div class="paragraph">
+<p>You can read more about all available options that you can pass to <code>run-server</code>
+function <a href="#launching-the-server">here</a>.</p>
+</div>
 </div>
 <div class="sect2">
-<h3 id="complete-example"><a class="link" href="#complete-example">Complete example</a></h3>
+<h3 id="put-all-together"><a class="link" href="#put-all-together">Put all together</a></h3>
 <div class="paragraph">
 <p>This is what the complete source code of the example looks like:</p>
 </div>
@@ -322,13 +313,17 @@ without problems.
   <span class="tok-p">(</span><span class="tok-ss">:require</span> <span class="tok-p">[</span><span class="tok-nv">catacumba.core</span> <span class="tok-ss">:as</span> <span class="tok-nv">ct</span><span class="tok-p">])</span>
   <span class="tok-p">(</span><span class="tok-ss">:gen-class</span><span class="tok-p">))</span>
 
-<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">my-hello-world-handler</span>
+<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">example-handler</span>
   <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
   <span class="tok-s">&quot;Hello World&quot;</span><span class="tok-p">)</span>
 
+<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">app</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/routes</span> <span class="tok-p">[[</span><span class="tok-ss">:all</span> <span class="tok-s">&quot;&quot;</span> <span class="tok-nv">example-handler</span><span class="tok-p">]</span>
+              <span class="tok-p">[</span><span class="tok-ss">:get</span> <span class="tok-s">&quot;foobar&quot;</span> <span class="tok-nv">example-handler</span><span class="tok-p">]]))</span>
+
 <span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">-main</span>
   <span class="tok-p">[</span><span class="tok-o">&amp;</span> <span class="tok-nv">args</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-nf">ct/run-server</span> <span class="tok-nv">my-hello-world-handler</span><span class="tok-p">))</span></code></pre>
+  <span class="tok-p">(</span><span class="tok-nf">ct/run-server</span> <span class="tok-nv">app</span> <span class="tok-p">{</span><span class="tok-ss">:port</span> <span class="tok-mi">3030</span><span class="tok-p">}))</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -346,89 +341,127 @@ help you setup your first project.</p>
 together.</p>
 </div>
 <div class="sect2">
-<h3 id="handlers"><a class="link" href="#handlers">Handlers</a></h3>
+<h3 id="handlers-2"><a class="link" href="#handlers-2">Handlers</a></h3>
 <div class="paragraph">
-<p>The idea of handlers is a fundamental piece of the <em>catacumba</em> library. It&#8217;s one of
-the main building blocks used for creating web services.</p>
+<p>Is the fundamentar building block in the <em>catacumba</em> toolkit and has two main types:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Ending</strong>: Handlers that process a request and return a response (usually named
+controller in other web frameworks or toolkits).</p>
+</li>
+<li>
+<p><strong>Middle</strong>: Handlers that does some logic but does not return any response (
+delegating that task to other handler) (usually named as middleware or decorator).</p>
+</li>
+</ul>
 </div>
 <div class="paragraph">
-<p>As we have seen in the "<a href="#quickstart">quickstart</a>" section, the default handler
-mainly consists of a simple function that acts on the handling context.</p>
-</div>
-<div class="paragraph">
-<p>Do not worry about the context for now, it will be explained in later sections. The
-only thing that you should known about it at this time, is that it&#8217;s the central part
-of the request and response cycle. It stores the current state of the http
-request and everything related to it.</p>
-</div>
-<div class="paragraph">
-<p>The hello world handler looks like this:</p>
+<p>The both handler types are defined in term of functions and looks identically, the
+principal change is the responsability. Let see an example:</p>
 </div>
 <div class="listingblock">
+<div class="title">An <strong>ending</strong> handler example.</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">myhandler</span>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">sample-ending-handler</span>
   <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
   <span class="tok-s">&quot;Hello World&quot;</span><span class="tok-p">)</span></code></pre>
 </div>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-I mention the "default" word because, <em>catacumba</em> comes with different
-<a href="#handler-types">types of handlers</a> out of the box. Catacumba&#8217;s handler system
-is fully extensible so you can easyly create your own handler types (also called
-adapters the internal terminology).
-</td>
-</tr>
-</table>
+<div class="listingblock">
+<div class="title">An <strong>middle</strong> handler example.</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">sample-middle-handler</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-nb">println </span><span class="tok-s">&quot;hello world&quot;</span><span class="tok-p">)</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/delegate</span><span class="tok-p">))</span></code></pre>
 </div>
-</div>
-<div class="sect2">
-<h3 id="context"><a class="link" href="#context">Context</a></h3>
-<div class="paragraph">
-<p>The second thing most important in the catacumba terminology is the <strong>context</strong>. It can
-be considered a central part of both: IO and the control flow (will be
-explained in advanced section).</p>
 </div>
 <div class="sect3">
-<h4 id="send-a-response"><a class="link" href="#send-a-response">Send a response</a></h4>
+<h4 id="the-ending-handlers"><a class="link" href="#the-ending-handlers">The ending handlers</a></h4>
 <div class="paragraph">
-<p>As you can see from the previous example, no status code is being provided,
-only the body of the response. To send a complete response you can use a builtin
-response type:</p>
+<p>As you have seen, the examples until now are always returning a simple string that
+in fact is not very usefull in real-world use cases. The great news here is that
+return values are handled using open polymorphic abstractions that clojure offers:
+protocols.</p>
+</div>
+<div class="paragraph">
+<p>This means that you can return anything that catacumbla already has implementation
+for it or anything that yourself have implemented. Let see some examples:</p>
 </div>
 <div class="listingblock">
+<div class="title">Handler example that returns ring style response.</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">some-handler</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">{</span><span class="tok-ss">:status</span> <span class="tok-mi">200</span>
+   <span class="tok-ss">:headers</span> <span class="tok-p">{}</span>
+   <span class="tok-ss">:body</span> <span class="tok-s">&quot;Hello World&quot;</span><span class="tok-p">})</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Handler example that returns catacumba&#8217;s builtin response type.</div>
 <div class="content">
 <pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">catacumba.http</span> <span class="tok-ss">:as</span> <span class="tok-nv">http</span><span class="tok-p">])</span>
 
-<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">my-handler</span>
+<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">some-handler</span>
   <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
   <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-s">&quot;Hello World&quot;</span><span class="tok-p">))</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The response types exposed under the <code>catacumba.http</code> namespace also accept
-additional parameters such as response headers:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">catacumba.http</span> <span class="tok-ss">:as</span> <span class="tok-nv">http</span><span class="tok-p">])</span>
-
-<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">myhandler</span>
-  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-s">&quot;&lt;p&gt;Hello World&lt;/p&gt;&quot;</span> <span class="tok-p">{</span><span class="tok-ss">:content-type</span> <span class="tok-s">&quot;text/html&quot;</span><span class="tok-p">}))</span></code></pre>
+<p>But this is not the end, if you want to know all the different kind of handlers
+and its return types, please take a look on <a href="#handler-types">Handler types</a> section.</p>
 </div>
 </div>
+<div class="sect3">
+<h4 id="the-middle-handlers"><a class="link" href="#the-middle-handlers">The middle handlers</a></h4>
+<div class="paragraph">
+<p>The catacumba toolkit in request/response handling perspective behaves like a
+pipeline of handlers (when only one handler is attached it will be a pipeline of
+one unique element).</p>
+</div>
+<div class="paragraph">
+<p>As you have observed in the previous example, the <strong>middle</strong> handler instead of
+returning a response, returns a result an opaque type that indicates to catacumba
+that this handler is not of <strong>ending</strong> type and forces to catacumba take the next
+handler from the pipeline and execute it. And so until <strong>ending</strong> handler is found
+and response is returned.</p>
+</div>
+<div class="paragraph">
+<p>There are nothing especial, the opaque object that <code>delegate</code> function returns
+just implement appropriate protocol and if you don&#8217;t like the default behavior,
+you are free to implement your own.</p>
+</div>
+<div class="paragraph">
+<p>This is a little introduction to the delegation process and how the <strong>middle</strong>
+handlers participates on it. For in depth understanding and how you can use it
+in your application, please read the <a href="#handler-delegation">handler delegation</a>
+section.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="context"><a class="link" href="#context">Context</a></h3>
+<div class="paragraph">
+<p>The second thing most important in the catacumba is the <strong>context</strong>. It can
+be considered a central part of both: IO and the control flow (will be
+explained in advanced section).</p>
+</div>
+<div class="paragraph">
+<p>In other words it can be considered as a combination of request and response.</p>
+</div>
+<div class="sect3">
+<h4 id="response"><a class="link" href="#response">Response</a></h4>
 <div class="paragraph">
 <p>In the previous examples, we&#8217;ve seen how the return value is handled, but behind
-the scenes the context is responsible for interacting with both the request and response.</p>
+the scenes the context is responsible for interacting with both the request and
+response.</p>
 </div>
 <div class="paragraph">
-<p>Let&#8217;s see the same example but interacting directly with the context:</p>
+<p>Let&#8217;s see the same example but interacting directly with the context using low-level
+mutable api:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -443,35 +476,9 @@ the scenes the context is responsible for interacting with both the request and 
 <p>The return value handler is really just a helper for people coming from ring.
 Internally, the context is the main player in IO operations.</p>
 </div>
-<div class="paragraph">
-<p>So, the handler response is can be:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>a <strong>string</strong>, will result in a response with status code 200 and "text/plain" as
-content type.</p>
-</li>
-<li>
-<p>a <strong>ring style</strong> hash map.</p>
-</li>
-<li>
-<p>a <strong>response</strong> type (previous example).</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>The return value handling is implemented using clojure protocols, so its behavior
-can be extended easily with user defined types.</p>
-</div>
 </div>
 <div class="sect3">
-<h4 id="reading-the-request"><a class="link" href="#reading-the-request">Reading the request</a></h4>
-<div class="paragraph">
-<p>In the catacumba the closest thing to the request concept is a context. In fact,
-catacumba does not has request and responses. Just a central object that handles
-the IO (Input and Output).</p>
-</div>
+<h4 id="request"><a class="link" href="#request">Request</a></h4>
 <div class="paragraph">
 <p>The most important thing here is that the context in a user end acts like a request
 object and allows access to the most used part of the request such as the <code>:body</code>,
@@ -674,9 +681,7 @@ keywords. Let&#8217;s see a little example of the aspect in a complete example:<
 <div class="content">
 <pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">routes</span>
   <span class="tok-p">(</span><span class="tok-nf">ct/routes</span> <span class="tok-p">[[</span><span class="tok-ss">:prefix</span> <span class="tok-s">&quot;api&quot;</span>
-               <span class="tok-p">[</span><span class="tok-ss">:get</span> <span class="tok-s">&quot;users&quot;</span> <span class="tok-nv">users-handler</span><span class="tok-p">]]]))</span>
-
-<span class="tok-p">(</span><span class="tok-nf">ct/run-server</span> <span class="tok-nv">routes</span><span class="tok-p">)</span></code></pre>
+               <span class="tok-p">[</span><span class="tok-ss">:get</span> <span class="tok-s">&quot;users&quot;</span> <span class="tok-nv">users-handler</span><span class="tok-p">]]]))</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -939,10 +944,342 @@ section.
 </div>
 </div>
 <div class="sect1">
+<h2 id="advanced-topics"><a class="link" href="#advanced-topics">Advanced topics</a></h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="handler-delegation"><a class="link" href="#handler-delegation">Handler delegation</a></h3>
+<div class="paragraph">
+<p>A part of the obvious (and previously explained) responsability of the <code>context</code>
+object in catacubla, it has some others responsabilities. Here just a summary of
+them:</p>
+</div>
+<div class="paragraph">
+<p>Here a small summary of the context responsabilities besides the obvious one
+explained in previous sections (IO handling):</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Provide direct access to the request and response objects.</p>
+</li>
+<li>
+<p>Access to the contextual objects (called registry).</p>
+</li>
+<li>
+<p>Flow control in handler chaining.</p>
+</li>
+<li>
+<p>Convenience helpers for common handlers operation.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>In a catacumba design (inherited from ratpack), a handler is a unit of work in
+an asynchronous handler pipeline and the context is a execution controler and
+local storage for the current request state.</p>
+</div>
+<div class="paragraph">
+<p>In other words it can be explained as "flow control" in the chain of handlers.</p>
+</div>
+<div class="paragraph">
+<p>The request process is an asynchronous pipeline of handlers that can be
+composed in different ways (as we previously seen in other parts of the
+documentation). So the each handler in the pipeline has the ability to do some
+work and delegate the rest of processing to next handler in the chain.</p>
+</div>
+<div class="paragraph">
+<p>This approach allows you build different kind of modular and completelly decoupled
+handlers and compose them into a pipeline to work together.</p>
+</div>
+<div class="paragraph">
+<p>The delegation response can be done with <code>delegate</code> function. Let see a simple
+example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler1</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-nf">do-something</span> <span class="tok-nv">context</span><span class="tok-p">)</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/delegate</span><span class="tok-p">)</span>
+
+<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler2</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-s">&quot;hello world&quot;</span><span class="tok-p">))</span>
+
+<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">router</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/routes</span> <span class="tok-p">[[</span><span class="tok-ss">:get</span> <span class="tok-s">&quot;foo&quot;</span> <span class="tok-nv">handler1</span> <span class="tok-nv">handler2</span><span class="tok-p">]]))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In this example, when the request arrives at <code>handler1</code>, it delegates the execution
+to the next handler in the chain. It do not need to know about next handler, it
+just delegates to the routing chain to find a next handler or raise a corresponding
+error.</p>
+</div>
+<div class="paragraph">
+<p>In addition to the simple handler delegation, <em>catacumba</em> offers a simple way to pass
+context data to the next handler in the chain. It can be done by passing an
+additional parameter to the <code>delegate</code> function:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler1</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-nf">do-something</span> <span class="tok-nv">context</span><span class="tok-p">)</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/delegate</span> <span class="tok-p">{</span><span class="tok-ss">:message</span> <span class="tok-s">&quot;foobar&quot;</span><span class="tok-p">}))</span>
+
+<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler2</span>
+  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">message</span> <span class="tok-p">(</span><span class="tok-ss">:message</span> <span class="tok-nv">context</span><span class="tok-p">)]</span>
+    <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-nv">message</span><span class="tok-p">)))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In the example above, the second handler prints the message found in the context.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="modular-components"><a class="link" href="#modular-components">Modular components</a></h3>
+<div class="paragraph">
+<p><em>Catacumba</em> is build from its ground with optional support for the
+<code>stuartsierra/component</code> library, and exposes a <code>catacumba-server</code> component with
+an API for adding routes and handlers from other components.</p>
+</div>
+<div class="paragraph">
+<p>Let see a little example on how it can be used:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">ns </span><span class="tok-nv">yourapp.system</span>
+  <span class="tok-p">(</span><span class="tok-ss">:require</span> <span class="tok-p">[</span><span class="tok-nv">com.stuartsierra.component</span> <span class="tok-ss">:as</span> <span class="tok-nv">component</span><span class="tok-p">]</span>
+            <span class="tok-p">[</span><span class="tok-nv">catacumba.components</span> <span class="tok-ss">:refer</span> <span class="tok-p">(</span><span class="tok-nf">catacumba-server</span> <span class="tok-nv">assoc-routes!</span><span class="tok-p">)]))</span>
+
+<span class="tok-c1">;; Define your web application component, it will be responsible to setup</span>
+<span class="tok-c1">;; the routes to the catacumba-server component of your handlers</span>
+
+<span class="tok-p">(</span><span class="tok-kd">defrecord </span><span class="tok-nv">WebApp</span> <span class="tok-p">[</span><span class="tok-nv">server</span><span class="tok-p">]</span>
+  <span class="tok-nv">component/Lifecycle</span>
+  <span class="tok-p">(</span><span class="tok-nf">start</span> <span class="tok-p">[</span><span class="tok-nv">this</span><span class="tok-p">]</span>
+    <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">routes</span> <span class="tok-p">[[</span><span class="tok-ss">:get</span> <span class="tok-s">&quot;foo&quot;</span> <span class="tok-nv">some-handler</span><span class="tok-p">]</span>
+                  <span class="tok-p">[</span><span class="tok-ss">:get</span> <span class="tok-s">&quot;bar&quot;</span> <span class="tok-nv">other-handler</span><span class="tok-p">]]]</span>
+      <span class="tok-p">(</span><span class="tok-nf">assoc-routes!</span> <span class="tok-nv">server</span> <span class="tok-ss">::web</span> <span class="tok-nv">routes</span><span class="tok-p">)))</span>
+
+  <span class="tok-p">(</span><span class="tok-nf">stop</span> <span class="tok-p">[</span><span class="tok-nv">this</span><span class="tok-p">]</span>
+    <span class="tok-c1">;; noop</span>
+    <span class="tok-p">))</span>
+
+<span class="tok-c1">;; Define a simple constructor for your web application component</span>
+<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">webapp</span> <span class="tok-p">[]</span>
+  <span class="tok-p">(</span><span class="tok-nf">-&gt;WebApp</span> <span class="tok-nv">nil</span><span class="tok-p">))</span>
+
+<span class="tok-c1">;; Define the system with two main components: catacumba-server and webapp</span>
+<span class="tok-c1">;; and explicitly specify the dependency of catacumba-server for webapp/</span>
+
+<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">application-system</span>
+  <span class="tok-s">&quot;The application system constructor.&quot;</span>
+  <span class="tok-p">[]</span>
+  <span class="tok-p">(</span><span class="tok-nb">-&gt; </span><span class="tok-p">(</span><span class="tok-nf">component/system-map</span>
+       <span class="tok-ss">:catacumba</span> <span class="tok-p">(</span><span class="tok-nf">catacumba-server</span> <span class="tok-p">{</span><span class="tok-ss">:port</span> <span class="tok-mi">5050</span><span class="tok-p">})</span>
+       <span class="tok-ss">:app</span> <span class="tok-p">(</span><span class="tok-nf">webapp</span><span class="tok-p">))</span>
+      <span class="tok-p">(</span><span class="tok-nf">component/system-using</span>
+       <span class="tok-p">{</span><span class="tok-ss">:app</span> <span class="tok-p">{</span><span class="tok-ss">:server</span> <span class="tok-ss">:catacumba</span><span class="tok-p">}})))</span>
+
+<span class="tok-c1">;; Just define an entry point for the application.</span>
+
+<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">-main</span>
+  <span class="tok-s">&quot;The main entry point to your application.&quot;</span>
+  <span class="tok-p">[</span><span class="tok-o">&amp;</span> <span class="tok-nv">args</span><span class="tok-p">]</span>
+  <span class="tok-p">(</span><span class="tok-nf">component/start</span> <span class="tok-p">(</span><span class="tok-nf">application-system</span><span class="tok-p">)))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Be aware that each call to the <code>assoc-routes!</code> function will cause the server
+to reload. In the majority of circumstances this is completely irrelevant
+because it is done at application bootstrap time.</p>
+</div>
+<div class="paragraph">
+<p>To understand it better, <em>catacumba</em> comes with an <a href="#sse-component-example">example</a>
+that builds a multiuser chat using "Server-Sent events" and component, so you can
+experiment with real code. See the <a href="#examples">examples</a> section for it.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="launching-the-server"><a class="link" href="#launching-the-server">Launching the server</a></h3>
+<div class="sect3">
+<h4 id="getting-started"><a class="link" href="#getting-started">Getting Started</a></h4>
+<div class="paragraph">
+<p>As you can see in the quick start section, the main entry point for start the
+server is the <code>run-server</code> function that receives a handler chain and a map
+with options.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">catacumba.core</span> <span class="tok-ss">:as</span> <span class="tok-nv">ct</span><span class="tok-p">])</span>
+
+<span class="tok-c1">;; handler definition goes here</span>
+
+<span class="tok-p">(</span><span class="tok-nf">ct/run-server</span> <span class="tok-o">#</span><span class="tok-ss">&#39;my-handler</span> <span class="tok-p">{</span><span class="tok-ss">:port</span> <span class="tok-mi">4040</span> <span class="tok-ss">:debug</span> <span class="tok-nv">true</span><span class="tok-p">})</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="configuration-options"><a class="link" href="#configuration-options">Configuration Options</a></h4>
+<div class="paragraph">
+<p>Here a complete reference of the currently supported options that can be passed
+to the <code>run-server</code> function:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 60%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-center valign-top">Keyword</th>
+<th class="tableblock halign-center valign-top">Default</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:port</code></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>5050</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The port to listen on.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:threads</code></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">(num of cores * 2)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The number of threads for handler requests.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:debug</code></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Start in development mode.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:setup</code></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>nil</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A callback for configuration step (low level ratpack access).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:basedir</code></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>nil</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The application base directory, used mainly for resolving relative paths and assets.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:keystore-path</code></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>nil</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A relative path in the classpath to the ssl keystore.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:keystore-secret</code></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>nil</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A secret for the ssl key store</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:decorators</code></p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock"><code>nil</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A vector of handlers to attach at the start of the pipeline</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>All supported options of this function, can be overwritten at JVM startup, using
+environment variables or system properties. This allows to customize the
+server without modifying source code and exists for convenience to make easy
+customizations in deployments.</p>
+</div>
+<div class="paragraph">
+<p>For example, you can change the default port on JVM startup using the
+<code>CATACUMBA_PORT</code> environment variable or <code>catacumba.port</code> system property:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example using enviroment variables</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash"><span class="tok-nb">export </span><span class="tok-nv">CATACUMBA_PORT</span><span class="tok-o">=</span>8000
+<span class="tok-nb">export </span><span class="tok-nv">CATACUMBA_BASEDIR</span><span class="tok-o">=</span><span class="tok-sb">`</span><span class="tok-nb">pwd</span><span class="tok-sb">`</span>
+java -jar yourjarhere.jar</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Example using enviroment variables</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash">java -Dcatacumba.port<span class="tok-o">=</span><span class="tok-m">8000</span> -Dcatacumba.debug<span class="tok-o">=</span><span class="tok-nb">true</span> -jar yourjarhere.jar</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+if no <code>:basedir</code> is specified, catacumba will try to find a <code>.catacumba</code> file
+in the classpath and will set a base dir to its directory.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="ssl-configuration"><a class="link" href="#ssl-configuration">SSL Configuration</a></h4>
+<div class="paragraph">
+<p><em>Catacumba</em> server can be configured to use TLS (commonly known as SSL). The process
+is pretty simple but it requires to have a proper key and certificate.</p>
+</div>
+<div class="paragraph">
+<p>The first thinkg that you should care about is that <em>catacumba</em> is built on jvm
+that the default ssl certificate/key format used by nginx/apache it isn&#8217;t compatible
+but is very easy create a compatible file using the <code>openssl</code> commandline.</p>
+</div>
+<div class="paragraph">
+<p>Having a key and the certificate, just execute this command:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="bash">openssl pkcs12 -export -in cert.pem -inkey key.pem -out store.p12</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This process will ask you for a password that you must memorize and later
+provide it to catacumba. Now, having the properly formated trusted store,
+just pass some additional parameters on starting the server:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">ct/run-server</span> <span class="tok-o">#</span><span class="tok-ss">&#39;my-handler</span> <span class="tok-p">{</span><span class="tok-ss">:port</span> <span class="tok-mi">4040</span>
+                             <span class="tok-ss">:keystore-secret</span> <span class="tok-s">&quot;yoursecrethere&quot;</span>
+                             <span class="tok-ss">:keystore-path</span> <span class="tok-s">&quot;path/to/store.p12&quot;</span><span class="tok-p">})</span></code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<em>catacumba</em> at this moment does not has the "upgrade" approach so if
+you setup ssl, only ssl connections will be accepted. So the most recommended
+way to use ssl on your application is put catacumba behind nginx or haproxi
+and make them handle the ssl.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="handler-types"><a class="link" href="#handler-types">Handler types</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This section intends to explain the different kind of builting handler types.</p>
+<p>This section intends to explain the different kind of builting handler types and the
+response types that comes out of the box with catacumba. This section is organized
+on handler types as first level and possible supported return values as second
+level.</p>
 </div>
 <div class="sect2">
 <h3 id="asynchronous"><a class="link" href="#asynchronous">Asynchronous</a></h3>
@@ -1448,7 +1785,7 @@ this one works in almost identical way.</p>
 <div class="sect2">
 <h3 id="sessions"><a class="link" href="#sessions">Sessions</a></h3>
 <div class="sect3">
-<h4 id="getting-started"><a class="link" href="#getting-started">Getting Started</a></h4>
+<h4 id="getting-started-2"><a class="link" href="#getting-started-2">Getting Started</a></h4>
 <div class="paragraph">
 <p>The HTTP sessions in <em>catacumba</em> are also implemented as chain handler. So you can
 add session handling support to you application just by adding the handler to your
@@ -2020,7 +2357,7 @@ transport and message routing layer for
 but it not tied by it.</p>
 </div>
 <div class="sect3">
-<h4 id="getting-started-2"><a class="link" href="#getting-started-2">Getting Started</a></h4>
+<h4 id="getting-started-3"><a class="link" href="#getting-started-3">Getting Started</a></h4>
 <div class="paragraph">
 <p>The <strong>postal</strong> handler looks like a default <em>catacumba</em> handler with one extra
 argument: frame. The frame is a structured message received from the client that
@@ -2196,331 +2533,6 @@ with it you can provide your own function for logging:</p>
 <div class="paragraph">
 <p>The <code>context</code> parameter is just a context that you have already used previously,
 and <code>outcome</code> is hash map that contains additional data such as: response headers, respose status and request duration time.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="advanced-topics"><a class="link" href="#advanced-topics">Advanced topics</a></h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="handler-delegation"><a class="link" href="#handler-delegation">Handler delegation</a></h3>
-<div class="paragraph">
-<p>A part of the obvious (and previously explained) responsability of the <code>context</code>
-object in catacubla, it has some others responsabilities. Here just a summary of
-them:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Provide direct access to the request and response objects.</p>
-</li>
-<li>
-<p>Access to the contextual objects (called registry).</p>
-</li>
-<li>
-<p>Flow control in handler chaining.</p>
-</li>
-<li>
-<p>Convenience helpers for common handlers operation.</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>In a catacumba design (inherited from ratpack), a handler is a unit of work in
-an asynchronous handler and the context is a execution controler and local storage
-for the current request state.</p>
-</div>
-<div class="paragraph">
-<p>In other words it can be explained as "flow control" in the chain of handlers.</p>
-</div>
-<div class="paragraph">
-<p>The request process is an asynchronous pipeline of handlers that can be
-composed in different ways (as we previously seen in a router section). So the each
-handler in the pipeline has the ability to do some work and delegate the rest of
-processing to next handler in the chain.</p>
-</div>
-<div class="paragraph">
-<p>This approach allows you build different kind of modular and completelly decoupled
-handlers and compose them into a pipeline to work together.</p>
-</div>
-<div class="paragraph">
-<p>The delegation response can be done with <code>delegate</code> function. Let see a simple
-example:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler1</span>
-  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-nf">do-something</span> <span class="tok-nv">context</span><span class="tok-p">)</span>
-  <span class="tok-p">(</span><span class="tok-nf">ct/delegate</span><span class="tok-p">)</span>
-
-<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler2</span>
-  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-s">&quot;hello world&quot;</span><span class="tok-p">))</span>
-
-<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">router</span>
-  <span class="tok-p">(</span><span class="tok-nf">ct/routes</span> <span class="tok-p">[[</span><span class="tok-ss">:get</span> <span class="tok-s">&quot;foo&quot;</span> <span class="tok-nv">handler1</span> <span class="tok-nv">handler2</span><span class="tok-p">]]))</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>In this example, when the request arrives at <code>handler1</code>, it delegates the execution
-to the next handler in the chain. It do not need to know about next handler, it
-just delegates to the routing chain to find a next handler or raise a corresponding
-error.</p>
-</div>
-<div class="paragraph">
-<p>In addition to the simple handler delegation, <em>catacumba</em> offers a simple way to pass
-context data to the next handler in the chain. It can be done by passing an
-additional parameter to the <code>delegate</code> function:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler1</span>
-  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-nf">do-something</span> <span class="tok-nv">context</span><span class="tok-p">)</span>
-  <span class="tok-p">(</span><span class="tok-nf">ct/delegate</span> <span class="tok-p">{</span><span class="tok-ss">:message</span> <span class="tok-s">&quot;foobar&quot;</span><span class="tok-p">}))</span>
-
-<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">handler2</span>
-  <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">message</span> <span class="tok-p">(</span><span class="tok-ss">:message</span> <span class="tok-nv">context</span><span class="tok-p">)]</span>
-    <span class="tok-p">(</span><span class="tok-nf">http/ok</span> <span class="tok-nv">message</span><span class="tok-p">)))</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>In the example above, the second handler prints the message found in the context.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="modular-components"><a class="link" href="#modular-components">Modular components</a></h3>
-<div class="paragraph">
-<p><em>Catacumba</em> is build from its ground with optional support for the
-<code>stuartsierra/component</code> library, and exposes a <code>catacumba-server</code> component with
-an API for adding routes and handlers from other components.</p>
-</div>
-<div class="paragraph">
-<p>Let see a little example on how it can be used:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">ns </span><span class="tok-nv">yourapp.system</span>
-  <span class="tok-p">(</span><span class="tok-ss">:require</span> <span class="tok-p">[</span><span class="tok-nv">com.stuartsierra.component</span> <span class="tok-ss">:as</span> <span class="tok-nv">component</span><span class="tok-p">]</span>
-            <span class="tok-p">[</span><span class="tok-nv">catacumba.components</span> <span class="tok-ss">:refer</span> <span class="tok-p">(</span><span class="tok-nf">catacumba-server</span> <span class="tok-nv">assoc-routes!</span><span class="tok-p">)]))</span>
-
-<span class="tok-c1">;; Define your web application component, it will be responsible to setup</span>
-<span class="tok-c1">;; the routes to the catacumba-server component of your handlers</span>
-
-<span class="tok-p">(</span><span class="tok-kd">defrecord </span><span class="tok-nv">WebApp</span> <span class="tok-p">[</span><span class="tok-nv">server</span><span class="tok-p">]</span>
-  <span class="tok-nv">component/Lifecycle</span>
-  <span class="tok-p">(</span><span class="tok-nf">start</span> <span class="tok-p">[</span><span class="tok-nv">this</span><span class="tok-p">]</span>
-    <span class="tok-p">(</span><span class="tok-k">let </span><span class="tok-p">[</span><span class="tok-nv">routes</span> <span class="tok-p">[[</span><span class="tok-ss">:get</span> <span class="tok-s">&quot;foo&quot;</span> <span class="tok-nv">some-handler</span><span class="tok-p">]</span>
-                  <span class="tok-p">[</span><span class="tok-ss">:get</span> <span class="tok-s">&quot;bar&quot;</span> <span class="tok-nv">other-handler</span><span class="tok-p">]]]</span>
-      <span class="tok-p">(</span><span class="tok-nf">assoc-routes!</span> <span class="tok-nv">server</span> <span class="tok-ss">::web</span> <span class="tok-nv">routes</span><span class="tok-p">)))</span>
-
-  <span class="tok-p">(</span><span class="tok-nf">stop</span> <span class="tok-p">[</span><span class="tok-nv">this</span><span class="tok-p">]</span>
-    <span class="tok-c1">;; noop</span>
-    <span class="tok-p">))</span>
-
-<span class="tok-c1">;; Define a simple constructor for your web application component</span>
-<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">webapp</span> <span class="tok-p">[]</span>
-  <span class="tok-p">(</span><span class="tok-nf">-&gt;WebApp</span> <span class="tok-nv">nil</span><span class="tok-p">))</span>
-
-<span class="tok-c1">;; Define the system with two main components: catacumba-server and webapp</span>
-<span class="tok-c1">;; and explicitly specify the dependency of catacumba-server for webapp/</span>
-
-<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">application-system</span>
-  <span class="tok-s">&quot;The application system constructor.&quot;</span>
-  <span class="tok-p">[]</span>
-  <span class="tok-p">(</span><span class="tok-nb">-&gt; </span><span class="tok-p">(</span><span class="tok-nf">component/system-map</span>
-       <span class="tok-ss">:catacumba</span> <span class="tok-p">(</span><span class="tok-nf">catacumba-server</span> <span class="tok-p">{</span><span class="tok-ss">:port</span> <span class="tok-mi">5050</span><span class="tok-p">})</span>
-       <span class="tok-ss">:app</span> <span class="tok-p">(</span><span class="tok-nf">webapp</span><span class="tok-p">))</span>
-      <span class="tok-p">(</span><span class="tok-nf">component/system-using</span>
-       <span class="tok-p">{</span><span class="tok-ss">:app</span> <span class="tok-p">{</span><span class="tok-ss">:server</span> <span class="tok-ss">:catacumba</span><span class="tok-p">}})))</span>
-
-<span class="tok-c1">;; Just define an entry point for the application.</span>
-
-<span class="tok-p">(</span><span class="tok-kd">defn </span><span class="tok-nv">-main</span>
-  <span class="tok-s">&quot;The main entry point to your application.&quot;</span>
-  <span class="tok-p">[</span><span class="tok-o">&amp;</span> <span class="tok-nv">args</span><span class="tok-p">]</span>
-  <span class="tok-p">(</span><span class="tok-nf">component/start</span> <span class="tok-p">(</span><span class="tok-nf">application-system</span><span class="tok-p">)))</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Be aware that each call to the <code>assoc-routes!</code> function will cause the server
-to reload. In the majority of circumstances this is completely irrelevant
-because it is done at application bootstrap time.</p>
-</div>
-<div class="paragraph">
-<p>To understand it better, <em>catacumba</em> comes with an <a href="#sse-component-example">example</a>
-that builds a multiuser chat using "Server-Sent events" and component, so you can
-experiment with real code. See the <a href="#examples">examples</a> section for it.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="launching-the-server"><a class="link" href="#launching-the-server">Launching the server</a></h3>
-<div class="sect3">
-<h4 id="getting-started-3"><a class="link" href="#getting-started-3">Getting Started</a></h4>
-<div class="paragraph">
-<p>As you can see in the quick start section, the main entry point for start the
-server is the <code>run-server</code> function that receives a handler chain and a map
-with options.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">require</span> <span class="tok-o">&#39;</span><span class="tok-p">[</span><span class="tok-nv">catacumba.core</span> <span class="tok-ss">:as</span> <span class="tok-nv">ct</span><span class="tok-p">])</span>
-
-<span class="tok-c1">;; handler definition goes here</span>
-
-<span class="tok-p">(</span><span class="tok-nf">ct/run-server</span> <span class="tok-o">#</span><span class="tok-ss">&#39;my-handler</span> <span class="tok-p">{</span><span class="tok-ss">:port</span> <span class="tok-mi">4040</span> <span class="tok-ss">:debug</span> <span class="tok-nv">true</span><span class="tok-p">})</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect3">
-<h4 id="configuration-options"><a class="link" href="#configuration-options">Configuration Options</a></h4>
-<div class="paragraph">
-<p>Here a complete reference of the currently supported options that can be passed
-to the <code>run-server</code> function:</p>
-</div>
-<table class="tableblock frame-all grid-all spread">
-<colgroup>
-<col style="width: 20%;">
-<col style="width: 20%;">
-<col style="width: 60%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-center valign-top">Keyword</th>
-<th class="tableblock halign-center valign-top">Default</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:port</code></p></td>
-<td class="tableblock halign-center valign-top"><p class="tableblock"><code>5050</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The port to listen on.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:threads</code></p></td>
-<td class="tableblock halign-center valign-top"><p class="tableblock">(num of cores * 2)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The number of threads for handler requests.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:debug</code></p></td>
-<td class="tableblock halign-center valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Start in development mode.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:setup</code></p></td>
-<td class="tableblock halign-center valign-top"><p class="tableblock"><code>nil</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">A callback for configuration step (low level ratpack access).</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:basedir</code></p></td>
-<td class="tableblock halign-center valign-top"><p class="tableblock"><code>nil</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The application base directory, used mainly for resolving relative paths and assets.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:keystore-path</code></p></td>
-<td class="tableblock halign-center valign-top"><p class="tableblock"><code>nil</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">A relative path in the classpath to the ssl keystore.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:keystore-secret</code></p></td>
-<td class="tableblock halign-center valign-top"><p class="tableblock"><code>nil</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">A secret for the ssl key store</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-center valign-top"><p class="tableblock"><code>:decorators</code></p></td>
-<td class="tableblock halign-center valign-top"><p class="tableblock"><code>nil</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">A vector of handlers to attach at the start of the pipeline</p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>All supported options of this function, can be overwritten at JVM startup, using
-environment variables or system properties. This allows to customize the
-server without modifying source code and exists for convenience to make easy
-customizations in deployments.</p>
-</div>
-<div class="paragraph">
-<p>For example, you can change the default port on JVM startup using the
-<code>CATACUMBA_PORT</code> environment variable or <code>catacumba.port</code> system property:</p>
-</div>
-<div class="listingblock">
-<div class="title">Example using enviroment variables</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span class="tok-nb">export </span><span class="tok-nv">CATACUMBA_PORT</span><span class="tok-o">=</span>8000
-<span class="tok-nb">export </span><span class="tok-nv">CATACUMBA_BASEDIR</span><span class="tok-o">=</span><span class="tok-sb">`</span><span class="tok-nb">pwd</span><span class="tok-sb">`</span>
-java -jar yourjarhere.jar</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="title">Example using enviroment variables</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash">java -Dcatacumba.port<span class="tok-o">=</span><span class="tok-m">8000</span> -Dcatacumba.debug<span class="tok-o">=</span><span class="tok-nb">true</span> -jar yourjarhere.jar</code></pre>
-</div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-if no <code>:basedir</code> is specified, catacumba will try to find a <code>.catacumba</code> file
-in the classpath and will set a base dir to its directory.
-</td>
-</tr>
-</table>
-</div>
-</div>
-<div class="sect3">
-<h4 id="ssl-configuration"><a class="link" href="#ssl-configuration">SSL Configuration</a></h4>
-<div class="paragraph">
-<p><em>Catacumba</em> server can be configured to use TLS (commonly known as SSL). The process
-is pretty simple but it requires to have a proper key and certificate.</p>
-</div>
-<div class="paragraph">
-<p>The first thinkg that you should care about is that <em>catacumba</em> is built on jvm
-that the default ssl certificate/key format used by nginx/apache it isn&#8217;t compatible
-but is very easy create a compatible file using the <code>openssl</code> commandline.</p>
-</div>
-<div class="paragraph">
-<p>Having a key and the certificate, just execute this command:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="bash">openssl pkcs12 -export -in cert.pem -inkey key.pem -out store.p12</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>This process will ask you for a password that you must memorize and later
-provide it to catacumba. Now, having the properly formated trusted store,
-just pass some additional parameters on starting the server:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">ct/run-server</span> <span class="tok-o">#</span><span class="tok-ss">&#39;my-handler</span> <span class="tok-p">{</span><span class="tok-ss">:port</span> <span class="tok-mi">4040</span>
-                             <span class="tok-ss">:keystore-secret</span> <span class="tok-s">&quot;yoursecrethere&quot;</span>
-                             <span class="tok-ss">:keystore-path</span> <span class="tok-s">&quot;path/to/store.p12&quot;</span><span class="tok-p">})</span></code></pre>
-</div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-<em>catacumba</em> at this moment does not has the "upgrade" approach so if
-you setup ssl, only ssl connections will be accepted. So the most recommended
-way to use ssl on your application is put catacumba behind nginx or haproxi
-and make them handle the ssl.
-</td>
-</tr>
-</table>
-</div>
 </div>
 </div>
 <div class="sect2">
@@ -2722,14 +2734,74 @@ an executable.</p>
 <h3 id="difference-with-aleph"><a class="link" href="#difference-with-aleph">What is the difference between <em>catacumba</em> and Aleph?</a></h3>
 <div class="paragraph">
 <p>First of all, Aleph is not a real alternative to catacumba, because its approach is
-so much low level and its web server support is a little bit constrained by ring.
+so much low level and its web server support is a little bit constrained by ring
+spec.
 Furthermore, aleph is already used in catacumba as http client in tests code and
-manifold (async abstractions behind aleph) as one of the first class abstractions
-for handle async vales.</p>
+manifold (async abstractions behind aleph) is a first class abstractions
+for handle async values.</p>
 </div>
 <div class="paragraph">
 <p>So, I&#8217;m happy to tell you that you can use the both libraries together because
 they are very complementary.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="rationale"><a class="link" href="#rationale">What is the rationale behind this project?</a></h3>
+<div class="paragraph">
+<p>I started writting this library as a research project to provide a simple, non
+obstructive (a la ring) without the constraints of the existing ring spec.
+The aim is to create a web toolkit for building asynchronous web services.</p>
+</div>
+<div class="paragraph">
+<p>Here is an incomplete list of things that <em>catacumba</em> aims to achieve:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Allow different types of handlers by being flexible and extensible</p>
+</li>
+<li>
+<p>Provide a simple and lightweight approach for defining asynchronous web services
+with support for different abstractions such as promises, futures, core.async,
+manifold, reactive-streams, etc&#8230;&#8203;</p>
+</li>
+<li>
+<p>Build upon abstractions with simplicity and extensibility in mind.</p>
+</li>
+<li>
+<p>Provide built in declarative style routing.</p>
+</li>
+<li>
+<p>Remain unopinionated and versatile.</p>
+</li>
+<li>
+<p>Come with backpressure support out of the box.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><em>catacumba</em> is not designed:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>To be a fully integrated full stack solution like Immutant or Pedestal.</p>
+</li>
+<li>
+<p>To provide an opinionated way to structure your "bussines logic"</p>
+</li>
+<li>
+<p>To provide all possible features that you might need.</p>
+</li>
+<li>
+<p>To be a low level, ring based library.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The result of this research project is a powerfull, lightweight, and fully
+extensible asynchronous web toolkit built on top of existing and well designed
+components such as Ratpack and Netty.</p>
 </div>
 </div>
 </div>
@@ -2837,7 +2909,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-12-25 13:18:06 EET
+Version 0.9.0<br>
+Last updated 2016-01-08 18:33:35 EET
 </div>
 </div>
 </body>

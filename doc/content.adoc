@@ -15,39 +15,20 @@ v0.9.0
 _Catacumba_ is an asynchronous or non-blocking web toolkit for Clojure built on top
 of ratpack and netty drawing inspiration from ring, pedestal and ratpack.
 
+[NOTE]
+====
+*Project Maturity*: +
+Since _catacumba_ is a young project there may be some API breakage. +
 
-=== Rationale
-
-I started writting this library as a research project to provide a simple, non
-obstructive (a la ring) without the constraints of the existing ring spec.
-The aim is to create a web toolkit for building asynchronous web services.
-
-Here is an incomplete list of things that _catacumba_ aims to achieve:
-
-* Allow different types of handlers by being flexible and extensible
-* Provide a simple and lightweight approach for defining asynchronous web services
-  with support for different abstractions such as promises, futures, core.async,
-  manifold, reactive-streams, etc...
-* Build upon abstractions with simplicity and extensibility in mind.
-* Provide built in declarative style routing.
-* Remain unopinionated and versatile.
-* Come with backpressure support out of the box.
-
-_catacumba_ is not designed:
-
-* To be a fully integrated full stack solution like Immutant or Pedestal.
-* To provide an opinionated way to structure your "bussines logic"
-* To provide all possible features that you might need.
-* To be a low level, ring based library.
-
-The result of this research project is a powerfull, lightweight, and fully
-extensible asynchronous web toolkit built on top of existing and well designed
-components such as Ratpack and Netty.
+*Rationale*: +
+You can read the rationale behind this project <<rationale,here>>.
+====
 
 
-=== Project Maturity
+[[quickstart]]
+== Quick Start
 
-Since _catacumba_ is a young project there may be some API breakage.
+This section intends to explain how to get _catacumba_ up and running.
 
 
 === Install
@@ -58,57 +39,72 @@ dependency vector on your *_project.clj_* file:
 [source,clojure]
 ----
 [funcool/catacumba "0.9.0"]
-[org.slf4j/slf4j-simple "1.7.12"] ;; (optional, only for show ratpack info messages)
 ----
 
-_Catacumba_ will only run with *JDK8* and *Clojure 1.7+* (due to extensive use of
-transducers and jdk8 concurrency primitives).
+NOTE: _Catacumba_ will only run with *JDK8* and *Clojure >= 1.7*.
 
 
-[[quickstart]]
-== Quick Start
+=== Handlers
 
-This section intends to explain how to get _catacumba_ up and running.
-
-
-=== First handler
-
-The handler consists of a function that accepts a "context" as it's first parameter and
-returns something renderable. Let's see an example:
+The handler consists of a function that accepts a "context" as it's first parameter
+and returns something renderable. Let's see an example:
 
 [source, clojure]
 ----
-(defn my-hello-world-handler
+(defn example-handler
   [context]
   "Hello World")
 ----
 
-This handler may look very familiar if you have used ring previously. The main
-difference is that it receives a context object instead of a request object.
-Additionally it may return a string directly.
+It looks very similar to ring hand with two main differences:
 
-The following sections explain all related concepts and give a full introduction on
-how handlers work.
+* instead of request ir receives a *context* that works like request but with
+  more responsabilities (explained in other sections).
+* returns a string instead of a hash-map (it is also allowed but is not mandatory,
+  also explained later).
 
 
-=== Running the server
+[[quick-start-routing]]
+=== Routing
 
-Having defined the simple, hello world handler, it's time to run it. To do this,
-import the `run-server` function from the `catacumba.core` ns and execute it with
-the handler as the first parameter:
+Now knowing how we can define handlers, the next step is define a route (http
+endpoint) for our handler. That can be done with `routes` function:
 
 [source, clojure]
 ----
 (require '[catacumba.core :as ct])
 
-(ct/run-server my-hello-world-handler)
+(def app
+  (ct/routes [[:all "" example-handler]
+              [:get "foobar" example-handler]]))
 ----
 
-TIP: The `run-server` function doesn't block so you can execute it in a repl
-without problems.
+The `routes` function receives a vector of ordered entry points for our handlers,
+and in this example we have defined two routes for the same handler (just for
+demostration purposes):
+
+The first entry defines a `/` route for all kind of requests and the second entry
+defines a `/foobar` route only for `GET` requests for the same handler.
+
+You can read a complete documentation about catacumba's routing <<routing,here>>.
 
 
-=== Complete example
+=== Run the server
+
+For run the previously defined handler, just use the `run-server` function:
+
+[source, clojure]
+----
+(ct/run-server app {:port 3030})
+----
+
+TIP: The `run-server` function doesn't block so you can execute it in a repl without problems.
+
+You can read more about all available options that you can pass to `run-server`
+function <<launching-the-server,here>>.
+
+
+=== Put all together
 
 This is what the complete source code of the example looks like:
 
@@ -118,13 +114,17 @@ This is what the complete source code of the example looks like:
   (:require [catacumba.core :as ct])
   (:gen-class))
 
-(defn my-hello-world-handler
+(defn example-handler
   [context]
   "Hello World")
 
+(def app
+  (ct/routes [[:all "" example-handler]
+              [:get "foobar" example-handler]]))
+
 (defn -main
   [& args]
-  (ct/run-server my-hello-world-handler))
+  (ct/run-server app {:port 3030}))
 ----
 
 _Catacumba_ also comes with a little collection of <<examples,Examples>> that may
@@ -139,71 +139,107 @@ together.
 
 === Handlers
 
-The idea of handlers is a fundamental piece of the _catacumba_ library. It's one of
-the main building blocks used for creating web services.
+Is the fundamentar building block in the _catacumba_ toolkit and has two main types:
 
-As we have seen in the "<<Quick Start,quickstart>>" section, the default handler
-mainly consists of a simple function that acts on the handling context.
+- *Ending*: Handlers that process a request and return a response (usually named
+  controller in other web frameworks or toolkits).
+- *Middle*: Handlers that does some logic but does not return any response (
+  delegating that task to other handler) (usually named as middleware or decorator).
 
-Do not worry about the context for now, it will be explained in later sections. The
-only thing that you should known about it at this time, is that it's the central part
-of the request and response cycle. It stores the current state of the http
-request and everything related to it.
+The both handler types are defined in term of functions and looks identically, the
+principal change is the responsability. Let see an example:
 
-The hello world handler looks like this:
-
+.An *ending* handler example.
 [source, clojure]
 ----
-(defn myhandler
+(defn sample-ending-handler
   [context]
   "Hello World")
 ----
 
-
-NOTE: I mention the "default" word because, _catacumba_ comes with different
-<<handler-types,types of handlers>> out of the box. Catacumba's handler system
-is fully extensible so you can easyly create your own handler types (also called
-adapters the internal terminology).
-
-
-=== Context
-
-The second thing most important in the catacumba terminology is the *context*. It can
-be considered a central part of both: IO and the control flow (will be
-explained in advanced section).
+.An *middle* handler example.
+[source, clojure]
+----
+(defn sample-middle-handler
+  [context]
+  (println "hello world")
+  (ct/delegate))
+----
 
 
-==== Send a response
+==== The ending handlers
 
-As you can see from the previous example, no status code is being provided,
-only the body of the response. To send a complete response you can use a builtin
-response type:
+As you have seen, the examples until now are always returning a simple string that
+in fact is not very usefull in real-world use cases. The great news here is that
+return values are handled using open polymorphic abstractions that clojure offers:
+protocols.
 
+This means that you can return anything that catacumbla already has implementation
+for it or anything that yourself have implemented. Let see some examples:
+
+.Handler example that returns ring style response.
+[source, clojure]
+----
+(defn some-handler
+  [context]
+  {:status 200
+   :headers {}
+   :body "Hello World"})
+----
+
+.Handler example that returns catacumba's builtin response type.
 [source, clojure]
 ----
 (require '[catacumba.http :as http])
 
-(defn my-handler
+(defn some-handler
   [context]
   (http/ok "Hello World"))
 ----
 
-The response types exposed under the `catacumba.http` namespace also accept
-additional parameters such as response headers:
+But this is not the end, if you want to know all the different kind of handlers
+and its return types, please take a look on <<handler-types,Handler types>> section.
 
-[source, clojure]
-----
-(require '[catacumba.http :as http])
 
-(defn myhandler
-  [context]
-  (http/ok "<p>Hello World</p>" {:content-type "text/html"}))
-----
+==== The middle handlers
+
+The catacumba toolkit in request/response handling perspective behaves like a
+pipeline of handlers (when only one handler is attached it will be a pipeline of
+one unique element).
+
+As you have observed in the previous example, the *middle* handler instead of
+returning a response, returns a result an opaque type that indicates to catacumba
+that this handler is not of *ending* type and forces to catacumba take the next
+handler from the pipeline and execute it. And so until *ending* handler is found
+and response is returned.
+
+There are nothing especial, the opaque object that `delegate` function returns
+just implement appropriate protocol and if you don't like the default behavior,
+you are free to implement your own.
+
+This is a little introduction to the delegation process and how the *middle*
+handlers participates on it. For in depth understanding and how you can use it
+in your application, please read the <<handler-delegation, handler delegation>>
+section.
+
+
+=== Context
+
+The second thing most important in the catacumba is the *context*. It can
+be considered a central part of both: IO and the control flow (will be
+explained in advanced section).
+
+In other words it can be considered as a combination of request and response.
+
+
+==== Response
 
 In the previous examples, we've seen how the return value is handled, but behind
-the scenes the context is responsible for interacting with both the request and response.
+the scenes the context is responsible for interacting with both the request and
+response.
 
-Let's see the same example but interacting directly with the context:
+Let's see the same example but interacting directly with the context using low-level
+mutable api:
 
 [source, clojure]
 ----
@@ -217,22 +253,8 @@ Let's see the same example but interacting directly with the context:
 The return value handler is really just a helper for people coming from ring.
 Internally, the context is the main player in IO operations.
 
-So, the handler response is can be:
 
-- a *string*, will result in a response with status code 200 and "text/plain" as
-  content type.
-- a *ring style* hash map.
-- a *response* type (previous example).
-
-The return value handling is implemented using clojure protocols, so its behavior
-can be extended easily with user defined types.
-
-
-==== Reading the request
-
-In the catacumba the closest thing to the request concept is a context. In fact,
-catacumba does not has request and responses. Just a central object that handles
-the IO (Input and Output).
+==== Request
 
 The most important thing here is that the context in a user end acts like a request
 object and allows access to the most used part of the request such as the `:body`,
@@ -361,7 +383,7 @@ following example:
 (ct/set-cookies! context {:cookiename {:value "foobar" :max-age 3600}})
 ----
 
-
+[[routing]]
 === Routing
 
 In contrast to ring, _catacumba_ is a toolkit for web development and offers builtin
@@ -383,8 +405,6 @@ keywords. Let's see a little example of the aspect in a complete example:
 (def routes
   (ct/routes [[:prefix "api"
                [:get "users" users-handler]]]))
-
-(ct/run-server routes)
 ----
 
 The order of statements is very important because the routing in _catacumba_ is a
@@ -561,11 +581,246 @@ NOTE: the assets are resolved using the `:basedir` parameter of the server
 constructor; for more details see the <<launching-the-server,Launching the server>>
 section.
 
+[[advanced-topics]]
+== Advanced topics
+
+[[handler-delegation]]
+=== Handler delegation
+
+A part of the obvious (and previously explained) responsability of the `context`
+object in catacubla, it has some others responsabilities. Here just a summary of
+them:
+
+Here a small summary of the context responsabilities besides the obvious one
+explained in previous sections (IO handling):
+
+* Provide direct access to the request and response objects.
+* Access to the contextual objects (called registry).
+* Flow control in handler chaining.
+* Convenience helpers for common handlers operation.
+
+In a catacumba design (inherited from ratpack), a handler is a unit of work in
+an asynchronous handler pipeline and the context is a execution controler and
+local storage for the current request state.
+
+In other words it can be explained as "flow control" in the chain of handlers.
+
+The request process is an asynchronous pipeline of handlers that can be
+composed in different ways (as we previously seen in other parts of the
+documentation). So the each handler in the pipeline has the ability to do some
+work and delegate the rest of processing to next handler in the chain.
+
+This approach allows you build different kind of modular and completelly decoupled
+handlers and compose them into a pipeline to work together.
+
+The delegation response can be done with `delegate` function. Let see a simple
+example:
+
+[source, clojure]
+----
+(defn handler1
+  [context]
+  (do-something context)
+  (ct/delegate)
+
+(defn handler2
+  [context]
+  (http/ok "hello world"))
+
+(def router
+  (ct/routes [[:get "foo" handler1 handler2]]))
+----
+
+In this example, when the request arrives at `handler1`, it delegates the execution
+to the next handler in the chain. It do not need to know about next handler, it
+just delegates to the routing chain to find a next handler or raise a corresponding
+error.
+
+In addition to the simple handler delegation, _catacumba_ offers a simple way to pass
+context data to the next handler in the chain. It can be done by passing an
+additional parameter to the `delegate` function:
+
+[source, clojure]
+----
+(defn handler1
+  [context]
+  (do-something context)
+  (ct/delegate {:message "foobar"}))
+
+(defn handler2
+  [context]
+  (let [message (:message context)]
+    (http/ok message)))
+----
+
+In the example above, the second handler prints the message found in the context.
+
+
+
+=== Modular components
+
+_Catacumba_ is build from its ground with optional support for the
+`stuartsierra/component` library, and exposes a `catacumba-server` component with
+an API for adding routes and handlers from other components.
+
+Let see a little example on how it can be used:
+
+[source, clojure]
+----
+(ns yourapp.system
+  (:require [com.stuartsierra.component :as component]
+            [catacumba.components :refer (catacumba-server assoc-routes!)]))
+
+;; Define your web application component, it will be responsible to setup
+;; the routes to the catacumba-server component of your handlers
+
+(defrecord WebApp [server]
+  component/Lifecycle
+  (start [this]
+    (let [routes [[:get "foo" some-handler]
+                  [:get "bar" other-handler]]]
+      (assoc-routes! server ::web routes)))
+
+  (stop [this]
+    ;; noop
+    ))
+
+;; Define a simple constructor for your web application component
+(defn webapp []
+  (->WebApp nil))
+
+;; Define the system with two main components: catacumba-server and webapp
+;; and explicitly specify the dependency of catacumba-server for webapp/
+
+(defn application-system
+  "The application system constructor."
+  []
+  (-> (component/system-map
+       :catacumba (catacumba-server {:port 5050})
+       :app (webapp))
+      (component/system-using
+       {:app {:server :catacumba}})))
+
+;; Just define an entry point for the application.
+
+(defn -main
+  "The main entry point to your application."
+  [& args]
+  (component/start (application-system)))
+----
+
+Be aware that each call to the `assoc-routes!` function will cause the server
+to reload. In the majority of circumstances this is completely irrelevant
+because it is done at application bootstrap time.
+
+To understand it better, _catacumba_ comes with an <<sse-component-example,example>>
+that builds a multiuser chat using "Server-Sent events" and component, so you can
+experiment with real code. See the <<examples,examples>> section for it.
+
+[[launching-the-server]]
+=== Launching the server
+
+==== Getting Started
+
+As you can see in the quick start section, the main entry point for start the
+server is the `run-server` function that receives a handler chain and a map
+with options.
+
+[source, clojure]
+----
+(require '[catacumba.core :as ct])
+
+;; handler definition goes here
+
+(ct/run-server #'my-handler {:port 4040 :debug true})
+----
+
+
+==== Configuration Options
+
+Here a complete reference of the currently supported options that can be passed
+to the `run-server` function:
+
+[options="header", cols="^1,^1,3"]
+|===========================================================================
+| Keyword   | Default | Description
+| `:port`   | `5050` | The port to listen on.
+| `:threads` | (num of cores * 2) | The number of threads for handler requests.
+| `:debug` | `false` | Start in development mode.
+| `:setup` | `nil`    | A callback for configuration step (low level ratpack access).
+| `:basedir` | `nil` | The application base directory, used mainly for resolving relative paths and assets.
+| `:keystore-path` | `nil` | A relative path in the classpath to the ssl keystore.
+| `:keystore-secret` | `nil` | A secret for the ssl key store
+| `:decorators` | `nil` | A vector of handlers to attach at the start of the pipeline
+|===========================================================================
+
+All supported options of this function, can be overwritten at JVM startup, using
+environment variables or system properties. This allows to customize the
+server without modifying source code and exists for convenience to make easy
+customizations in deployments.
+
+For example, you can change the default port on JVM startup using the
+`CATACUMBA_PORT` environment variable or `catacumba.port` system property:
+
+.Example using enviroment variables
+[source, bash]
+----
+export CATACUMBA_PORT=8000
+export CATACUMBA_BASEDIR=`pwd`
+java -jar yourjarhere.jar
+----
+
+.Example using enviroment variables
+[source, bash]
+----
+java -Dcatacumba.port=8000 -Dcatacumba.debug=true -jar yourjarhere.jar
+----
+
+NOTE: if no `:basedir` is specified, catacumba will try to find a `.catacumba` file
+in the classpath and will set a base dir to its directory.
+
+
+==== SSL Configuration
+
+_Catacumba_ server can be configured to use TLS (commonly known as SSL). The process
+is pretty simple but it requires to have a proper key and certificate.
+
+The first thinkg that you should care about is that _catacumba_ is built on jvm
+that the default ssl certificate/key format used by nginx/apache it isn't compatible
+but is very easy create a compatible file using the `openssl` commandline.
+
+Having a key and the certificate, just execute this command:
+
+[source, bash]
+----
+openssl pkcs12 -export -in cert.pem -inkey key.pem -out store.p12
+----
+
+This process will ask you for a password that you must memorize and later
+provide it to catacumba. Now, having the properly formated trusted store,
+just pass some additional parameters on starting the server:
+
+
+[source, clojure]
+----
+(ct/run-server #'my-handler {:port 4040
+                             :keystore-secret "yoursecrethere"
+                             :keystore-path "path/to/store.p12"})
+----
+
+NOTE: _catacumba_ at this moment does not has the "upgrade" approach so if
+you setup ssl, only ssl connections will be accepted. So the most recommended
+way to use ssl on your application is put catacumba behind nginx or haproxi
+and make them handle the ssl.
+
 
 [[handler-types]]
 == Handler types
 
-This section intends to explain the different kind of builting handler types.
+This section intends to explain the different kind of builting handler types and the
+response types that comes out of the box with catacumba. This section is organized
+on handler types as first level and possible supported return values as second
+level.
 
 
 === Asynchronous
@@ -1620,234 +1875,6 @@ The `context` parameter is just a context that you have already used previously,
 and `outcome` is hash map that contains additional data such as: response headers, respose status and request duration time.
 
 
-== Advanced topics
-
-=== Handler delegation
-
-A part of the obvious (and previously explained) responsability of the `context`
-object in catacubla, it has some others responsabilities. Here just a summary of
-them:
-
-* Provide direct access to the request and response objects.
-* Access to the contextual objects (called registry).
-* Flow control in handler chaining.
-* Convenience helpers for common handlers operation.
-
-In a catacumba design (inherited from ratpack), a handler is a unit of work in
-an asynchronous handler and the context is a execution controler and local storage
-for the current request state.
-
-In other words it can be explained as "flow control" in the chain of handlers.
-
-The request process is an asynchronous pipeline of handlers that can be
-composed in different ways (as we previously seen in a router section). So the each
-handler in the pipeline has the ability to do some work and delegate the rest of
-processing to next handler in the chain.
-
-This approach allows you build different kind of modular and completelly decoupled
-handlers and compose them into a pipeline to work together.
-
-The delegation response can be done with `delegate` function. Let see a simple
-example:
-
-[source, clojure]
-----
-(defn handler1
-  [context]
-  (do-something context)
-  (ct/delegate)
-
-(defn handler2
-  [context]
-  (http/ok "hello world"))
-
-(def router
-  (ct/routes [[:get "foo" handler1 handler2]]))
-----
-
-In this example, when the request arrives at `handler1`, it delegates the execution
-to the next handler in the chain. It do not need to know about next handler, it
-just delegates to the routing chain to find a next handler or raise a corresponding
-error.
-
-In addition to the simple handler delegation, _catacumba_ offers a simple way to pass
-context data to the next handler in the chain. It can be done by passing an
-additional parameter to the `delegate` function:
-
-[source, clojure]
-----
-(defn handler1
-  [context]
-  (do-something context)
-  (ct/delegate {:message "foobar"}))
-
-(defn handler2
-  [context]
-  (let [message (:message context)]
-    (http/ok message)))
-----
-
-In the example above, the second handler prints the message found in the context.
-
-
-
-=== Modular components
-
-_Catacumba_ is build from its ground with optional support for the
-`stuartsierra/component` library, and exposes a `catacumba-server` component with
-an API for adding routes and handlers from other components.
-
-Let see a little example on how it can be used:
-
-[source, clojure]
-----
-(ns yourapp.system
-  (:require [com.stuartsierra.component :as component]
-            [catacumba.components :refer (catacumba-server assoc-routes!)]))
-
-;; Define your web application component, it will be responsible to setup
-;; the routes to the catacumba-server component of your handlers
-
-(defrecord WebApp [server]
-  component/Lifecycle
-  (start [this]
-    (let [routes [[:get "foo" some-handler]
-                  [:get "bar" other-handler]]]
-      (assoc-routes! server ::web routes)))
-
-  (stop [this]
-    ;; noop
-    ))
-
-;; Define a simple constructor for your web application component
-(defn webapp []
-  (->WebApp nil))
-
-;; Define the system with two main components: catacumba-server and webapp
-;; and explicitly specify the dependency of catacumba-server for webapp/
-
-(defn application-system
-  "The application system constructor."
-  []
-  (-> (component/system-map
-       :catacumba (catacumba-server {:port 5050})
-       :app (webapp))
-      (component/system-using
-       {:app {:server :catacumba}})))
-
-;; Just define an entry point for the application.
-
-(defn -main
-  "The main entry point to your application."
-  [& args]
-  (component/start (application-system)))
-----
-
-Be aware that each call to the `assoc-routes!` function will cause the server
-to reload. In the majority of circumstances this is completely irrelevant
-because it is done at application bootstrap time.
-
-To understand it better, _catacumba_ comes with an <<sse-component-example,example>>
-that builds a multiuser chat using "Server-Sent events" and component, so you can
-experiment with real code. See the <<examples,examples>> section for it.
-
-[[launching-the-server]]
-=== Launching the server
-
-==== Getting Started
-
-As you can see in the quick start section, the main entry point for start the
-server is the `run-server` function that receives a handler chain and a map
-with options.
-
-[source, clojure]
-----
-(require '[catacumba.core :as ct])
-
-;; handler definition goes here
-
-(ct/run-server #'my-handler {:port 4040 :debug true})
-----
-
-
-==== Configuration Options
-
-Here a complete reference of the currently supported options that can be passed
-to the `run-server` function:
-
-[options="header", cols="^1,^1,3"]
-|===========================================================================
-| Keyword   | Default | Description
-| `:port`   | `5050` | The port to listen on.
-| `:threads` | (num of cores * 2) | The number of threads for handler requests.
-| `:debug` | `false` | Start in development mode.
-| `:setup` | `nil`    | A callback for configuration step (low level ratpack access).
-| `:basedir` | `nil` | The application base directory, used mainly for resolving relative paths and assets.
-| `:keystore-path` | `nil` | A relative path in the classpath to the ssl keystore.
-| `:keystore-secret` | `nil` | A secret for the ssl key store
-| `:decorators` | `nil` | A vector of handlers to attach at the start of the pipeline
-|===========================================================================
-
-All supported options of this function, can be overwritten at JVM startup, using
-environment variables or system properties. This allows to customize the
-server without modifying source code and exists for convenience to make easy
-customizations in deployments.
-
-For example, you can change the default port on JVM startup using the
-`CATACUMBA_PORT` environment variable or `catacumba.port` system property:
-
-.Example using enviroment variables
-[source, bash]
-----
-export CATACUMBA_PORT=8000
-export CATACUMBA_BASEDIR=`pwd`
-java -jar yourjarhere.jar
-----
-
-.Example using enviroment variables
-[source, bash]
-----
-java -Dcatacumba.port=8000 -Dcatacumba.debug=true -jar yourjarhere.jar
-----
-
-NOTE: if no `:basedir` is specified, catacumba will try to find a `.catacumba` file
-in the classpath and will set a base dir to its directory.
-
-
-==== SSL Configuration
-
-_Catacumba_ server can be configured to use TLS (commonly known as SSL). The process
-is pretty simple but it requires to have a proper key and certificate.
-
-The first thinkg that you should care about is that _catacumba_ is built on jvm
-that the default ssl certificate/key format used by nginx/apache it isn't compatible
-but is very easy create a compatible file using the `openssl` commandline.
-
-Having a key and the certificate, just execute this command:
-
-[source, bash]
-----
-openssl pkcs12 -export -in cert.pem -inkey key.pem -out store.p12
-----
-
-This process will ask you for a password that you must memorize and later
-provide it to catacumba. Now, having the properly formated trusted store,
-just pass some additional parameters on starting the server:
-
-
-[source, clojure]
-----
-(ct/run-server #'my-handler {:port 4040
-                             :keystore-secret "yoursecrethere"
-                             :keystore-path "path/to/store.p12"})
-----
-
-NOTE: _catacumba_ at this moment does not has the "upgrade" approach so if
-you setup ssl, only ssl connections will be accepted. So the most recommended
-way to use ssl on your application is put catacumba behind nginx or haproxi
-and make them handle the ssl.
-
-
 === Instrumentation
 
 TODO
@@ -2007,13 +2034,44 @@ link:https://github.com/funcool/catacumba/tree/master/examples/single-file[here]
 === What is the difference between _catacumba_ and Aleph?
 
 First of all, Aleph is not a real alternative to catacumba, because its approach is
-so much low level and its web server support is a little bit constrained by ring.
+so much low level and its web server support is a little bit constrained by ring
+spec.
 Furthermore, aleph is already used in catacumba as http client in tests code and
-manifold (async abstractions behind aleph) as one of the first class abstractions
-for handle async vales.
+manifold (async abstractions behind aleph) is a first class abstractions
+for handle async values.
 
 So, I'm happy to tell you that you can use the both libraries together because
 they are very complementary.
+
+
+[[rationale]]
+=== What is the rationale behind this project?
+
+I started writting this library as a research project to provide a simple, non
+obstructive (a la ring) without the constraints of the existing ring spec.
+The aim is to create a web toolkit for building asynchronous web services.
+
+Here is an incomplete list of things that _catacumba_ aims to achieve:
+
+* Allow different types of handlers by being flexible and extensible
+* Provide a simple and lightweight approach for defining asynchronous web services
+  with support for different abstractions such as promises, futures, core.async,
+  manifold, reactive-streams, etc...
+* Build upon abstractions with simplicity and extensibility in mind.
+* Provide built in declarative style routing.
+* Remain unopinionated and versatile.
+* Come with backpressure support out of the box.
+
+_catacumba_ is not designed:
+
+* To be a fully integrated full stack solution like Immutant or Pedestal.
+* To provide an opinionated way to structure your "bussines logic"
+* To provide all possible features that you might need.
+* To be a low level, ring based library.
+
+The result of this research project is a powerfull, lightweight, and fully
+extensible asynchronous web toolkit built on top of existing and well designed
+components such as Ratpack and Netty.
 
 
 == Developers Guide

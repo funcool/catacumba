@@ -1,5 +1,18 @@
 # Changelog #
 
+## Version 0.10.0 ##
+
+Date: 2016-01-08
+
+Changes:
+
+- Remove slingshot dependency.
+- Update buddy-sign version to 0.9.0.
+- Update promesa version to 0.7.0.
+- Update cats version to 1.2.1.
+- Update potemkin version to 0.4.3.
+
+
 ## Version 0.9.0 ##
 
 Date: 2015-12-10

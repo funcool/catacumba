@@ -119,7 +119,11 @@
                       (-> data
                           (p/then callback)
                           (p/catch callback))))
-        (hp/then #(-handle-response % context)))))
+        (hp/then #(-handle-response % context))))
+
+  ratpack.exec.Promise
+  (-handle-response [data ^DefaultContext context]
+    (hp/then data #(-handle-response % context))))
 
 (extend-protocol ISend
   (Class/forName "[B")

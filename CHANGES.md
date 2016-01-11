@@ -1,5 +1,12 @@
 # Changelog #
 
+## Version 0.11.0 ##
+
+Date: Unreleased
+
+- Add implementation for ratpack promises as response type (thanks to @christoph-frick).
+
+
 ## Version 0.10.1 ##
 
 Date: 2016-01-11

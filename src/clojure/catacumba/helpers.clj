@@ -45,6 +45,15 @@
     (^void execute [_ x]
       (callable x))))
 
+(defn ^Function fn->function
+  "Coerce a plain clojure function into
+  ratpacks's Function interface."
+  {:no-doc true}
+  [callable]
+  (reify Function
+    (apply [_ x]
+      (callable x))))
+
 (defn ^Block fn->block
   "Coerce a plain clojure function into
   ratpacks's Block interface."

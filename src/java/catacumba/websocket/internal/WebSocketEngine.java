@@ -118,11 +118,12 @@ public class WebSocketEngine {
               WebSocketFrame frame = (WebSocketFrame) msg;
               if (frame instanceof CloseWebSocketFrame) {
                 open.set(false);
-                handshaker.close(channel, (CloseWebSocketFrame) frame.retain()).addListener(future1 -> handler.onClose());
+                handshaker.close(channel, (CloseWebSocketFrame) frame).addListener(future1 -> handler.onClose());
                 return;
               }
+
               if (frame instanceof PingWebSocketFrame) {
-                channel.write(new PongWebSocketFrame(frame.content().retain()));
+                channel.write(new PongWebSocketFrame(frame.content()));
                 return;
               }
 
@@ -132,6 +133,7 @@ public class WebSocketEngine {
                 final Action<Void> callback = new Action<Void>() {
                     public void execute(Void input) {
                       channel.config().setAutoRead(true);
+                      frame.release();
                     }
                   };
 
@@ -148,6 +150,7 @@ public class WebSocketEngine {
                 final Action<Void> callback = new Action<Void>() {
                     public void execute(Void input) {
                       channel.config().setAutoRead(true);
+                      frame.release();
                     }
                   };
 

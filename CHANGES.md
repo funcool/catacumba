@@ -1,5 +1,12 @@
 # Changelog #
 
+## Version 0.10.1 ##
+
+Date: 2016-01-11
+
+- Fix non-heap memory leak on websockets impl.
+
+
 ## Version 0.10.0 ##
 
 Date: 2016-01-08

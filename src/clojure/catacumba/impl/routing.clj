@@ -122,8 +122,8 @@
   (attach-server-error-handler chain error-handler))
 
 (defmethod attach-route :setup
-  [^Chain chain [_ ^String path setup]]
-  (.prefix chain path (hp/fn->action setup)))
+  [^Chain chain [_ setup]]
+  (setup chain))
 
 (defn- split-path-from-handlers
   [handlers]

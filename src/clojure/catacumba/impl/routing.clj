@@ -86,7 +86,9 @@
   [^Chain chain [_ handlersmap]]
   {:pre [(map? handlersmap)]}
   (letfn [(attach [^Context ctx ^ByMethodSpec spec [method handler]]
-            (let [^Handler handler (if (vector? handler) (combine-handlers handler) (hs/adapter handler))
+            (let [^Handler handler (if (vector? handler)
+                                     (combine-handlers handler)
+                                     (hs/adapter handler))
                   ^Block block (hp/fn->block #(.handle handler ctx))]
               (case method
                 :get (.get spec block)

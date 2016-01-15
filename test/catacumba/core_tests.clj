@@ -357,6 +357,26 @@
                 (is (= (:status data) 404)))))))))
 )
 
+(deftest routing-1
+  (testing "Serving authenticated assets in root."
+    (letfn [(handler1 [state context]
+              (reset! state 1)
+              "hello world")
+
+            (handler2 [state context]
+              (reset! state 2)
+              (ct/delegate))]
+
+      (let [state (atom 0)
+            app (ct/routes [[:get "api" #(handler1 state %)]
+                            [:scope
+                             [:any #(handler2 state %)]
+                             [:assets nil {:dir "public"}]]])]
+        (with-server {:handler app}
+          (let [response (client/get (str base-url "/test.txt"))]
+            (is (= (:body response) "hello world from test.txt\n"))
+            (is (= (:status response) 200))
+            (is (= 2 @state))))))))
 
 
 (deftest context-data-forwarding

@@ -1,10 +1,16 @@
 # Changelog #
 
+
 ## Version 0.11.0 ##
 
 Date: Unreleased
 
-- Add implementation for ratpack promises as response type (thanks to @christoph-frick).
+- Add implementation for ratpack promises as response type
+  (thanks to @christoph-frick).
+- Add the ability to return files (java.nio.file.Path) as response
+  or body value and transfer it to the user in the most efficient way.
+- Add `resolve-file` function for easy resolve files in the current
+  FileSystem binding configuration.
 
 
 ## Version 0.10.1 ##

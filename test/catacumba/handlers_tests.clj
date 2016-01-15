@@ -189,31 +189,6 @@
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Basic request in context
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(deftest basic-request-handler
-  (testing "Simple cors request"
-    (let [p (promise)
-          handler (fn [ctx] (deliver p ctx) "hello world")
-          handler (ct/routes [[:any handler]])]
-      (with-server {:handler handler}
-        (let [response (client/get (str base-url "/foo"))
-              ctx (deref p 1000 {})]
-          (is (contains? ctx :body))
-          (is (contains? ctx :query))
-          (is (contains? ctx :query-params))
-          (is (contains? ctx :route-params))
-          (is (contains? ctx :headers))
-          (is (contains? ctx :cookies))
-          (is (contains? ctx :path))
-          (is (contains? ctx :catacumba/request))
-          (is (contains? ctx :catacumba/context))
-          (is (contains? ctx :catacumba/response))
-          (is (= (:body response) "hello world"))
-          (is (= (:status response) 200)))))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Session tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -483,6 +458,10 @@
               (is (= (:status response) 405)))))
         ))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Logging
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defn with-logged [handler f]
   (let [p   (promise)
         app (ct/routes [[:any (misc/log #(deliver p %&))]
@@ -511,3 +490,20 @@
                                        [:get (constantly "")]])}
       ;; Having it not explode is about the best we can do
       (client/get base-url))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; CPS handler type
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest cps-handler-type
+  (let [handler (fn [context next]
+                   (a/thread
+                     (a/<!! (a/timeout 500))
+                     (next "hello world cps")))]
+    (with-server {:handler (with-meta handler {:handler-type :catacumba/cps})}
+      (let [response (client/get base-url)]
+        (is (= (:body response) "hello world cps"))
+        (is (= (:status response) 200))))))
+
+
+

@@ -50,7 +50,7 @@
           (is (= (get-in response [:cookies "foo" :value]) "bar"))
           (is (= (get-in response [:cookies "foo" :secure]) true)))))))
 
-(deftest request-response
+(deftest request-response-handling
   (testing "Using send! with context"
     (let [handler (fn [ctx] (ct/send! ctx "hello world"))]
       (with-server {:handler handler}
@@ -182,6 +182,20 @@
         (let [response (client/get base-url)]
           (is (= (:body response) "Hello world!"))
           (is (= (:status response) 200))))))
+
+  (testing "Read body as text"
+    (let [p (promise)
+          handler (fn [ctx]
+                    (let [body (:body ctx)]
+                      (deliver p (slurp body)))
+                    "hello world")]
+      (with-server {:handler handler}
+        (let [response (client/post base-url {:body "Hello world"
+                                              :content-type "text/plain"})]
+          (is (= (:body response) "hello world"))
+          (is (= (:status response) 200))
+          (let [bodydata (deref p 1000 nil)]
+            (is (= bodydata "Hello world")))))))
 )
 
 (deftest routing
@@ -344,30 +358,6 @@
 )
 
 
-(deftest request-body-handling
-  (testing "Read body as text"
-    (let [p (promise)
-          handler (fn [ctx]
-                    (let [body (:body ctx)]
-                      (deliver p (slurp body)))
-                    "hello world")]
-      (with-server {:handler handler}
-        (let [response (client/post base-url {:body "Hello world"
-                                              :content-type "text/plain"})]
-          (is (= (:body response) "hello world"))
-          (is (= (:status response) 200))
-          (let [bodydata (deref p 1000 nil)]
-            (is (= bodydata "Hello world"))))))))
-
-(deftest cps-handler-type
-  (let [handler (fn [context next]
-                   (a/thread
-                     (a/<!! (a/timeout 500))
-                     (next "hello world cps")))]
-    (with-server {:handler (with-meta handler {:handler-type :catacumba/cps})}
-      (let [response (client/get base-url)]
-        (is (= (:body response) "hello world cps"))
-        (is (= (:status response) 200))))))
 
 (deftest context-data-forwarding
   (letfn [(handler1 [context]
@@ -391,6 +381,27 @@
         (is (= (deref p 1000 nil)
                {:foo 1 :bar 2 :baz 3})))))))
 
+
+(deftest basic-request-handler
+  (testing "Simple cors request"
+    (let [p (promise)
+          handler (fn [ctx] (deliver p ctx) "hello world")
+          handler (ct/routes [[:any handler]])]
+      (with-server {:handler handler}
+        (let [response (client/get (str base-url "/foo"))
+              ctx (deref p 1000 {})]
+          (is (contains? ctx :body))
+          (is (contains? ctx :query))
+          (is (contains? ctx :query-params))
+          (is (contains? ctx :route-params))
+          (is (contains? ctx :headers))
+          (is (contains? ctx :cookies))
+          (is (contains? ctx :path))
+          (is (contains? ctx :catacumba/request))
+          (is (contains? ctx :catacumba/context))
+          (is (contains? ctx :catacumba/response))
+          (is (= (:body response) "hello world"))
+          (is (= (:status response) 200)))))))
 
 (deftest async-context-delegation
   (letfn [(handler1 [context]

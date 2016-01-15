@@ -32,7 +32,7 @@
     (pmdw/exceptions-response context error namespaces)))
 
 (defn handler
-  [{:keys [namespaces]}]
+  [{:keys [app-namespaces]}]
   (fn [chain]
     (as-> chain $
       (.all $ (hs/adapter prone-assets))

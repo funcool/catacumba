@@ -86,6 +86,10 @@
             (.next ctx (Registry/single data))))
         (.next ctx))))
 
+  java.nio.file.Path
+  (-handle-response [path ^DefaultContext context]
+    (-send path (:catacumba/context context)))
+
   String
   (-handle-response [data ^DefaultContext context]
     (-send data (:catacumba/context context)))
@@ -130,6 +134,10 @@
   (-send [data ^Context ctx]
     (let [^Response response (.getResponse ctx)]
       (.send response ^bytes data)))
+
+  java.nio.file.Path
+  (-send [path ^Context ctx]
+    (.sendFile ctx path))
 
   String
   (-send [data ^Context ctx]

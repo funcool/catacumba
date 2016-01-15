@@ -68,7 +68,7 @@
            (a/<! (send! ws (str value)))
            (recur))
          (do
-           (a/put! ctrl [:close])
+           (a/put! ctrl [:close nil])
            (hp/try-on (.close ws))
            (hp/try-on (.close this)))))
      (try
@@ -82,7 +82,7 @@
    (a/put! in (.getData msg) (fn [_] (.execute callback nil))))
 
   (^void onClose [this]
-   (a/put! ctrl [:close])
+   (a/put! ctrl [:close nil])
    (.close this)))
 
 (defn websocket

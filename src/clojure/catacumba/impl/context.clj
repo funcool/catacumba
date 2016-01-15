@@ -287,3 +287,12 @@
   [^DefaultContext context]
   (get-formdata* (:catacumba/context context)
                  (:body context)))
+
+(defn resolve-file
+  "Resolve file using the current filesystem binding
+  configuration. The path will be resolved as relative
+  to the filesystem binding root."
+  [^DefaultContext context ^String path]
+  {:pre [(string? path)]}
+  (let [^Context ctx (:catacumba/context context)]
+    (.file ctx path)))

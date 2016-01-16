@@ -103,17 +103,23 @@
                   (^void handle [_ ^Context ctx]
                     (.byMethod ctx (hp/fn->action (partial callback ctx))))))))
 
+(defn attach-server-error-handler
+  [^Chain chain handler]
+  (letfn [(callback [context throwable]
+            (let [response (handler context throwable)]
+              (when (satisfies? hs/IHandlerResponse response)
+                (hs/-handle-response response context))))
+          (on-register [^RegistrySpec rspec]
+            (->> (reify ServerErrorHandler
+                   (error [_ ctx throwable]
+                     (hs/hydrate-context ctx #(callback % throwable))))
+                 (.add rspec ServerErrorHandler)))]
+    (.register chain ^Action (hp/fn->action on-register))))
+
+
 (defmethod attach-route :error
   [^Chain chain [_ error-handler]]
-  (letfn [(on-register [^RegistrySpec rspec]
-            (let [ehandler (reify ServerErrorHandler
-                             (error [_ ctx throwable]
-                               (hs/hydrate-context ctx (fn [^DefaultContext context]
-                                                         (let [response (error-handler context throwable)]
-                                                           (when (satisfies? hs/IHandlerResponse response)
-                                                             (hs/-handle-response response context)))))))]
-              (.add rspec ServerErrorHandler ehandler)))]
-    (.register chain ^Action (hp/fn->action on-register))))
+  (attach-server-error-handler chain error-handler))
 
 (defmethod attach-route :setup
   [^Chain chain [_ ^String path setup]]

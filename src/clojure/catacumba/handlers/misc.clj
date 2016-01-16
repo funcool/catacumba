@@ -152,17 +152,13 @@
   It wraps the rest of route chain the execution. It receive a
   continuation (as a cloure function) that must be called in
   order for processing to proceed."
-  [context interceptor]
-  (let [^Context ctx (:catacumba/context context)
-        ^Execution exec (.getExecution ctx)]
-    (.addInterceptor exec
-                     (exec-interceptor interceptor)
-                     (reify Block
-                       (^void execute [_]
-                         (.next ctx))))))
-
-(defmethod routing/attach-route :interceptor
-  [^Chain chain [_ interceptor']]
-  (let [handler #(interceptor % interceptor')]
-    (.all chain ^Handler (hs/adapter handler))))
+  [callback]
+  (fn [context]
+    (let [^Context ctx (:catacumba/context context)
+          ^Execution exec (.getExecution ctx)]
+      (.addInterceptor exec
+                       (exec-interceptor callback)
+                       (reify Block
+                         (^void execute [_]
+                          (.next ctx)))))))
 

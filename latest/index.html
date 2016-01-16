@@ -80,7 +80,7 @@
 <h1>Catacumba - Web toolkit for Clojure.</h1>
 <div class="details">
 <span id="author" class="author">Andrey Antukh, &lt;niwi@niwi.nz&gt;</span><br>
-<span id="revnumber">version 0.10.1</span>
+<span id="revnumber">version 0.11.0</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -131,12 +131,17 @@
 <li><a href="#instrumentation">Instrumentation</a></li>
 </ul>
 </li>
+<li><a href="#plugins">Plugins</a>
+<ul class="sectlevel2">
+<li><a href="#catacumba-prone">catacumba-prone</a></li>
+</ul>
+</li>
 <li><a href="#examples">Examples</a>
 <ul class="sectlevel2">
 <li><a href="#website-example">Website and Auth</a></li>
 <li><a href="#websocket-echo-example">WebSocket Echo</a></li>
 <li><a href="#sse-component-example">Multiuser chat with SSE</a></li>
-<li><a href="#debugging-with-prone">Debugging with prone</a></li>
+<li><a href="#prone-example">Debugging with prone</a></li>
 <li><a href="#instrumentation-2">Instrumentation</a></li>
 <li><a href="#single-file-example">Single file web app</a></li>
 </ul>
@@ -2544,6 +2549,66 @@ and <code>outcome</code> is hash map that contains additional data such as: resp
 </div>
 </div>
 <div class="sect1">
+<h2 id="plugins"><a class="link" href="#plugins">Plugins</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This section will explain usefull modules that ara not part of the core of
+<em>catacumba</em> but are fully supported.</p>
+</div>
+<div class="sect2">
+<h3 id="catacumba-prone"><a class="link" href="#catacumba-prone">catacumba-prone</a></h3>
+<div class="paragraph">
+<p><a href="https://github.com/magnars/prone">Prone</a> is a exception reporting middleware for
+ring based applications that show a beautiful, navegable and human readable
+stacktraces when an exception is throwed in your application. It is not directly
+compatible with catacumba but here is a integration that allows you use almost
+all features that it exposes.</p>
+</div>
+<div class="paragraph">
+<p>For use it on your application, add the appropriate dependency:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">funcool/catacumba-prone</span> <span class="tok-s">&quot;0.2.0&quot;</span><span class="tok-p">]</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Later, add the prone handler to you route chain:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-kd">ns </span><span class="tok-nv">myappns.routes</span>
+  <span class="tok-p">(</span><span class="tok-ss">:require</span> <span class="tok-p">[</span><span class="tok-nv">catacumba.core</span> <span class="tok-ss">:as</span> <span class="tok-nv">ct</span><span class="tok-p">]</span>
+            <span class="tok-p">[</span><span class="tok-nv">catacumba.plugins.prone</span> <span class="tok-ss">:as</span> <span class="tok-nv">prone</span><span class="tok-p">]))</span>
+
+<span class="tok-p">(</span><span class="tok-k">def </span><span class="tok-nv">app</span>
+  <span class="tok-p">(</span><span class="tok-nf">ct/routes</span> <span class="tok-p">[[</span><span class="tok-ss">:setup</span> <span class="tok-p">(</span><span class="tok-nf">prone/handler</span> <span class="tok-p">{</span><span class="tok-ss">:namespaces</span> <span class="tok-p">[</span><span class="tok-s">&quot;myappns&quot;</span><span class="tok-p">]})]</span>
+              <span class="tok-c1">;; your handlers here</span>
+              <span class="tok-p">]))</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now, if an exception is happens in your application, the prone middleware will
+capture it and showed in a beautiful manner.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>You can found a <a href="#prone-example">complete example</a> using prone in the <a href="#examples">examples section</a>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="examples"><a class="link" href="#examples">Examples</a></h2>
 <div class="sectionbody">
 <div class="sect2">
@@ -2618,12 +2683,11 @@ between them.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="debugging-with-prone"><a class="link" href="#debugging-with-prone">Debugging with prone</a></h3>
+<h3 id="prone-example"><a class="link" href="#prone-example">Debugging with prone</a></h3>
 <div class="paragraph">
 <p><a href="https://github.com/magnars/prone">Prone</a> is really awesome middleware for
 ring that shows a beautiful and human readable stack traces when a exception is
-raised in your application. It is not directly compatible with <em>catacumba</em> but
-it is relatively easy to adapt it.</p>
+raised in your application.</p>
 </div>
 <div class="paragraph">
 <p>Just follow the following commands for get it up and running:</p>
@@ -2909,8 +2973,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 0.10.1<br>
-Last updated 2016-01-11 17:17:58 EET
+Version 0.11.0<br>
+Last updated 2016-01-16 12:21:28 EET
 </div>
 </div>
 </body>

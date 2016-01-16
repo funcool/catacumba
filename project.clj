@@ -12,6 +12,7 @@
                   "-Xlint:unchecked"]
   :dependencies [[org.clojure/clojure "1.7.0" :scope "provided"]
                  [org.slf4j/slf4j-simple "1.7.13" :scope "provided"]
+                 [prone "1.0.1" :scope "provided"]
                  [org.clojure/core.async "0.2.374"]
                  [io.ratpack/ratpack-core "1.1.1"
                   :exclusions [io.netty/netty-codec-http

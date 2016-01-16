@@ -1880,6 +1880,53 @@ and `outcome` is hash map that contains additional data such as: response header
 TODO
 
 
+
+[[plugins]]
+== Plugins
+
+This section will explain usefull modules that ara not part of the core of
+_catacumba_ but are fully supported.
+
+
+[[catacumba-prone]]
+=== catacumba-prone
+
+link:https://github.com/magnars/prone[Prone] is a exception reporting middleware for
+ring based applications that show a beautiful, navegable and human readable
+stacktraces when an exception is throwed in your application. It is not directly
+compatible with catacumba but here is a integration that allows you use almost
+all features that it exposes.
+
+For use it on your application, add the appropriate dependency:
+
+[source, clojure]
+----
+[funcool/catacumba-prone "0.2.0"]
+----
+
+Later, add the prone handler to you route chain:
+
+[source, clojure]
+----
+(ns myappns.routes
+  (:require [catacumba.core :as ct]
+            [catacumba.plugins.prone :as prone]))
+
+(def app
+  (ct/routes [[:setup (prone/handler {:namespaces ["myappns"]})]
+              ;; your handlers here
+              ]))
+----
+
+Now, if an exception is happens in your application, the prone middleware will
+capture it and showed in a beautiful manner.
+
+[NOTE]
+====
+You can found a <<prone-example,complete example>> using prone in the <<examples,examples section>>.
+====
+
+
 [[examples]]
 == Examples
 
@@ -1944,12 +1991,12 @@ You can found the source code of this example
 link:https://github.com/funcool/catacumba/tree/master/examples/component-chat[here].
 
 
+[[prone-example]]
 === Debugging with prone
 
 link:https://github.com/magnars/prone[Prone] is really awesome middleware for
 ring that shows a beautiful and human readable stack traces when a exception is
-raised in your application. It is not directly compatible with _catacumba_ but
-it is relatively easy to adapt it.
+raised in your application.
 
 Just follow the following commands for get it up and running:
 

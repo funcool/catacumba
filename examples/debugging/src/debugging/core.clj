@@ -2,7 +2,7 @@
   (:require [catacumba.core :as ct]
             [catacumba.http :as http]
             [catacumba.helpers :as hp]
-            [catacumba.handlers.prone :as prone])
+            [catacumba.plugins.prone :as prone])
   (:gen-class))
 
 (defn index
@@ -19,7 +19,7 @@
   (throw (ex-info "Error" {:some "data"})))
 
 (def app
-  (ct/routes [[:setup (prone/handler {:app-namespaces ["debugging"]})]
+  (ct/routes [[:setup (prone/handler {:namespaces ["debugging"]})]
               [:get "somepage" middle-hander some-page]
               [:get index]]))
 

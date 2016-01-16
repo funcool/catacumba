@@ -11,6 +11,7 @@ Date: Unreleased
   or body value and transfer it to the user in the most efficient way.
 - Add `resolve-file` function for easy resolve files in the current
   FileSystem binding configuration.
+- Add prone (error reporting middleware) plugin.
 
 
 ## Version 0.10.1 ##

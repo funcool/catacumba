@@ -31,6 +31,7 @@
            ratpack.exec.Promise
            ratpack.exec.Upstream
            ratpack.exec.Downstream
+           ratpack.exec.Blocking
            ratpack.handling.Context
            java.nio.file.Paths
            java.util.concurrent.CompletableFuture

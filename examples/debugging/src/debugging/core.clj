@@ -1,38 +1,27 @@
 (ns debugging.core
   (:require [catacumba.core :as ct]
             [catacumba.http :as http]
-            [prone.stacks :refer [normalize-exception]]
-            [prone.debug :as debug]
-            [prone.prep :refer [prep-error-page prep-debug-page]]
-            [prone.hiccough :refer [render]]
-            [prone.middleware :as pronemw])
+            [catacumba.helpers :as hp]
+            [catacumba.handlers.prone :as prone])
   (:gen-class))
-
-(defn prone-error-handler
-  [appname]
-  (let [render-page #'pronemw/render-page
-        serve #'pronemw/serve]
-    (fn [context throwable]
-      [context throwable]
-      (.printStackTrace throwable)
-      (-> (normalize-exception throwable)
-          (prep-error-page [] context [appname])
-          (render-page)
-          (serve)))))
 
 (defn index
   [context]
   (http/ok "<a href='/somepage'>Go here</a>"
            {:content-type "text/html; encoding=utg-8"}))
 
+(defn middle-hander
+  [context]
+  (ct/delegate))
+
 (defn some-page
   [context]
   (throw (ex-info "Error" {:some "data"})))
 
 (def app
-  (ct/routes [[:error (prone-error-handler "debugging")]
-              [:get index]
-              [:get "somepage" some-page]]))
+  (ct/routes [[:setup (prone/handler {:app-namespaces ["debugging"]})]
+              [:get "somepage" middle-hander some-page]
+              [:get index]]))
 
 (defn -main
   [& args]

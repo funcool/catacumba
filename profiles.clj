@@ -79,8 +79,7 @@
 
  :debugging-example
  [:examples
-  {:dependencies [[prone "0.8.2"]]
-   :source-paths ["examples/debugging/src"]
+  {:source-paths ["examples/debugging/src"]
    :resource-paths ["examples/debugging/resources"]
    :main ^:skip-aot debugging.core}]
 

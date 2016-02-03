@@ -16,7 +16,7 @@
 ;; session auth backend is the most appropiate for this case.
 
 (def auth-backend
-  (auth/session-backend))
+  (cauth/session-backend))
 
 ;; Define the application routes using `ct/routes`
 ;; function from catacumba.

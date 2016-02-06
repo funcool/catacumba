@@ -1,6 +1,6 @@
 {:dev
  {:global-vars {*warn-on-reflection* false}
-  :aliases {"test-all" ["with-profile" "dev,1.8:dev" "test"]}
+  :aliases {"test-all" ["with-profile" "dev,1.7:dev" "test"]}
   :source-paths ["dev"]
   :dependencies [[clj-http "1.1.2" :exclusions [org.clojure/tools.reader]]
                  [aleph "0.4.0" :exclusions [io.netty/netty-all]]
@@ -47,8 +47,7 @@
                         "-Xms4g"]
    :main ^:skip-aot bench}]
 
- :1.8 {:dependencies [[org.clojure/clojure "1.8.0-RC5"]]
-       :jvm-opts ["-Dclojure.compiler.direct-linking=true"]}
+ :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
 
  ;; Examples
  :examples

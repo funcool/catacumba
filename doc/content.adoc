@@ -1893,33 +1893,9 @@ _catacumba_ but are fully supported.
 
 link:https://github.com/magnars/prone[Prone] is a exception reporting middleware for
 ring based applications that show a beautiful, navegable and human readable
-stacktraces when an exception is throwed in your application. It is not directly
-compatible with catacumba but here is a integration that allows you use almost
-all features that it exposes.
+stacktraces when an exception is throwed in your application.
 
-For use it on your application, add the appropriate dependency:
-
-[source, clojure]
-----
-[funcool/catacumba-prone "0.2.0"]
-----
-
-Later, add the prone handler to you route chain:
-
-[source, clojure]
-----
-(ns myappns.routes
-  (:require [catacumba.core :as ct]
-            [catacumba.plugins.prone :as prone]))
-
-(def app
-  (ct/routes [[:setup (prone/handler {:namespaces ["myappns"]})]
-              ;; your handlers here
-              ]))
-----
-
-Now, if an exception is happens in your application, the prone middleware will
-capture it and showed in a beautiful manner.
+Full documentation: https://github.com/funcool/catacumba-prone
 
 [NOTE]
 ====

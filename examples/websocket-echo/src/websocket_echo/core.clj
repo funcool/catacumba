@@ -3,7 +3,7 @@
             [clojure.java.io :as io]
             [cheshire.core :as json]
             [catacumba.core :as ct]
-            [catacumba.handlers :as hs]
+            [catacumba.handlers.misc :refer (autoreloader)]
             [catacumba.http :as http]))
 
 (defn home-handler
@@ -26,9 +26,9 @@
         (close! out)))))
 
 (def app
-  (ct/routes [[:any (hs/autoreloader)]
-              [:get #'home-handler]
-              [:get "ws" #'websocket-handler]]))
+  (ct/routes [[:any (autoreloader)]
+              [:get "ws" #'websocket-handler]
+              [:get #'home-handler]]))
 
 (defn -main
   "The main entry point to your application."

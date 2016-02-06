@@ -1,5 +1,12 @@
 # Changelog #
 
+## Version 0.11.1 ##
+
+Date: 2016-02-06
+
+- Update dependencies: prone, manifold, environ.
+- Remove explicit cats dependency.
+- Set default clojure version to 1.8.0.
 
 ## Version 0.11.0 ##
 

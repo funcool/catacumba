@@ -99,8 +99,8 @@
   [context]
   (let [form-params (ct/get-formdata context)
         query-params (:query-params context)
-        username (get form-params "username" "")
-        password (get form-params "password" "")]
+        username (:username form-params)
+        password (:password form-params)]
     (if (or (empty? username) (empty? password))
       ;; Firstly validates the input, if required fields
       ;; are empty, render the login page html with

@@ -26,7 +26,7 @@
               [:any (misc/autoreloader)]
               [:any (cses/session {:storage :inmemory})]
               [:any (cauth/auth auth-backend)]
-              [:get #'handlers/home-page]
+              [:get "" #'handlers/home-page]
               [:get "logout" #'handlers/logout-page]
               [:prefix "login"
                [:by-method {:get #'handlers/login-page

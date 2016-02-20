@@ -23,7 +23,32 @@
 ;; THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (ns catacumba.serializers
-  "A serializers abstraction layer."
+  "A friction-less and extensioble serializers abstraction layer.
+
+  The main public api consists in two functions:
+
+  - `encode`: that takes the clojure data and the serialization format
+    as keyword and returns serialized bytes.
+  - `decode`: just does the reverse operation. It takes the a byte array
+    and returns a deserialized data.
+
+  If something wrong is happens in the process, the underlying library
+  used for serialize or deserialize can raise exceptions.
+
+  Here an simple example serializing and deserializing a clojure
+  hash-map using json format:
+
+  ```
+  (require '[catacumba.serializers :as sz])
+
+  (-> (sz/encode {:foo 2} :json)
+      (sz/bytes->str))
+  ;; => \"{\\\"foo\\\": 2}\"
+
+  (sz/decode some-data :json)
+  ;; => {:foo 2}
+  ```
+  "
   (:require [cheshire.core :as json]
             [cognitect.transit :as transit]
             [buddy.core.codecs :as codecs])

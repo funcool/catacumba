@@ -7,6 +7,7 @@ Date: --
 - Better docstrings for serializers api.
 - Better docstrings for postal api.
 - Minor internal changes on postal impl.
+- Minor internal changes on executor impl.
 
 
 ## Version 0.11.1 ##

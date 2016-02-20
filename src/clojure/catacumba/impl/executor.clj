@@ -35,10 +35,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defprotocol IExecutor
-  (^:private execute* [_ task] "Execute a task in a executor."))
+  (^:private -execute [_ task] "Execute a task in a executor."))
 
 (defprotocol IExecutorService
-  (^:private submit* [_ task] "Submit a task and return a promise."))
+  (^:private -submit [_ task] "Submit a task and return a promise."))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Implementation
@@ -46,14 +46,14 @@
 
 (extend-type Executor
   IExecutor
-  (execute* [this task]
+  (-execute [this task]
     (.execute this ^Runnable task))
 
   IExecutorService
-  (submit* [this task]
+  (-submit [this task]
     (p/promise
      (fn [resolve reject]
-       (execute* this #(try
+       (-execute this #(try
                          (resolve (task))
                          (catch Throwable e
                            (reject e))))))))
@@ -100,9 +100,9 @@
   A task is a plain clojure function or
   jvm Runnable instance."
   ([task]
-   (execute* *default* task))
+   (-execute *default* task))
   ([executor task]
-   (execute* executor task)))
+   (-execute executor task)))
 
 (defn submit
   "Submit a task to be executed in a provided executor
@@ -111,7 +111,7 @@
 
   A task is a plain clojure function."
   ([task]
-   (submit* *default* task))
+   (-submit *default* task))
   ([executor task]
-   (submit* executor task)))
+   (-submit executor task)))
 

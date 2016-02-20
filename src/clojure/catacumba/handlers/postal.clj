@@ -39,19 +39,19 @@
 ;; Data encoding/decoding
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmulti decode
+(defmulti ^:no-doc -decode
   (fn [data content-type]
     content-type))
 
-(defmulti encode
+(defmulti ^:no-doc -encode
   (fn [data content-type]
     content-type))
 
-(defmethod decode :application/transit+json
+(defmethod -decode :application/transit+json
   [data _]
   (sz/decode ^bytes data :transit+json))
 
-(defmethod encode :application/transit+json
+(defmethod -encode :application/transit+json
   [data _]
   (sz/encode data :transit+json))
 
@@ -133,11 +133,11 @@
   (-handle-response-message [data content-type]
     (try
       (-> (normalize-frame data)
-          (encode content-type)
+          (-encode content-type)
           (frame->http content-type))
       (catch Throwable error
         (-> (-adapt-exception error)
-            (encode content-type)
+            (-encode content-type)
             (frame->http content-type)))))
 
   CompletableFuture
@@ -167,7 +167,7 @@
         (-handle-response-message response content-type)))
     (catch Throwable error
       (-> (-adapt-exception error)
-          (encode content-type)
+          (-encode content-type)
           (frame->http content-type)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -213,7 +213,7 @@
              data (get-incoming-data context)
              frame (if (empty? data)
                      {}
-                     (decode data content-type))]
+                     (-decode data content-type))]
          (dispatch handler context content-type frame))
        (catch Exception e
          (http/unsupported-mediatype (str e)))))))
@@ -230,12 +230,12 @@
   (let [content-type (::content-type context)]
     (letfn [(encode-message [msg]
               (-> (normalize-frame msg)
-                  (encode content-type)
+                  (-encode content-type)
                   (codecs/bytes->str)))
 
             (decode-message [msg]
               (-> (codecs/str->bytes msg)
-                  (decode content-type)))
+                  (-decode content-type)))
 
             (inner-handler [{:keys [in out ctrl] :as context}]
               (let [out-xf (map encode-message)

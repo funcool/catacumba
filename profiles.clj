@@ -26,14 +26,7 @@
                       catacumba.impl.routing
                       catacumba.impl.stream
                       catacumba.impl.websocket
-                      catacumba.impl.sse
-                      catacumba.handlers.cors
-                      catacumba.handlers.auth
-                      catacumba.handlers.autoreload
-                      catacumba.handlers.parsing
-                      catacumba.handlers.security
-                      catacumba.handlers.session
-                      catacumba.handlers.interceptor]
+                      catacumba.impl.sse]
             :reader :clojure
             :target "doc/dist/latest/api"
             :src-uri "http://github.com/funcool/catacumba/blob/master/"

@@ -95,9 +95,23 @@
   (http/ok frame {:headers {:content-type content-type}}))
 
 (defprotocol IExceptionAdapter
+  "A protocol that defines the behavior of adapting
+  a possible exception that can happens in the body
+  of postal handler to a valid postal frame.
+
+  It comes with default implementation for:
+  `clojure.lang.ExceptionInfo` and generic
+  `java.lang.Throwable`."
   (-adapt-exception [_] "Adapt an exception into proper return message."))
 
 (defprotocol IHandlerResponseMessage
+  "A protocol that defines the behavior of how
+  the return value of postal frame can be transformed
+  into valid frame instance.
+
+  It comes with default implementation for:
+  `clojure.lang.PersistentMap`, `java.util.concurrent.CompletableFuture`
+  and `manifold.deferred.IDeferred`."
   (-handle-response-message [_ context]))
 
 (extend-protocol IExceptionAdapter
@@ -161,15 +175,34 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn frame
-  "A convenience helper for easy
-  create postal response messages."
+  "A convenience helper that allow easy create a frame compatible
+  hash-map instance.
+
+  ```
+  (frame {:num 1})
+  ;; => {:type :response :data {:num 1}}
+
+  (frame :error {:num 1})
+  ;; => {:type :error :data {:num 1}}
+  ```"
   ([data]
    {:type :response :data data})
   ([type data]
    {:type type :data data}))
 
 (defn router
-  "A postal message router chain handler."
+  "Given a postal handler function returns a catacumba compatible
+  handler that can be attached to the main catacumba routes:
+
+  ```
+  (require '[catacumba.core :as ct])
+  (require '[catacumba.handlers.postal :as pc])
+
+  (defmulti -handler
+    (comp (juxt :type :dest) second vector))
+
+  (def app (ct/routes [[:post \"api\" (pc/router -handler)]]))
+  ```"
   ([handler]
    (router handler {}))
   ([handler options]

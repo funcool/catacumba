@@ -39,7 +39,7 @@
 (defn- response->frame
   [response]
   (let [data (response->data response)]
-    (pc/decode data :application/transit+json)))
+    (pc/-decode data :application/transit+json)))
 
 (defn- send-raw-frame
   [uri method frame content-type]
@@ -61,7 +61,7 @@
   ([uri frame]
    (send-frame uri frame :put))
   ([uri frame method]
-   (let [data (pc/encode frame :application/transit+json)]
+   (let [data (pc/-encode frame :application/transit+json)]
      @(md/chain
        (send-raw-frame uri method data "application/transit+json")
        response->frame))))
@@ -149,10 +149,10 @@
               (a/close! out)))]
     (with-server {:handler (pc/router handler)}
       (let [frame {:type :subscribe :data nil}
-            frame (pc/encode frame :application/transit+json)
+            frame (pc/-encode frame :application/transit+json)
             conn @(http/websocket-client (str "ws://localhost:5050/?d="
                                               (codecs/bytes->safebase64 frame)))
             result @(ms/take! conn)
-            frame (pc/decode (codecs/str->bytes result)
+            frame (pc/-decode (codecs/str->bytes result)
                              :application/transit+json)]
         (is (= frame {:data [1], :type :response}))))))

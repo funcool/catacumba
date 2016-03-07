@@ -177,7 +177,11 @@
     (let [^Response response (.getResponse ctx)]
       (-> (hp/blocking (IOUtils/toByteArray data))
           (hp/then (fn [^bytes buff]
-                     (.send response buff)))))))
+                     (.send response buff))))))
+
+  Renderable
+  (-send [data ^Context ctx]
+    (.render ctx data)))
 
 (extend-protocol io/IOFactory
   TypedData

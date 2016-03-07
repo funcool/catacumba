@@ -24,8 +24,7 @@
 
 (ns catacumba.handlers.parse
   (:require [catacumba.impl.context :as ct]
-            [cheshire.core :as json]
-            [cognitect.transit :as transit])
+            [catacumba.impl.serializers :as cs])
   (:import ratpack.http.Request
            ratpack.http.TypedData
            ratpack.handling.Context))
@@ -50,22 +49,19 @@
 
 (defmethod parse-body :application/json
   [^Context ctx ^TypedData body]
-  (let [^String data (slurp body)]
-    (json/parse-string data true)))
+  (cs/decode :json (.getBytes body)))
 
 (defmethod parse-body :application/octet-stream
   [^Context ctx ^TypedData body]
-  nil)
+  (.getBytes body))
 
 (defmethod parse-body :application/transit+json
   [^Context ctx ^TypedData body]
-  (let [reader (transit/reader (.getInputStream body) :json)]
-    (transit/read reader)))
+  (cs/decode :transit+json (.getBytes body)))
 
 (defmethod parse-body :application/transit+msgpack
   [^Context ctx ^TypedData body]
-  (let [reader (transit/reader (.getInputStream body) :msgpack)]
-    (transit/read reader)))
+  (cs/decode :transit+msgpack (.getBytes body)))
 
 (defn body-params
   "A route chain that parses the body into

@@ -59,7 +59,7 @@ and returns something renderable. Let's see an example:
 It looks very similar to ring hand with two main differences:
 
 * instead of request ir receives a *context* that works like request but with
-  more responsabilities (explained in other sections).
+  more responsibilities (explained in other sections).
 * returns a string instead of a hash-map (it is also allowed but is not mandatory,
   also explained later).
 
@@ -81,7 +81,7 @@ endpoint) for our handler. That can be done with `routes` function:
 
 The `routes` function receives a vector of ordered entry points for our handlers,
 and in this example we have defined two routes for the same handler (just for
-demostration purposes):
+demonstration purposes):
 
 The first entry defines a `/` route for all kind of requests and the second entry
 defines a `/foobar` route only for `GET` requests for the same handler.
@@ -139,7 +139,7 @@ together.
 
 === Handlers
 
-Is the fundamentar building block in the _catacumba_ toolkit and has two main types:
+Is the fundamental building block in the _catacumba_ toolkit and has two main types:
 
 - *Ending*: Handlers that process a request and return a response (usually named
   controller in other web frameworks or toolkits).
@@ -147,7 +147,7 @@ Is the fundamentar building block in the _catacumba_ toolkit and has two main ty
   delegating that task to other handler) (usually named as middleware or decorator).
 
 The both handler types are defined in term of functions and looks identically, the
-principal change is the responsability. Let see an example:
+principal change is the responsibility. Let see an example:
 
 .An *ending* handler example.
 [source, clojure]
@@ -170,7 +170,7 @@ principal change is the responsability. Let see an example:
 ==== The ending handlers
 
 As you have seen, the examples until now are always returning a simple string that
-in fact is not very usefull in real-world use cases. The great news here is that
+in fact is not very useful in real-world use cases. The great news here is that
 return values are handled using open polymorphic abstractions that clojure offers:
 protocols.
 
@@ -243,7 +243,7 @@ mutable api:
 
 [source, clojure]
 ----
-(def myhandler
+(defn myhandler
   [context]
   (ct/set-status! context 200)
   (ct/set-headers! context {:content-type "text/plain"})
@@ -275,7 +275,7 @@ That object exposes through Java interop methods to access the content type and 
 raw data of the request body. For convenience, it implements the `clojure.java.io`
 protocols for make it compatible with Clojure's native facilities for reading data.
 
-A good demostration of this is using the clojure `slurp` function. It uses
+A good demonstration of this is using the clojure `slurp` function. It uses
 `clojure.java.io` abstractions behind the scenes and serves as helper for reading a
 resource as a string:
 
@@ -288,14 +288,14 @@ resource as a string:
 ----
 
 The `slurp` function uses the abstractions defined on the `clojure.java.io` namespace
-for read the content of the provided resourse as string and return it.
+for read the content of the provided resource as string and return it.
 
 Furthermore, _catacumba_ offers a more flexible way to parsing body data based on the
 incoming content type, but it is explained with more details in the
 <<body-parsing,body parsing section>> of this document.
 
 Like the http request body, the http headers are available through the `:headers` key
-entry. In order to extract some header, just perform the apropiate lookup:
+entry. In order to extract some header, just perform the appropriate lookup:
 
 [source, clojure]
 ----
@@ -356,7 +356,7 @@ The `context` also contains other keys but them will explain in its correspondin
 
 === Cookies
 
-The cookies CRUD operations works very similiar to the headers one. You can access
+The cookies CRUD operations works very similar to the headers one. You can access
 to the request cookies through direct keyword lookup on context object:
 
 [source, clojure]
@@ -566,7 +566,7 @@ using `:assets` routing directive. Here an example:
 ----
 
 Additionally, it has support for specify a index file, that will be returned if no
-file is requested. This is very usefull for SPA (single page applications):
+file is requested. This is very useful for SPA (single page applications):
 
 [source, clojure]
 ----
@@ -587,11 +587,11 @@ section.
 [[handler-delegation]]
 === Handler delegation
 
-A part of the obvious (and previously explained) responsability of the `context`
-object in catacubla, it has some others responsabilities. Here just a summary of
+A part of the obvious (and previously explained) responsibility of the `context`
+object in catacubla, it has some others responsibilities. Here just a summary of
 them:
 
-Here a small summary of the context responsabilities besides the obvious one
+Here a small summary of the context responsibilities besides the obvious one
 explained in previous sections (IO handling):
 
 * Provide direct access to the request and response objects.
@@ -600,7 +600,7 @@ explained in previous sections (IO handling):
 * Convenience helpers for common handlers operation.
 
 In a catacumba design (inherited from ratpack), a handler is a unit of work in
-an asynchronous handler pipeline and the context is a execution controler and
+an asynchronous handler pipeline and the context is a execution controller and
 local storage for the current request state.
 
 In other words it can be explained as "flow control" in the chain of handlers.
@@ -610,7 +610,7 @@ composed in different ways (as we previously seen in other parts of the
 documentation). So the each handler in the pipeline has the ability to do some
 work and delegate the rest of processing to next handler in the chain.
 
-This approach allows you build different kind of modular and completelly decoupled
+This approach allows you build different kind of modular and completely decoupled
 handlers and compose them into a pipeline to work together.
 
 The delegation response can be done with `delegate` function. Let see a simple
@@ -785,9 +785,9 @@ in the classpath and will set a base dir to its directory.
 _Catacumba_ server can be configured to use TLS (commonly known as SSL). The process
 is pretty simple but it requires to have a proper key and certificate.
 
-The first thinkg that you should care about is that _catacumba_ is built on jvm
+The first thing that you should care about is that _catacumba_ is built on jvm
 that the default ssl certificate/key format used by nginx/apache it isn't compatible
-but is very easy create a compatible file using the `openssl` commandline.
+but is very easy create a compatible file using the `openssl` command line.
 
 Having a key and the certificate, just execute this command:
 
@@ -810,14 +810,14 @@ just pass some additional parameters on starting the server:
 
 NOTE: _catacumba_ at this moment does not has the "upgrade" approach so if
 you setup ssl, only ssl connections will be accepted. So the most recommended
-way to use ssl on your application is put catacumba behind nginx or haproxi
+way to use ssl on your application is put catacumba behind nginx or haproxy
 and make them handle the ssl.
 
 
 [[handler-types]]
 == Handler types
 
-This section intends to explain the different kind of builting handler types and the
+This section intends to explain the different kind of built in handler types and the
 response types that comes out of the box with catacumba. This section is organized
 on handler types as first level and possible supported return values as second
 level.
@@ -853,10 +853,10 @@ This is the aspect of async handler returning a core.async channel as a body:
 
 Do not worry about how much data you can send to the client, if you are using
 channels in a right way (in a go block), you will send data to the client as fast
-as the client can consume it. This technique is also called backpressure, and is
+as the client can consume it. This technique is also called back pressure, and is
 fully supported for chunked responses.
 
-Additionaly, you also can return a channel as the handler response. The main
+Additionally, you also can return a channel as the handler response. The main
 difference is that in this case you should put a complete response into the channel:
 
 [source, clojure]
@@ -871,7 +871,7 @@ difference is that in this case you should put a complete response into the chan
 
 ==== CompletableFuture
 
-Sometimes, you do not need send a chunked stream to the client, but your "bussines
+Sometimes, you do not need send a chunked stream to the client, but your "business
 logic" is defined in an asynchronous friendly API using promises (or something
 similar). In this case, with _catacumba_ you can return a promise as a body or as a
 response and the data will be sent to the client when the promise has been resolved
@@ -915,8 +915,8 @@ One of the advantages of using `CompletableFuture` abstraction with _promesa_ an
 _cats_ libraries is that them both exposes additional sugar syntax that work with
 promises in a more painless way.
 
-Let see an example that thaks to the link:https://github.com/funcool/cats[cats]
-`mlet` macro composes few async compitations in a very clojure familiar syntax:
+Let see an example that takes the link:https://github.com/funcool/cats[cats]
+`mlet` macro, composes few async computations in a very clojure familiar syntax:
 
 [source, clojure]
 ----
@@ -984,7 +984,7 @@ and return them as http response body:
 ;; It will return a chunked response to the client with "HELLO WORLD" string.
 ----
 
-One of the best parts of the reactive-strams is that them comes with backpressure
+One of the best parts of the reactive-strams is that them comes with back pressure
 support out of the box and it native support in ratpack makes them a great glue
 abstraction for similar async primitives. In fact, the support for all stream like
 primitives explained until now are implemented in terms of _reactive-streams_
@@ -994,7 +994,7 @@ publisher.
 === WebSockets
 
 One of the main goals of _catacumba_ is come with builtin, full featured and
-backpressure-aware websockets support.
+back pressure aware websockets support.
 
 You can start a websocket connection in any _catacumba_ handler or route handler
 using `websocket` function. It does not require any special handlers for dealing
@@ -1065,7 +1065,7 @@ handler type in the way that you prefer.
 
 === SSE (Server-Sent Events)
 
-WebSockets are cool because they allow bi-directional comunication, but in some
+WebSockets are cool because they allow bi-directional communication, but in some
 circumstances we only need something unidirectional, for notifying the client about
 some changes or any other events. For this purpose exists
 link:https://developer.mozilla.org/en-US/docs/Server-sent_events[Server-Sent Events]
@@ -1170,7 +1170,7 @@ compojure and all related middlewares) or in a _catacumba_'s routing chain.
 
 Is a low level handler type that works in a cps style (in other words, they works
 with callbacks). This is not general purpose handler type but you maybe found it
-usefull for integrate catacumba with other scenarios that it is not initialy
+useful for integrate catacumba with other scenarios that it is not initially
 designed to work.
 
 This is the aspect ot the cps style handler:
@@ -1211,7 +1211,7 @@ chain:
 (defn example-handler
   [context]
   (let [body (:data context)]
-    (println "Received data:" data)
+    (println "Received data:" body)
     (http/no-content)))
 
 (def app
@@ -1226,7 +1226,7 @@ By default, the `application/x-www-form-urlencoded`, `multipart/form-data`,
 parsers come out of the box. The link:https://github.com/dakrone/cheshire[cheshire]
 json parser is used for parsing the body with the `application/json` content type.
 
-The body parsing is a open system, implemented using clojure's polymorphism facilites
+The body parsing is a open system, implemented using clojure's polymorphism facilities
 such as multimethods. If you want add additional parser, just add an additional
 implementation to the parse multimethod with your content-type as dispatch tag.
 
@@ -1304,8 +1304,8 @@ You can clean the session just reseting to the empty map:
 ----
 
 One of the big advantages of using the routing chain for session set up, is that
-you can restrict session halding to a concrete subset of urls/resources avoiding
-unnecesary code execution for handlers that do not need sessions:
+you can restrict session handling to a concrete subset of urls/resources avoiding
+unnecessary code execution for handlers that do not need sessions:
 
 [source, clojure]
 ----
@@ -1353,7 +1353,7 @@ one.
 
 === Authentication
 
-_Catacumba_ also comes with authentication facilites heavily inspired by
+_Catacumba_ also comes with authentication facilities heavily inspired by
 *buddy-auth*.
 
 We do not have used directly *buddy-auth* because it is designed for ring based
@@ -1361,7 +1361,7 @@ applications, therefore the buddy-auth abstractions are blocking, and blocking a
 is not well suited for async based applications.
 
 So, _catacumba_ defines own abstractions for handle authentication, that are very
-very similar to the _buddy-auth_, with the execption that them expose asynchronous
+very similar to the _buddy-auth_, with the exception that them expose asynchronous
 api, so adapt existing _buddy-auth_ backends should be very easy.
 
 Like *buddy-auth*, _catacumba_ comes with a little set of builtin backends that can
@@ -1372,7 +1372,7 @@ be used directly: *session*, *jws* (token) and *jwe* (encrypted token).
 
 Let start with session authentication backend. This backend is mainly used for web
 based applications and consists in verify some value on the session. So this is the
-easyest authentication scheme and fits perfectly for the first contact.
+easiest authentication scheme and fits perfectly for the first contact.
 
 Start importing some needed namespaces and create an instance
 of the authentication backend:
@@ -1387,7 +1387,7 @@ of the authentication backend:
 ----
 
 Now, continue defining a handler for the login action. It consists in receive
-credentials from the user input and verify them. In case of success verifycation,
+credentials from the user input and verify them. In case of success verification,
 we just need setup the `:identity` key in the session.
 
 Let see a partially implemented example:
@@ -1397,7 +1397,7 @@ Let see a partially implemented example:
 (defn login-handler
   [context]
   (let [data (:body context)
-        user (find-user (:username data)   ;; (implementation ommited)
+        user (find-user (:username data)   ;; (implementation omitted)
                         (:password data))]
     (swap! (:session context) assoc :identity user)
     (http/ok "ok")))
@@ -1416,7 +1416,7 @@ authentication handler to the routing chain:
               [:any (cauth/auth auth-backend)]              ;; Auth backend
               [:any (parse/body-params)]                  ;; Body parsing
               [:get "login" login-handler]
-              [:get some-handler]]))                     ;; (implementation ommited)
+              [:get some-handler]]))                     ;; (implementation omitted)
 ----
 
 You can see a working example using auth facilities <<website-example,here>>.
@@ -1453,7 +1453,7 @@ Following of our new login handler:
 (defn login-handler
   [context]
   (let [data (:body context)
-        user (find-user (:username data)   ;; (implementation ommited)
+        user (find-user (:username data)   ;; (implementation omitted)
                         (:password data))]
     (-> (json/encode {:token (jws/sign {:user (:id user)} secret)})
         (http/ok {:content-type "application/json"}))))
@@ -1467,12 +1467,12 @@ And finally, put the new backend into the routing chain:
   (ct/routes [[:any (cauth/auth auth-backend)]     ;; Auth backend
               [:any (parse/body-params)]           ;; Body parsing
               [:get "login" login-handler]
-              [:get some-handler]]))               ;; (implementation ommited)
+              [:get some-handler]]))               ;; (implementation omitted)
 ----
 
 
 WARNING: Take care that using jws for create tokens, the data is serialized using
-json + base64 and siged using strong cryptography signatures. That method ensure that
+json + base64 and signed using strong cryptography signatures. That method ensure that
 the data can not be manipulated by third party but it not protect it from privacy. If
 you need store private data in the token, consider using JWE.
 
@@ -1498,7 +1498,7 @@ You can create the backend instance so:
   (auth/jwe-backend privkey))
 ----
 
-NOTE: In this example we use asymetric encryption scheme, if you want use an other
+NOTE: In this example we use asymmetric encryption scheme, if you want use an other
 encryption scheme, please check
 link:https://funcool.github.io/buddy-sign/latest/#_json_web_encryption[buddy-sign documentation]
 for the complete list of supported encryption algorithms.
@@ -1520,7 +1520,7 @@ The login handler is almost identical:
 ----
 
 Instead of signing the content, we encrypt it using the public key. The routing
-chain is completelly identical from the JWE Token examples.
+chain is completely identical from the JWE Token examples.
 
 
 ==== Other
@@ -1709,7 +1709,7 @@ More information:
 
 === Postal
 
-The tipical web application usually follows the api REST architecture, but the main
+The typical web application usually follows the api REST architecture, but the main
 problem of that is that is bound directly to the HTTP semantics that are not
 always coherent or not always clear how to use.
 
@@ -1721,7 +1721,7 @@ The general idea behind the protocol and this library is borrowed from
 link:https://facebook.github.io/relay/[Facebook Relay] and
 link:http://netflix.github.io/falcor/[Netflix's Falcor].
 The main differents with them is that this library only represents the transport and
-message routing layer layer, so it's is nonobstructive and not copupled with
+message routing layer layer, so it's is nonobstructive and not coupled with
 concrete framework and persistence.
 
 One of the great examples where this library fits in a perfection is a
@@ -1747,7 +1747,7 @@ NOTE: The `:type` and `:dest` keys are mandatory to be present in the frame.
 
 The messages are by default serialized using transit+json serialization format
 but the system is open to be extended with other formats. The serialization is
-completelly transparent to the user, the catacumba will do all the hard work for
+completely transparent to the user, the catacumba will do all the hard work for
 you.
 
 Knowing the frame structure, the best way to define a postal handler is using
@@ -1781,8 +1781,8 @@ The `message` function is just a helper for create response hashmaps:
 ----
 
 In addition to plain return values, you can freely return a promise or deferred
-(from *promesa* and *manifold* libraries respecively). And if that abstractions
-do not satisfies you, the system is completly open to be extended with your
+(from *promesa* and *manifold* libraries respectively). And if that abstractions
+do not satisfies you, the system is completely open to be extended with your
 own abstractions.
 
 And finally, attach the handler on the router:
@@ -1822,7 +1822,7 @@ with the client:
     (pc/socket context on-connect))
 ----
 
-Behind the schenes, the `socket` function just upgrades to websockets and uses
+Behind the scenes, the `socket` function just upgrades to websockets and uses
 it as low-level transport layer for message communication between the client and
 the server.
 
@@ -1832,7 +1832,7 @@ this value it is not configurable but it will change in a future.
 
 [NOTE]
 ====
-This documention will explain only the backend related stuff. For client usage,
+This documentation will explain only the backend related stuff. For client usage,
 please refer to the link:https://github.com/funcool/postal[client documentation].
 ====
 
@@ -1884,7 +1884,7 @@ TODO
 [[plugins]]
 == Plugins
 
-This section will explain usefull modules that ara not part of the core of
+This section will explain useful modules that are not part of the core of
 _catacumba_ but are fully supported.
 
 
@@ -1892,7 +1892,7 @@ _catacumba_ but are fully supported.
 === catacumba-prone
 
 link:https://github.com/magnars/prone[Prone] is a exception reporting middleware for
-ring based applications that show a beautiful, navegable and human readable
+ring based applications that show a beautiful, navigable and human readable
 stacktraces when an exception is throwed in your application.
 
 Full documentation: https://github.com/funcool/catacumba-prone
@@ -1999,7 +1999,7 @@ different kinds of diagnosis, such as performance, latency, etc. This example
 shows how it can be done.
 
 In case of this concrete example application, it uses the instrumentation facilities
-of catacumba for monitoring the time of oxecuttion of request handlers.
+of catacumba for monitoring the time of execution of request handlers.
 
 Follow this steps for get this example up and running:
 
@@ -2070,7 +2070,7 @@ they are very complementary.
 [[rationale]]
 === What is the rationale behind this project?
 
-I started writting this library as a research project to provide a simple, non
+I started writing this library as a research project to provide a simple, non
 obstructive (a la ring) without the constraints of the existing ring spec.
 The aim is to create a web toolkit for building asynchronous web services.
 
@@ -2083,16 +2083,16 @@ Here is an incomplete list of things that _catacumba_ aims to achieve:
 * Build upon abstractions with simplicity and extensibility in mind.
 * Provide built in declarative style routing.
 * Remain unopinionated and versatile.
-* Come with backpressure support out of the box.
+* Come with back pressure support out of the box.
 
 _catacumba_ is not designed:
 
 * To be a fully integrated full stack solution like Immutant or Pedestal.
-* To provide an opinionated way to structure your "bussines logic"
+* To provide an opinionated way to structure your "business logic"
 * To provide all possible features that you might need.
 * To be a low level, ring based library.
 
-The result of this research project is a powerfull, lightweight, and fully
+The result of this research project is a powerful, lightweight, and fully
 extensible asynchronous web toolkit built on top of existing and well designed
 components such as Ratpack and Netty.
 

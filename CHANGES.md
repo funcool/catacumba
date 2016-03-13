@@ -1,9 +1,10 @@
 # Changelog #
 
-## Version 0.11.2-SNAPSHOT ##
+## Version 0.11.2 ##
 
-Date: --
+Date: 2016-03-13
 
+- Documentation improvements.
 - Better docstrings for serializers api.
 - Better docstrings for postal api.
 - Minor internal changes on postal impl.

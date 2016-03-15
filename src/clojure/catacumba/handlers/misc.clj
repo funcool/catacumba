@@ -52,19 +52,32 @@
     (set? origin) (origin value)
     (= origin value) origin))
 
+(defn- normalize-headers
+  [headers]
+  (->> (map (comp str/lower name) headers)
+       (str/join ",")))
+
+(defn- normalize-methods
+  [methods]
+  (->> (map (comp str/upper name) methods)
+       (str/join ",")))
+
 (defn- handle-preflight
-  [context headers {:keys [allow-methods allow-headers max-age allow-credentials] :as opts}]
+  [context headers {:keys [allow-methods allow-headers max-age allow-credentials]
+                    :or {allow-methods #{:get :post :put :delete}}
+                    :as opts}]
   (let [^String origin (get headers :origin)]
     (when-let [origin (allow-origin? origin opts)]
-      (ct/set-headers! context {:access-control-allow-origin origin
-                                :access-control-allow-methods (str/join "," allow-methods)})
+      (ct/set-headers! context
+                       {:access-control-allow-origin origin
+                        :access-control-allow-methods (normalize-methods allow-methods)})
       (when allow-credentials
         (ct/set-headers! context {:access-control-allow-credentials true}))
       (when max-age
         (ct/set-headers! context {:access-control-max-age max-age}))
       (when allow-headers
-        (ct/set-headers! context {:access-control-allow-headers (str/join "," allow-headers)})))
-    (hs/send! context "")))
+        (ct/set-headers! context {:access-control-allow-headers (normalize-headers allow-headers)}))
+    (hs/send! context ""))))
 
 (defn- handle-response
   [context headers {:keys [allow-headers expose-headers origin] :as opts}]
@@ -72,9 +85,9 @@
     (when-let [origin (allow-origin? origin opts)]
       (ct/set-headers! context {:access-control-allow-origin origin})
       (when allow-headers
-        (ct/set-headers! context {:access-control-allow-headers (str/join "," allow-headers)}))
+        (ct/set-headers! context {:access-control-allow-headers (normalize-headers allow-headers)}))
       (when expose-headers
-        (ct/set-headers! context {:access-control-expose-headers (str/join "," expose-headers)})))
+        (ct/set-headers! context {:access-control-expose-headers (normalize-headers expose-headers)})))
     (ct/delegate)))
 
 (defn- cors-preflight?
@@ -91,7 +104,6 @@
       (if (cors-preflight? context headers)
         (handle-preflight context headers opts)
         (handle-response context headers opts)))))
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Autorealoader

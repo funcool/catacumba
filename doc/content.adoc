@@ -1547,9 +1547,10 @@ _Catacumba_ has builtin support for CORS, and this is how you can use it:
 ----
 (require '[catacumba.handlers.misc :as misc])
 
-(def cors-conf {:origin #{"http://website.com"}                       ;; mandatory
-                :max-age 3600                                         ;; optional
-                :allow-headers ["X-Requested-With", "Content-Type"]}) ;; optional
+(def cors-conf {:origin #{"http://website.com"}                     ;; mandatory
+                :max-age 3600                                       ;; optional
+                :allow-methods #{:post :put :get :delete}           ;; optional
+                :allow-headers #{:x-requested-with :content-type}}) ;; optional
 
 (def app
   (ct/routes [[:prefix "api/v1"

@@ -1,5 +1,13 @@
 # Changelog #
 
+## Version 0.11.3-SNAPSHOT ##
+
+Date: ---
+
+- Improved headers and methods normalization on cors handler
+- Improved cors documentation.
+
+
 ## Version 0.11.2 ##
 
 Date: 2016-03-13

@@ -6,6 +6,7 @@ Date: ---
 
 - Improved headers and methods normalization on cors handler
 - Improved cors documentation.
+- Fix wrong documentation related to logging.
 
 
 ## Version 0.11.2 ##

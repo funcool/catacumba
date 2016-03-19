@@ -1852,7 +1852,7 @@ attaching additional handler to your routing chain:
 (require '[catacumba.handlers.misc :as misc])
 
 (def app
-  (ct/routes [[(misc/log)]
+  (ct/routes [[:any (misc/log)]
               ;; here your handlers
               ]))
 ----
@@ -1867,7 +1867,7 @@ with it you can provide your own function for logging:
   (println context outcome))
 
 (def app
-  (ct/routes [[(misc/log my-logging-handler)]
+  (ct/routes [[:any (misc/log my-logging-handler)]
               ;; here your handlers
               ]))
 ----

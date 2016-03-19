@@ -1264,6 +1264,12 @@ For use it, just attach it to your routing chain:
 
 You can see a working example in the <<website-example,Website example>> code.
 
+[TIP]
+====
+The auto-reloading can only work if you pass var references to the router
+definition instead resolved values. In same way as the previous example.
+====
+
 
 === Sessions
 

@@ -76,8 +76,8 @@
       (when max-age
         (ct/set-headers! context {:access-control-max-age max-age}))
       (when allow-headers
-        (ct/set-headers! context {:access-control-allow-headers (normalize-headers allow-headers)}))
-    (hs/send! context ""))))
+        (ct/set-headers! context {:access-control-allow-headers (normalize-headers allow-headers)})))
+    (hs/send! context "")))
 
 (defn- handle-response
   [context headers {:keys [allow-headers expose-headers origin] :as opts}]

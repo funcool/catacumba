@@ -11,8 +11,6 @@
             [buddy.core.hash :as hash]
             [slingshot.slingshot :refer [try+]]
             [cheshire.core :as json]
-            [cats.core :as m]
-            [cats.monad.exception :as exc]
             [catacumba.core :as ct]
             [catacumba.http :as http]
             [catacumba.handlers.session :as cses]

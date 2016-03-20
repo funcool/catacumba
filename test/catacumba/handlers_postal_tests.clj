@@ -11,8 +11,6 @@
             [manifold.stream :as ms]
             [promesa.core :as p]
             [buddy.core.codecs :as codecs]
-            [cats.core :as m]
-            [cats.monad.exception :as exc]
             [catacumba.core :as ct]
             [catacumba.impl.executor :as exec]
             [catacumba.handlers.postal :as pc]
@@ -88,19 +86,15 @@
 (deftest invalid-response-spec
   (with-server {:handler (pc/router (constantly {}))}
     (let [frame (pr-str {:type :query :data nil})
-          response (exc/try-on
-                    @(send-raw-frame base-url :put frame "application/edn"))]
-      (is (exc/failure? response))
-      (let [response (m/extract response)
-            data (ex-data response)]
-        (is (:status data) 415)))))
+          response (try
+                     @(send-raw-frame base-url :put frame "application/edn")
+                     (catch clojure.lang.ExceptionInfo e
+                       (ex-data e)))]
+      (is (:status response) 415))))
 
 (deftest response-as-promise-spec
   (letfn [(handler [context frame]
-            (m/mlet [_ (future
-                         (Thread/sleep 500))]
-              (m/return {:data {:foo [1]}})))]
-
+            (p/resolved {:data {:foo [1]}}))]
     (with-server {:handler (pc/router handler)}
       (let [frame {:type :query :data nil}
             response (send-frame base-url frame)]
@@ -109,11 +103,7 @@
 
 (deftest response-as-rejected-promise-spec
   (letfn [(handler [context frame]
-            (m/mlet [_ (future
-                         (Thread/sleep 500))]
-              (throw (ex-info "foobar" {:error true}))
-              (m/return {:data {:foo [1]}})))]
-
+            (p/rejected (ex-info "foobar" {:error true})))]
     (with-server {:handler (pc/router handler)}
       (let [frame {:type :query :data nil}
             response (send-frame base-url frame)]

@@ -7,7 +7,6 @@
             [clj-http.client :as client]
             [promesa.core :as p]
             [catacumba.stream :as stream]
-            [cats.core :as m]
             [cuerdas.core :as str]
             [manifold.stream :as ms]
             [manifold.deferred :as md]

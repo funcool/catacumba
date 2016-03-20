@@ -1,12 +1,16 @@
 # Changelog #
 
-## Version 0.11.3-SNAPSHOT ##
+## Version 0.12.0 ##
 
-Date: ---
+Date: 2016-03-20
 
 - Improved headers and methods normalization on cors handler
 - Improved cors documentation.
 - Fix wrong documentation related to logging.
+- Update to ratpack 1.2.0
+- Update to netty 4.1.0.Beta8
+- Update to promesa 1.1.1
+
 
 
 ## Version 0.11.2 ##

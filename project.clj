@@ -26,7 +26,7 @@
                  [commons-io/commons-io "2.4"]
                  [buddy/buddy-sign "0.9.0" :exclusions [org.clojure/tools.reader]]
                  [funcool/cuerdas "0.7.1"]
-                 [funcool/promesa "0.7.0"]
+                 [funcool/promesa "1.1.1"]
                  [danlentz/clj-uuid "0.1.6"]
                  [environ "1.0.2"]
                  [potemkin "0.4.3"]

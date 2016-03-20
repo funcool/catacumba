@@ -96,6 +96,17 @@
         (let [response (client/post base-url {:body (test-utils/data->transit {:foo/bar "bar"} :msgpack)
                                               :content-type "application/transit+msgpack"})]
           (is (= {:foo/bar "bar"} (deref p 1000 nil)))))))
+
+
+  (testing "Regression: do not throw exception when get request is received with content type header"
+    (let [p (promise)
+          app (ct/routes [[:any (parse/body-params)]
+                          [:any #(do
+                                   (deliver p (:data %))
+                                   "hello world")]])]
+      (with-server {:handler app}
+        (let [response (client/get base-url {:content-type "application/transit+json"})]
+          (is (= nil (deref p 1000 :nothing)))))))
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

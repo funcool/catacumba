@@ -78,4 +78,6 @@
    (fn [context]
      (let [^Context ctx (:catacumba/context context)
            ^TypedData body (:body context)]
-       (ct/delegate {attr (parsefn ctx body)})))))
+       (if (not= (:method context) :get)
+         (ct/delegate {attr (parsefn ctx body)})
+         (ct/delegate {attr nil}))))))

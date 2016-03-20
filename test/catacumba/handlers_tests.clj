@@ -168,7 +168,7 @@
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))
           (is (= (get headers "access-control-allow-origin") "*"))
-          (is (= (get headers "access-control-allow-headers") "X-FooBar"))))))
+          (is (= (get headers "access-control-allow-headers") "x-foobar"))))))
 
   (testing "Options cors request"
     (let [handler (fn [ctx] "hello world")

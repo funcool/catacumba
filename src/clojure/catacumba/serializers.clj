@@ -59,58 +59,62 @@
 ;; Public Api
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn str->bytes
-  [data]
-  (.getBytes data "UTF-8"))
+(defmulti -encode
+  (fn [data opts] (::type opts)))
 
-(defn bytes->str
-  [data]
-  (String. data "UTF-8"))
+(defmulti -decode
+  (fn [data opts] (::type opts)))
 
-(defmulti encode
+(defn encode
   "Encode data."
-  (fn [data type] type))
+  ([data type]
+   (-encode data {::type type}))
+  ([data type opts]
+   (-encode data (merge {::type type} opts))))
 
-(defmulti decode
-  "Decode data."
-  (fn [data type] type))
+(defn decode
+  "Encode data."
+  ([data type]
+   (-decode data {::type type}))
+  ([data type opts]
+   (-decode data (merge {::type type} opts))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Implementation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmethod encode :json
+(defmethod -encode :json
   [data _]
   (-> (json/encode data)
       (codecs/str->bytes)))
 
-(defmethod decode :json
+(defmethod -decode :json
   [data _]
   (-> (codecs/bytes->str data)
       (json/decode true)))
 
-(defmethod encode :transit+json
-  [data _]
+(defmethod -encode :transit+json
+  [data {:keys [handlers]}]
   (with-open [out (ByteArrayOutputStream.)]
-    (let [w (transit/writer out :json)]
+    (let [w (transit/writer out :json {:handlers handlers})]
       (transit/write w data)
       (.toByteArray out))))
 
-(defmethod encode :transit+msgpack
-  [data _]
+(defmethod -encode :transit+msgpack
+  [data {:keys [handlers]}]
   (with-open [out (ByteArrayOutputStream.)]
-    (let [w (transit/writer out :msgpack)]
+    (let [w (transit/writer out :msgpack {:handlers handlers})]
       (transit/write w data)
       (.toByteArray out))))
 
-(defmethod decode :transit+json
-  [data _]
+(defmethod -decode :transit+json
+  [data {:keys [handlers]}]
   (with-open [input (ByteArrayInputStream. data)]
-    (let [reader (transit/reader input :json)]
+    (let [reader (transit/reader input :json {:handlers handlers})]
       (transit/read reader))))
 
-(defmethod decode :transit+msgpack
-  [data _]
+(defmethod -decode :transit+msgpack
+  [data {:keys [handlers]}]
   (with-open [input (ByteArrayInputStream. data)]
-    (let [reader (transit/reader input :msgpack)]
+    (let [reader (transit/reader input :msgpack {:handlers handlers})]
       (transit/read reader))))

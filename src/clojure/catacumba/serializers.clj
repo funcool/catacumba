@@ -59,6 +59,14 @@
 ;; Public Api
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn str->bytes
+  [data]
+  (.getBytes data "UTF-8"))
+
+(defn bytes->str
+  [data]
+  (String. data "UTF-8"))
+
 (defmulti -encode
   (fn [data opts] (::type opts)))
 

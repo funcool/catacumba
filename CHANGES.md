@@ -1,5 +1,12 @@
 # Changelog #
 
+## Version 0.13.0-SNAPSHOT ##
+
+Date: ---
+
+- Allow pass additional options to serializers.
+
+
 ## Version 0.12.0 ##
 
 Date: 2016-03-20

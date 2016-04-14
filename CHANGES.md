@@ -5,6 +5,16 @@
 Date: ---
 
 - Allow pass additional options to serializers.
+- BREAKING CHANGE: rename the default marker file 
+  from `.catacumba` to `.catacumba.basedir`.
+- Add the ability to specify an user defined file name
+  for the marker file.
+- Add support for serving static files from classpath.
+- Update manifold dependency to 0.1.4.
+- Update cheshire dependency to 5.6.1
+- Update buddy-sign dependency to 0.12.0
+- Remove potemkin dependency.
+
 
 
 ## Version 0.12.0 ##

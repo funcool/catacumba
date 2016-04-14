@@ -46,6 +46,7 @@ import static ratpack.util.Exceptions.uncheck;
 
 public class WebSocketEngine {
 
+  @SuppressWarnings("deprecation")
   public static <T> void connect(final Context context, String path, int maxLength, final WebSocketHandler<T> handler) {
     PublicAddress publicAddress = context.get(PublicAddress.class);
     URI address = publicAddress.get(context);
@@ -70,6 +71,10 @@ public class WebSocketEngine {
 
     final DirectChannelAccess directChannelAccess = context.getDirectChannelAccess();
     final Channel channel = directChannelAccess.getChannel();
+
+    if (!channel.config().isAutoRead()) {
+      channel.config().setAutoRead(true);
+    }
 
     handshaker.handshake(channel, nettyRequest).addListener(new HandshakeFutureListener<>(context, handshaker, handler));
   }

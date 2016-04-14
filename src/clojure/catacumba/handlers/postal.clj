@@ -167,9 +167,20 @@
           (-encode content-type)
           (frame->http content-type)))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Public Api
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn- connect-chans
+  "Like core.async pipe but reacts on close
+  in both sides."
+  [from to]
+  (a/go-loop []
+    (let [v (a/<! from)]
+      (if (nil? v)
+        (a/close! to)
+        (if (a/>! to v)
+          (recur)
+          (a/close! from)))))
+  to)
+
+;; --- Public Api
 
 (defn frame
   "A convenience helper that allow easy create a frame compatible
@@ -242,8 +253,8 @@
                     in' (a/chan 1 in-xf)]
 
                 ;; Connect transformatons
-                (hp/connect-chans out' out)
-                (hp/connect-chans in in')
+                (connect-chans out' out)
+                (connect-chans in in')
 
                 ;; keep-alive loop
                 (a/go-loop [n 1]

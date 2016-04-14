@@ -30,14 +30,13 @@
             [catacumba.impl.helpers :as hp]
             [catacumba.impl.websocket :as implws]
             [buddy.core.codecs :as codecs]
+            [buddy.core.codecs.base64 :as b64]
             [manifold.deferred :as md]
             [promesa.core :as p])
   (:import ratpack.http.TypedData
            java.util.concurrent.CompletableFuture))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Data encoding/decoding
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; --- Data encoding/decoding
 
 (defmulti ^:no-doc -decode
   (fn [data content-type]
@@ -55,9 +54,7 @@
   [data _]
   (sz/encode data :transit+json))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Implementation
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; --- Implementation
 
 (defn- get-content-type
   [context]
@@ -71,7 +68,7 @@
   [context]
   (if (= (:method context) :get)
     (if-let [data (get-in context [:query-params :d] nil)]
-      (codecs/safebase64->bytes data)
+      (b64/decode data)
       (byte-array 0))
     (.getBytes ^TypedData (:body context))))
 

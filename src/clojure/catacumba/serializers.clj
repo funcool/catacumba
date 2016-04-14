@@ -59,13 +59,8 @@
 ;; Public Api
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn str->bytes
-  [data]
-  (.getBytes data "UTF-8"))
-
-(defn bytes->str
-  [data]
-  (String. data "UTF-8"))
+(def str->bytes codecs/str->bytes)
+(def bytes->str codecs/bytes->str)
 
 (defmulti -encode
   (fn [data opts] (::type opts)))

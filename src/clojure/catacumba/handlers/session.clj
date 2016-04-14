@@ -28,6 +28,7 @@
   (:require [promesa.core :as p]
             [buddy.core.nonce :as nonce]
             [buddy.core.codecs :as codecs]
+            [buddy.core.codecs.base64 :as b64]
             [buddy.sign.jws :as jws]
             [catacumba.impl.atomic :as atomic]
             [catacumba.impl.handlers :as hs]
@@ -138,11 +139,15 @@
         (p/promise
          (fn [resolve reject]
            (if (nil? key)
-             (let [key (codecs/bytes->safebase64 (nonce/random-nonce 48))]
+             (let [key (-> (nonce/random-nonce 48)
+                           (b64/encode true)
+                           (codecs/bytes->str))]
                (resolve [key {}]))
              (let [data (get @internalstore key nil)]
                (if (nil? data)
-                 (let [key (codecs/bytes->safebase64 (nonce/random-nonce 48))]
+                 (let [key (-> (nonce/random-nonce 48)
+                               (b64/encode true)
+                               (codecs/bytes->str))]
                    (resolve [key {}]))
                  (resolve [key data])))))))
 

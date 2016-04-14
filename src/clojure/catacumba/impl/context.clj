@@ -41,9 +41,7 @@
            ratpack.registry.Registry
            java.util.Optional))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Types
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; --- Types
 
 (defrecord DefaultContext [])
 (defrecord ContextData [payload])
@@ -53,9 +51,19 @@
 (alter-meta! #'->ContextData assoc :private true)
 (alter-meta! #'map->ContextData assoc :private true)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Public Api
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; --- Helpers
+
+(defn- assoc-conj!
+  {:internal true :no-doc true}
+  [map key val]
+  (assoc! map key
+          (if-let [cur (get map key)]
+            (if (vector? cur)
+              (conj cur val)
+              [cur val])
+            val)))
+
+;; --- Public Api
 
 (defn context
   "A catacumba context constructor."
@@ -149,7 +157,7 @@
     (persistent!
      (reduce (fn [acc key]
                (let [values (.getAll params key)]
-                 (reduce #(hp/assoc-conj! %1 (keyword key) %2) acc values)))
+                 (reduce #(assoc-conj! %1 (keyword key) %2) acc values)))
              (transient {})
              (.keySet params)))))
 
@@ -178,7 +186,7 @@
                      key (if keywordize
                            (keyword (.toLowerCase key))
                            (.toLowerCase key))]
-                 (reduce #(hp/assoc-conj! %1 key %2) acc values)))
+                 (reduce #(assoc-conj! %1 key %2) acc values)))
              (transient {})
              (.keySet headers))))
 
@@ -273,12 +281,12 @@
         result (transient {})]
     (reduce (fn [acc key]
               (let [values (.getAll files key)]
-                (reduce #(hp/assoc-conj! %1 (keyword key) %2) acc values)))
+                (reduce #(assoc-conj! %1 (keyword key) %2) acc values)))
             result
             (.keySet files))
     (reduce (fn [acc key]
               (let [values (.getAll form key)]
-                (reduce #(hp/assoc-conj! %1 (keyword key) %2) acc values)))
+                (reduce #(assoc-conj! %1 (keyword key) %2) acc values)))
             result
             (.keySet form))
       (persistent! result)))

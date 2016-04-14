@@ -2,10 +2,10 @@
 
 ## Version 0.13.0-SNAPSHOT ##
 
-Date: ---
+Date: 2016-04-14
 
 - Allow pass additional options to serializers.
-- BREAKING CHANGE: rename the default marker file 
+- BREAKING CHANGE: rename the default marker file
   from `.catacumba` to `.catacumba.basedir`.
 - Add the ability to specify an user defined file name
   for the marker file.
@@ -14,7 +14,6 @@ Date: ---
 - Update cheshire dependency to 5.6.1
 - Update buddy-sign dependency to 0.12.0
 - Remove potemkin dependency.
-
 
 
 ## Version 0.12.0 ##

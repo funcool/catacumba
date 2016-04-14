@@ -2,15 +2,15 @@
  {:global-vars {*warn-on-reflection* false}
   :aliases {"test-all" ["with-profile" "dev,1.7:dev" "test"]}
   :source-paths ["dev"]
-  :dependencies [[clj-http "1.1.2" :exclusions [org.clojure/tools.reader]]
-                 [aleph "0.4.0" :exclusions [io.netty/netty-all]]
+  :dependencies [[clj-http "3.0.0" :exclusions [org.clojure/tools.reader]]
+                 [aleph "0.4.1" :exclusions [primitive-math io.netty/netty-all]]
                  [org.clojure/tools.namespace "0.2.11"]
                  [ring/ring-core "1.4.0" :exclusions [javax.servlet/servlet-api
                                                       org.clojure/tools.reader
                                                       org.clojure/clojure
                                                       clj-time]]]
-  :plugins [[lein-ancient "0.6.7" :exclusions [org.clojure/tools.reader]]
-            [funcool/codeina "0.3.0"]]
+  :plugins [[lein-ancient "0.6.10"]
+            [funcool/codeina "0.4.0"]]
   :codeina {:sources ["src/clojure"]
             :exclude [catacumba.impl.context
                       catacumba.impl.atomic
@@ -26,6 +26,7 @@
                       catacumba.impl.routing
                       catacumba.impl.stream
                       catacumba.impl.websocket
+                      catacumba.impl.helpers
                       catacumba.impl.sse]
             :reader :clojure
             :target "doc/dist/latest/api"

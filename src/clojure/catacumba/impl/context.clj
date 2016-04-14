@@ -25,7 +25,7 @@
 (ns catacumba.impl.context
   "Functions and helpers for work in a clojure
   way with ratpack types."
-  (:require [catacumba.helpers :as hp])
+  (:require [catacumba.impl.helpers :as hp])
   (:import ratpack.handling.Handler
            ratpack.handling.Context
            ratpack.handling.RequestOutcome

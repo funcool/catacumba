@@ -27,7 +27,7 @@
   ;; TODO: replace direct var usage to fully namespaced calls of core.async
   (:require [clojure.core.async :refer [chan go-loop close! >! <! put!] :as async]
             [catacumba.stream :as stream]
-            [catacumba.helpers :as hp]
+            [catacumba.impl.helpers :as hp]
             [catacumba.impl.executor :as exec]
             [catacumba.impl.handlers :as handlers]
             [catacumba.impl.stream.channel :as schannel])

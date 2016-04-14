@@ -25,7 +25,7 @@
 (ns catacumba.impl.routing
   (:require [catacumba.impl.handlers :as hs]
             [catacumba.impl.context :as ct]
-            [catacumba.helpers :as hp])
+            [catacumba.impl.helpers :as hp])
   (:import catacumba.impl.context.DefaultContext
            ratpack.handling.Context
            ratpack.handling.Chain

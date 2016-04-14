@@ -32,7 +32,7 @@
             [catacumba.impl.atomic :as atomic]
             [catacumba.impl.handlers :as hs]
             [catacumba.impl.context :as ct]
-            [catacumba.helpers :as hp])
+            [catacumba.impl.helpers :as hp])
   (:import clojure.lang.IAtom
            clojure.lang.IDeref
            clojure.lang.Counted

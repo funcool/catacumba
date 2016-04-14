@@ -29,7 +29,7 @@
             [manifold.deferred :as md]
             [promesa.core :as p]
             [catacumba.stream :as stream]
-            [catacumba.helpers :as hp]
+            [catacumba.impl.helpers :as hp]
             [catacumba.impl.context :as ct]
             [catacumba.impl.http :as http])
   (:import catacumba.impl.context.DefaultContext

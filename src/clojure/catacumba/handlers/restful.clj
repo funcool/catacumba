@@ -26,7 +26,7 @@
   (:require [catacumba.impl.handlers :as hs]
             [catacumba.impl.routing :as rt]
             [catacumba.http :as http]
-            [catacumba.helpers :as hp])
+            [catacumba.impl.helpers :as hp])
   (:import ratpack.handling.Handlers
            ratpack.handling.Handler
            ratpack.handling.Context

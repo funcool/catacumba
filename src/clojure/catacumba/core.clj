@@ -1,4 +1,4 @@
-;; Copyright (c) 2015 Andrey Antukh <niwi@niwi.nz>
+;; Copyright (c) 2015-2016 Andrey Antukh <niwi@niwi.nz>
 ;; All rights reserved.
 ;;
 ;; Redistribution and use in source and binary forms, with or without
@@ -24,28 +24,21 @@
 
 (ns catacumba.core
   (:require [catacumba.impl server routing context handlers websocket sse]
-            [potemkin.namespaces :refer [import-vars]]))
+            [catacumba.impl.helpers :refer(defalias)]))
 
-(import-vars
- [catacumba.impl.server
-  run-server]
- [catacumba.impl.routing
-  routes]
- [catacumba.impl.context
-  on-close
-  before-send
-  delegate
-  public-address
-  get-headers
-  set-headers!
-  set-cookies!
-  get-cookies
-  set-status!
-  get-formdata
-  get-query-params]
- [catacumba.impl.handlers
-  send!]
- [catacumba.impl.websocket
-  websocket]
- [catacumba.impl.sse
-  sse])
+(defalias run-server catacumba.impl.server/run-server)
+(defalias routes catacumba.impl.routing/routes)
+(defalias on-close catacumba.impl.context/on-close)
+(defalias before-send catacumba.impl.context/before-send)
+(defalias delegate catacumba.impl.context/delegate)
+(defalias public-address catacumba.impl.context/public-address)
+(defalias get-headers catacumba.impl.context/get-headers)
+(defalias set-headers! catacumba.impl.context/set-headers!)
+(defalias get-cookies catacumba.impl.context/get-cookies)
+(defalias set-cookies! catacumba.impl.context/set-cookies!)
+(defalias set-status! catacumba.impl.context/set-status!)
+(defalias get-formdata catacumba.impl.context/get-formdata)
+(defalias get-query-params catacumba.impl.context/get-query-params)
+(defalias send! catacumba.impl.handlers/send!)
+(defalias websocket catacumba.impl.websocket/websocket)
+(defalias sse catacumba.impl.sse/sse)

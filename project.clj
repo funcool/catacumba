@@ -29,5 +29,4 @@
                  [funcool/promesa "1.1.1"]
                  [danlentz/clj-uuid "0.1.6"]
                  [environ "1.0.2"]
-                 [potemkin "0.4.3"]
                  [com.cognitect/transit-clj "0.8.285"]])

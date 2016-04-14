@@ -29,7 +29,7 @@
             [catacumba.impl.routing :as rt]
             [catacumba.impl.context :as ct]
             [catacumba.impl.http]
-            [catacumba.helpers :as hp]
+            [catacumba.impl.helpers :as hp]
             [buddy.sign.jws :as jws]
             [buddy.sign.jwe :as jwe]
             [promesa.core :as p])

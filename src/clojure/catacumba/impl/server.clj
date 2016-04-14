@@ -23,10 +23,10 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (ns catacumba.impl.server
-  (:require [catacumba.helpers :as hp]
+  (:require [catacumba.impl.helpers :as hp]
             [catacumba.impl.websocket :as websocket]
             [catacumba.impl.handlers :as handlers]
-            [catacumba.helpers :as hp]
+            [catacumba.impl.helpers :as hp]
             [clojure.java.io :as io]
             [environ.core :refer [env]])
   (:import ratpack.server.RatpackServer

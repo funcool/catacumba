@@ -22,7 +22,7 @@
 ;; OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-(ns catacumba.helpers
+(ns catacumba.impl.helpers
   (:refer-clojure :exclude [promise])
   (:require [clojure.core.async :as a])
   (:import ratpack.func.Action
@@ -33,14 +33,17 @@
            ratpack.exec.Downstream
            ratpack.exec.Blocking
            ratpack.handling.Context
+           java.nio.file.Path
            java.nio.file.Paths
            java.util.concurrent.CompletableFuture
            io.netty.buffer.Unpooled))
 
+
+;; --- Java 8 Interop
+
 (defn ^Action fn->action
   "Coerce a plain clojure function into
   ratpacks's Action interface."
-  {:no-doc true}
   [callable]
   (reify Action
     (^void execute [_ x]
@@ -49,7 +52,6 @@
 (defn ^Function fn->function
   "Coerce a plain clojure function into
   ratpacks's Function interface."
-  {:no-doc true}
   [callable]
   (reify Function
     (apply [_ x]
@@ -58,15 +60,12 @@
 (defn ^Block fn->block
   "Coerce a plain clojure function into
   ratpacks's Block interface."
-  {:no-doc true}
   [callable]
   (reify Block
     (execute [_]
       (callable))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Promise & Async blocks
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; --- Promise & Async blocks
 
 (defprotocol IPromiseAcceptor
   (-accept [v ds]))
@@ -122,9 +121,7 @@
   [^Promise promise callback]
   (.then promise (fn->action callback)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Bytebuffer coersions.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; --- Bytebuffer coersions.
 
 (defprotocol IByteBuffer
   (bytebuffer [_] "Coerce to byte buffer."))
@@ -134,66 +131,44 @@
   (bytebuffer [s]
     (Unpooled/wrappedBuffer (.getBytes s "UTF-8"))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Internal usage transducers
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; --- Common Transducers
 
-(def ^:no-doc
-  lowercase-keys-t (map (fn [[^String key value]]
-                          [(.toLowerCase key) value])))
+(def lowercase-keys-t
+  (map (fn [[^String key value]]
+         [(.toLowerCase key) value])))
 
-(def ^:no-doc
-  keywordice-keys-t (map (fn [[^String key value]]
-                           [(keyword key) value])))
+(def keywordice-keys-t
+  (map (fn [[^String key value]]
+         [(keyword key) value])))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Misc
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; --- Path Helpers
 
-(defn str->path
+(defprotocol IPath
+  (^:private -to-path [_]))
+
+(extend-protocol IPath
+  Path
+  (-to-path [v] v)
+
+  String
+  (-to-path [v]
+    (Paths/get v (into-array String []))))
+
+(defn to-path
   {:internal true :no-doc true}
-  [^String path]
-  (Paths/get path (into-array String [])))
+  [value]
+  (-to-path value))
 
-(defn assoc-conj!
-  {:internal true :no-doc true}
-  [map key val]
-  (assoc! map key
-    (if-let [cur (get map key)]
-      (if (vector? cur)
-        (conj cur val)
-        [cur val])
-      val)))
-
-(defn- get-arities
-  [f]
-  {:pre [(instance? clojure.lang.AFunction f)]}
-  (->> (class f)
-       (.getDeclaredMethods)
-       (filter #(= "invoke" (.getName %)))
-       (map #(-> % .getParameterTypes alength))
-       (set)))
-
-(defmacro with-ignore-exception
-  [exception & body]
-  `(try
-     ~@body
-     (catch ~exception e#
-       nil)))
+;; --- Exceptions
 
 (defmacro try-on
   [& body]
-  `(try (do ~@body) (catch Throwable e# nil)))
+  `(try (do ~@body) (catch Throwable e# e#)))
 
-(defn connect-chans
-  "Like core.async pipe but reacts on close
-  in both sides."
-  [from to]
-  (a/go-loop []
-    (let [v (a/<! from)]
-      (if (nil? v)
-        (a/close! to)
-        (if (a/>! to v)
-          (recur)
-          (a/close! from)))))
-  to)
+;; --- Aliases
+
+(defmacro defalias
+  [sym sym2]
+  `(do
+     (def ~sym ~sym2)
+     (alter-meta! (var ~sym) merge (dissoc (meta (var ~sym2)) :name))))

@@ -74,10 +74,15 @@
     (let [keystore (io/resource keystore-path)]
       (SSLContexts/sslContext keystore keystore-secret))))
 
+(defn find-base-dir
+  [^String name]
+  (BaseDir/find name))
+
 (defn- build-server-config
   "Given user specified options, return a `ServerConfig` instance."
-  [{:keys [port debug threads basedir public-address max-body-size]
-    :or {debug false}
+  [{:keys [port debug threads basedir public-address
+           max-body-size marker-file]
+    :or {debug false marker-file ".catacumba.basedir"}
     :as options}]
   (let [port (or (:catacumba-port env) port ServerConfig/DEFAULT_PORT)
         threads (or (:catacumba-threads env) threads ServerConfig/DEFAULT_THREADS)
@@ -85,11 +90,15 @@
         debug (or (:catacumba-debug env) debug)
         sslcontext (build-ssl-context options)
         config (ServerConfig/builder)]
-    (if (string? basedir)
-      (.baseDir config ^Path (hp/str->path basedir))
-      (hp/with-ignore-exception IllegalStateException
-        (let [^Path path (BaseDir/find ".catacumba")]
-          (.baseDir config path))))
+    (if basedir
+      (let [^Path path (hp/to-path basedir)]
+        (.baseDir config path))
+      (try
+        (let [^Path path (find-base-dir marker-file)]
+          (.baseDir config path))
+        (catch IllegalStateException e
+          ;; Excplicitly ignore this exception
+          )))
     (when sslcontext (.ssl config sslcontext))
     (when public-address (.publicAddress config (java.net.URI. public-address)))
     (when max-body-size (.maxContentLength config max-body-size))
@@ -117,12 +126,14 @@
   - `:decorators`: a list of handlers that will be chained at the first of the request pipeline.
   - `:public-address`: force a specific public address (default: `nil`).
   - `:max-body-size`: set the maximum size of the body (default: 1048576 bytes (1mb))
+  - `:marker-file`:  the file name of the marker file that will be used for establish
+    the base directory (default `catacumba.marker`).
 
   Additional notes:
 
   - The `:basedir` is used mainly to resolve relative paths for assets. When you set
-    no basedir it first try to find a .catacumba file in the root of you classpath if
-    it cannot find that it will run without a basedir
+    no basedir it first try to find a `catacumba.marker` file in the root of you classpath if
+    it cannot find that it will run without a basedir.
   - With `:publicaddress` you can force one specific public address, in case contrary it
     will be discovered using a variety of different strategies explained in the
     `public-address` function docstring.

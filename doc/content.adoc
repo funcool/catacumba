@@ -752,6 +752,7 @@ to the `run-server` function:
 | `:keystore-path` | `nil` | A relative path in the classpath to the ssl keystore.
 | `:keystore-secret` | `nil` | A secret for the ssl key store
 | `:decorators` | `nil` | A vector of handlers to attach at the start of the pipeline
+| `:marker-file` | `.catacumba.basedir` | A file name that will be used to find the base directory in the class path.
 |===========================================================================
 
 All supported options of this function, can be overwritten at JVM startup, using
@@ -776,8 +777,19 @@ java -jar yourjarhere.jar
 java -Dcatacumba.port=8000 -Dcatacumba.debug=true -jar yourjarhere.jar
 ----
 
-NOTE: if no `:basedir` is specified, catacumba will try to find a `.catacumba` file
-in the classpath and will set a base dir to its directory.
+[NOTE]
+====
+If no `:basedir` is specified, catacumba will try to find a `.catacumba.basedir` 
+file in the classpath and will set a base dir to its  directory.
+====
+
+[WARNING]
+====
+If you are deploying your application as uberjar and you want serve static files
+from the classpath, you should set the `:marker-file` to somethig different that
+the default value (e.g. `catacumba.basedir`) without the first `.`, because
+leiningen ignores all files that starts with dot.
+====
 
 
 ==== SSL Configuration

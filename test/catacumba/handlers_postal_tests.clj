@@ -11,6 +11,7 @@
             [manifold.stream :as ms]
             [promesa.core :as p]
             [buddy.core.codecs :as codecs]
+            [buddy.core.codecs.base64 :as b64]
             [catacumba.core :as ct]
             [catacumba.impl.executor :as exec]
             [catacumba.handlers.postal :as pc]
@@ -44,7 +45,8 @@
   (let [headers {"content-type" content-type}]
     (condp = method
       :put (http/put uri {:body frame :headers headers})
-      :get (http/get (str uri "?d=" (codecs/bytes->safebase64 frame))
+      :get (http/get (str uri "?d=" (-> (b64/encode frame true)
+                                        (codecs/bytes->str)))
                      {:headers headers}))))
 
 (defn- send-raw-frame2
@@ -52,7 +54,8 @@
   (let [headers {"content-type" content-type}]
     (condp = method
       :put (client/put uri {:body frame :headers headers})
-      :get (client/get (str uri "?d=" (codecs/bytes->safebase64 frame))
+      :get (client/get (str uri "?d=" (-> (b64/encode frame true)
+                                          (codecs/bytes->str)))
                        {:headers headers}))))
 
 (defn- send-frame
@@ -141,7 +144,8 @@
       (let [frame {:type :subscribe :data nil}
             frame (pc/-encode frame :application/transit+json)
             conn @(http/websocket-client (str "ws://localhost:5050/?d="
-                                              (codecs/bytes->safebase64 frame)))
+                                              (-> (b64/encode frame true)
+                                                  (codecs/bytes->str))))
             result @(ms/take! conn)
             frame (pc/-decode (codecs/str->bytes result)
                              :application/transit+json)]

@@ -1,6 +1,6 @@
 # Changelog #
 
-## Version 0.13.0-SNAPSHOT ##
+## Version 0.13.0 ##
 
 Date: 2016-04-14
 

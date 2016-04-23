@@ -1,5 +1,14 @@
 # Changelog #
 
+## Version 0.14.0 ##
+
+Date: 2016-04-23
+
+- Update ratpack to 1.3.1
+- Update netty to 4.1.0.CR7
+- Remove unused functions from internal executors ns.
+
+
 ## Version 0.13.0 ##
 
 Date: 2016-04-14

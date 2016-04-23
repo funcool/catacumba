@@ -23,7 +23,7 @@
                  [ns-tracker "0.3.0"]
                  [manifold "0.1.4" :exclusions [riddley]]
                  [com.stuartsierra/component "0.3.1"]
-                 [commons-io/commons-io "2.4"]
+                 [commons-io/commons-io "2.5"]
                  [buddy/buddy-sign "0.12.0"]
                  [funcool/cuerdas "0.7.2"]
                  [funcool/promesa "1.1.1"]

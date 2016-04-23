@@ -13,7 +13,7 @@
   :dependencies [[org.clojure/clojure "1.8.0" :scope "provided"]
                  [org.slf4j/slf4j-simple "1.7.21" :scope "provided"]
                  [org.clojure/core.async "0.2.374"]
-                 [io.ratpack/ratpack-core "1.2.0"
+                 [io.ratpack/ratpack-core "1.3.1"
                   :exclusions [io.netty/netty-codec-http
                                io.netty/netty-handler
                                io.netty/netty-transport-native-epoll]]

@@ -58,41 +58,11 @@
                          (catch Throwable e
                            (reject e))))))))
 
-(defn- thread-factory-adapter
-  "Adapt a simple clojure function into a
-  ThreadFactory instance."
-  [func]
-  (reify ThreadFactory
-    (^Thread newThread [_ ^Runnable runnable]
-      (func runnable))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Public Api
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def ^:dynamic *default* (ForkJoinPool/commonPool))
-(def ^:dynamic *default-thread-factory* (Executors/defaultThreadFactory))
-
-(defn fixed
-  "A fixed thread pool constructor."
-  ([n]
-   (Executors/newFixedThreadPool n *default-thread-factory*))
-  ([n factory]
-   (Executors/newFixedThreadPool n (thread-factory-adapter factory))))
-
-(defn single-thread
-  "A single thread executor constructor."
-  ([]
-   (Executors/newSingleThreadExecutor *default-thread-factory*))
-  ([factory]
-   (Executors/newSingleThreadExecutor (thread-factory-adapter factory))))
-
-(defn cached
-  "A cached thread executor constructor."
-  ([]
-   (Executors/newCachedThreadPool *default-thread-factory*))
-  ([factory]
-   (Executors/newCachedThreadPool (thread-factory-adapter factory))))
+(def ^:redef default (ForkJoinPool/commonPool))
 
 (defn execute
   "Execute a task in a provided executor.
@@ -100,7 +70,7 @@
   A task is a plain clojure function or
   jvm Runnable instance."
   ([task]
-   (-execute *default* task))
+   (-execute default task))
   ([executor task]
    (-execute executor task)))
 
@@ -111,7 +81,7 @@
 
   A task is a plain clojure function."
   ([task]
-   (-submit *default* task))
+   (-submit default task))
   ([executor task]
    (-submit executor task)))
 

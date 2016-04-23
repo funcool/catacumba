@@ -9,7 +9,7 @@
     (is (deref p 1000 false)))
 
   (let [p (promise)]
-    (exec/execute exec/*default* #(deliver p true))
+    (exec/execute exec/default #(deliver p true))
     (is (deref p 1000 false))))
 
 (deftest iexecutor-service-tests
@@ -17,7 +17,7 @@
                          (a/<!! (a/timeout 500))
                          true))]
     (is (deref p 1000 false)))
-  (let [submit (partial exec/submit exec/*default*)
+  (let [submit (partial exec/submit exec/default)
         p (submit (fn []
                     (a/<!! (a/timeout 500))
                     true))]

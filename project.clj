@@ -24,7 +24,7 @@
                  [manifold "0.1.4"]
                  [com.stuartsierra/component "0.3.1"]
                  [commons-io/commons-io "2.5"]
-                 [buddy/buddy-sign "0.12.0"]
+                 [buddy/buddy-sign "0.13.0"]
                  [funcool/cuerdas "0.7.2"]
                  [funcool/promesa "1.1.1"]
                  [danlentz/clj-uuid "0.1.6"]

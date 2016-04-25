@@ -1,5 +1,13 @@
 # Changelog #
 
+## Version 0.15.0
+
+Date: ---
+
+- Remove riddley exclusion on manifold.
+- Update buddy-sign to 0.13.0
+
+
 ## Version 0.14.0 ##
 
 Date: 2016-04-23

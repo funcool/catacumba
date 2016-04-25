@@ -21,7 +21,7 @@
                  [cheshire "5.6.1"
                   :exclusions [com.fasterxml.jackson.core/jackson-core]]
                  [ns-tracker "0.3.0"]
-                 [manifold "0.1.4" :exclusions [riddley]]
+                 [manifold "0.1.4"]
                  [com.stuartsierra/component "0.3.1"]
                  [commons-io/commons-io "2.5"]
                  [buddy/buddy-sign "0.12.0"]

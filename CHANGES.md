@@ -2,10 +2,12 @@
 
 ## Version 0.15.0
 
-Date: ---
+Date: 2016-04-26
 
 - Remove riddley exclusion on manifold.
 - Update buddy-sign to 0.13.0
+- Fix bug in CompletableFuture response handling.
+- Simplified impl of auth handler.
 
 
 ## Version 0.14.0 ##

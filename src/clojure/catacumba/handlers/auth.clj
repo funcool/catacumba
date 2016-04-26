@@ -127,32 +127,30 @@
 ;; Handlers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn- do-auth
+(defn- authenticate
   "Perform an asynchronous recursive loop over all
   provided backends and tries to authenticate with
   all them in order."
-  [context callback [backend & backends]]
+  [context [backend & backends]]
   (if backend
     (let [token (-parse backend context)]
       (if (nil? token)
-        (do-auth context callback backends)
-        (-> (-authenticate backend context token)
-            (p/then (fn [ue]
-                      (if (nil? ue)
-                        (do-auth context callback backends)
-                        (callback {:identity ue}))))
-            (p/catch (fn [e] (callback {}))))))
-    (callback {})))
+        (authenticate context backends)
+        (->> (-authenticate backend context token)
+             (p/mapcat (fn [ue]
+                         (if (nil? ue)
+                           (authenticate context backends)
+                           (p/resolved (ct/delegate {:identity ue})))))
+             (p/error (fn [e] (ct/delegate {}))))))
+    (p/resolved
+     (ct/delegate {}))))
 
 (defn auth
   "Authentication chain handler constructor."
   [& backends]
   {:pre [(pos? (count backends))]}
   (fn [context]
-    (p/promise
-     (fn [resolve reject]
-       (let [callback #(resolve (ct/delegate %))]
-         (do-auth context callback backends))))))
+    (authenticate context backends)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Adapters

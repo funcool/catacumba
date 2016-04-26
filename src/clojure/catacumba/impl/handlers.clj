@@ -119,11 +119,8 @@
 
   CompletableFuture
   (-handle-response [data ^DefaultContext context]
-    (-> (hp/promise (fn [callback]
-                      (-> data
-                          (p/then callback)
-                          (p/catch callback))))
-        (hp/then #(-handle-response % context))))
+    (let [promise (hp/completable-future->promise data)]
+      (-handle-response promise context)))
 
   ratpack.exec.Promise
   (-handle-response [data ^DefaultContext context]

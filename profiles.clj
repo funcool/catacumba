@@ -1,6 +1,6 @@
 {:dev
  {:global-vars {*warn-on-reflection* false}
-  :aliases {"test-all" ["with-profile" "dev,1.7:dev" "test"]}
+  :aliases {"test-all" ["with-profile" "dev,1.9:dev,1.7:dev" "test"]}
   :source-paths ["dev"]
   :dependencies [[clj-http "3.0.0" :exclusions [org.clojure/tools.reader]]
                  [aleph "0.4.1" :exclusions [primitive-math io.netty/netty-all]]
@@ -41,6 +41,7 @@
                         "-Xms4g"]
    :main ^:skip-aot bench}]
 
+ :1.9 {:dependencies [[org.clojure/clojure "1.9.0-alpha1"]]}
  :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
 
  ;; Examples

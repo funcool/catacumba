@@ -58,8 +58,8 @@
         ss (atomic/ref nil)
         sb (reify Subscriber
              (onSubscribe [_ s]
-               (.countDown lc)
-               (atomic/set! ss s))
+               (atomic/set! ss s)
+               (.countDown lc))
              (onNext [_ v]
                (async/put! sr v))
              (onError [_ e]

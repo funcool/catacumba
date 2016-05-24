@@ -6,7 +6,7 @@
             [clojure.pprint :refer [pprint]]
             [clojure.core.async :as async]
             [clj-http.client :as client]
-            [buddy.sign.jws :as jws]
+            [buddy.sign.jwt :as jwt]
             [buddy.sign.jwe :as jwe]
             [buddy.core.hash :as hash]
             [slingshot.slingshot :refer [try+]]
@@ -370,7 +370,7 @@
          (catch Object e
            (is (= (:status e) 401))))
 
-        (let [token (jws/sign {:userid 1} jws-secret)
+        (let [token (jwt/sign {:userid 1} jws-secret)
               headers {"Authorization" (str "Token " token)}
               response (client/get base-url {:headers headers})]
           (is (= (:status response) 200))))))
@@ -388,7 +388,7 @@
          (catch Object e
            (is (= (:status e) 401))))
 
-        (let [token (jwe/encrypt {:userid 1} jwe-secret)
+        (let [token (jwt/encrypt {:userid 1} jwe-secret)
               headers {"Authorization" (str "Token " token)}
               response (client/get base-url {:headers headers})]
           (is (= (:status response) 200)))))))

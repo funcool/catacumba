@@ -30,8 +30,7 @@
             [catacumba.impl.context :as ct]
             [catacumba.impl.http]
             [catacumba.impl.helpers :as hp]
-            [buddy.sign.jws :as jws]
-            [buddy.sign.jwe :as jwe]
+            [buddy.sign.jwt :as jwt]
             [promesa.core :as p])
   (:import catacumba.impl.context.DefaultContext
            ratpack.exec.Downstream
@@ -89,14 +88,14 @@
     (-authenticate [_ context token]
       (p/promise (fn [resolve reject]
                    (try
-                     (resolve (jws/decode token secret options))
+                     (resolve (jwt/unsign token secret options))
                      (catch Exception e
                        (if (fn? on-error)
                          (resolve (on-error context e))
                          (resolve nil)))))))))
 
 (defn jwe-backend
-  "The JWS (Json Web Signature) based backend constructor."
+  "The JWE (Json Web Encryption) based backend constructor."
   [{:keys [secret options token-name on-error]
     :or {token-name "Token"}}]
   (reify
@@ -106,7 +105,7 @@
     (-authenticate [_ context token]
       (p/promise (fn [resolve reject]
                    (try
-                     (resolve (jwe/decrypt token secret options))
+                     (resolve (jwt/decrypt token secret options))
                      (catch Exception e
                        (if (fn? on-error)
                          (resolve (on-error context e))

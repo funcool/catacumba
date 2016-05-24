@@ -29,7 +29,7 @@
             [buddy.core.nonce :as nonce]
             [buddy.core.codecs :as codecs]
             [buddy.core.codecs.base64 :as b64]
-            [buddy.sign.jws :as jws]
+            [buddy.sign.jwt :as jwt]
             [catacumba.impl.atomic :as atomic]
             [catacumba.impl.handlers :as hs]
             [catacumba.impl.context :as ct]
@@ -171,16 +171,16 @@
         (p/promise
          (fn [resolve reject]
            (if (nil? dkey)
-             (resolve [(jws/sign {} pkey opts) {}])
+             (resolve [(jwt/sign {} pkey opts) {}])
              (try
-               (resolve [dkey (jws/unsign dkey pkey opts)])
+               (resolve [dkey (jwt/unsign dkey pkey opts)])
                (catch clojure.lang.ExceptionInfo e
-                 (resolve [(jws/sign {} pkey opts) {}])))))))
+                 (resolve [(jwt/sign {} pkey opts) {}])))))))
 
       (-write [_ key data]
         (p/promise
          (fn [resolve reject]
-           (resolve (jws/sign data pkey opts)))))
+           (resolve (jwt/sign data pkey opts)))))
 
       (-delete [_ key]
         (p/promise

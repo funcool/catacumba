@@ -1,5 +1,14 @@
 # Changelog #
 
+## Version 0.16.0
+
+Date: 2016-05-24
+
+- Update buddy-sign to 1.0.0 (maybe breaking change).
+- Update ratpack to 1.3.3
+- Update promesa to 1.2.0
+
+
 ## Version 0.15.0
 
 Date: 2016-04-26

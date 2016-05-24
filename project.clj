@@ -13,7 +13,7 @@
   :dependencies [[org.clojure/clojure "1.8.0" :scope "provided"]
                  [org.slf4j/slf4j-simple "1.7.21" :scope "provided"]
                  [org.clojure/core.async "0.2.374"]
-                 [io.ratpack/ratpack-core "1.3.1"
+                 [io.ratpack/ratpack-core "1.3.3"
                   :exclusions [io.netty/netty-codec-http
                                io.netty/netty-handler
                                io.netty/netty-transport-native-epoll]]
@@ -24,9 +24,9 @@
                  [manifold "0.1.4"]
                  [com.stuartsierra/component "0.3.1"]
                  [commons-io/commons-io "2.5"]
-                 [buddy/buddy-sign "0.13.0"]
+                 [buddy/buddy-sign "1.0.0"]
                  [funcool/cuerdas "0.7.2"]
-                 [funcool/promesa "1.1.1"]
+                 [funcool/promesa "1.2.0"]
                  [danlentz/clj-uuid "0.1.6"]
-                 [environ "1.0.2"]
+                 [environ "1.0.3"]
                  [com.cognitect/transit-clj "0.8.285"]])

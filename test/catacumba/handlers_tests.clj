@@ -52,6 +52,27 @@
           (let [formdata (deref p 1000 nil)]
             (is (= (get formdata :foo) "bar")))))))
 
+  (testing "Form data with more than 8 fields"
+    (let [p (promise)
+          handler (fn [context]
+                    (let [form-dt (ct/get-formdata context)]
+                      (deliver p form-dt)
+                      "OK"))]
+      (with-server {:handler handler}
+        (let [res (client/post base-url
+                               {:form-params {:a 1, :b 2, :c 3, :d 4, :e 5
+                                              :f 6, :g 7, :h 8, :i 9, :j 10
+                                              :k 11 :l 12 :m 13 :n 14 :o 15}})]
+          (is (= (:status res) 200))
+          (is (= (:body res) "OK"))
+          (let [form-dt (deref p 1000 nil)]
+            (is (false? (empty? form-dt)))
+            (is (= 15 (count (keys form-dt))))
+            (is (contains? form-dt :a)) 
+            (is (contains? form-dt :b))
+            (is (contains? form-dt :i))
+            (is (contains? form-dt :j)))))))
+
   (testing "Form encoded body parsing using chain handler"
     (let [p (promise)
           app (ct/routes [[:any (parse/body-params)]

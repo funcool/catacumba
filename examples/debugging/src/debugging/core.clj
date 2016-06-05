@@ -1,7 +1,6 @@
 (ns debugging.core
   (:require [catacumba.core :as ct]
             [catacumba.http :as http]
-            [catacumba.helpers :as hp]
             [catacumba.plugins.prone :as prone])
   (:gen-class))
 

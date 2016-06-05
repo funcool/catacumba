@@ -55,9 +55,9 @@
 
 (defn- assoc-conj!
   {:internal true :no-doc true}
-  [map key val]
-  (assoc! map key
-          (if-let [cur (get map key)]
+  [the-map key val]
+  (assoc! the-map key
+          (if-let [cur (get the-map key)]
             (if (vector? cur)
               (conj cur val)
               [cur val])
@@ -274,22 +274,33 @@
                 (into [] cookiedata))
           (recur (rest cookies)))))))
 
+(defn- parse-form-files
+  [^MultiValueMap files result-map]
+  (persistent!
+    (reduce
+      (fn [acc key]
+        (let [values (.getAll files key)]
+          (reduce #(assoc-conj! %1 (keyword key) %2) acc values)))
+      (transient result-map)
+      (.keySet files))))
+
+(defn- parse-form-fields
+  [^Form form result-map]
+  (persistent!
+    (reduce
+      (fn [acc the-key]
+        (let [values (.getAll form the-key)]
+          (reduce #(assoc-conj! %1 (keyword the-key) %2) acc values)))
+      (transient result-map)
+      (.keySet form))))
+
 (defn get-formdata*
   [^Context ctx ^TypedData body]
   (let [^Form form (.parse ctx body (Parse/of Form))
-        ^MultiValueMap files (.files form)
-        result (transient {})]
-    (reduce (fn [acc key]
-              (let [values (.getAll files key)]
-                (reduce #(assoc-conj! %1 (keyword key) %2) acc values)))
-            result
-            (.keySet files))
-    (reduce (fn [acc key]
-              (let [values (.getAll form key)]
-                (reduce #(assoc-conj! %1 (keyword key) %2) acc values)))
-            result
-            (.keySet form))
-      (persistent! result)))
+        ^MultiValueMap files (.files form)]
+    (->> {}
+      (parse-form-files files)
+      (parse-form-fields form))))
 
 (defn get-formdata
   [^DefaultContext context]

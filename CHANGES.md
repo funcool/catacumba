@@ -1,6 +1,17 @@
 # Changelog #
 
-## Version 0.16.0
+## Version 0.17.0 ##
+
+Date: 2016-06-05
+
+- Fixed wrong usage of transients on body parsing.
+  (thanks to @timgluz)
+- Remove some reflection warnings on hot code.
+- Add support for use symbols as handlers.
+  (namespaced symbols that will resolve to a proper handler var).
+
+
+## Version 0.16.0 ##
 
 Date: 2016-05-24
 
@@ -9,7 +20,7 @@ Date: 2016-05-24
 - Update promesa to 1.2.0
 
 
-## Version 0.15.0
+## Version 0.15.0 ##
 
 Date: 2016-04-26
 

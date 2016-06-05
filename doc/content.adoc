@@ -1836,7 +1836,7 @@ with the client:
   [context frame]
   (letfn [(on-connect [{:keys [in out] :as context}]
             (a/go-loop []
-              (when-let [_ (a/>! out (pc/response :message {:time (now)}))]
+              (when-let [_ (a/>! out (pc/frame :message {:time (now)}))]
                 (a/<! (a/timeout 100))
                  (recur))))]
     (pc/socket context on-connect))

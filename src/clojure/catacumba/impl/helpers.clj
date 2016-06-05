@@ -43,7 +43,7 @@
 (defn fn->action
   "Coerce a plain clojure function into
   ratpacks's Action interface."
-  ^Action [callable]
+  [callable]
   (reify Action
     (^void execute [_ x]
       (callable x))))
@@ -51,7 +51,7 @@
 (defn fn->function
   "Coerce a plain clojure function into
   ratpacks's Function interface."
-  ^Function [callable]
+  [callable]
   (reify Function
     (apply [_ x]
       (callable x))))
@@ -59,7 +59,7 @@
 (defn fn->block
   "Coerce a plain clojure function into
   ratpacks's Block interface."
-  ^Block [callable]
+  [callable]
   (reify Block
     (execute [_]
       (callable))))

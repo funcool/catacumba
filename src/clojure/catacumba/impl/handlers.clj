@@ -211,8 +211,14 @@
   metadata found on the given var or anonymous
   handler."
   (fn [handler & args]
-    (if (instance? Handler handler)
+    (cond
+      (instance? Handler handler)
       :catacumba/native
+
+      (symbol? handler)
+      ::symbol
+
+      :else
       (let [metadata (meta handler)]
         (:handler-type metadata))))
   :default :catacumba/default)
@@ -273,6 +279,10 @@
 (defmethod adapter :catacumba/native
   [handler]
   handler)
+
+(defmethod adapter ::symbol
+  [handler]
+  (adapter (hp/resolve-fn handler)))
 
 (defmethod adapter :catacumba/blocking
   [handler]

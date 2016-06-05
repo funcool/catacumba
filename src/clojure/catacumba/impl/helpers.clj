@@ -64,6 +64,14 @@
     (execute [_]
       (callable))))
 
+;; --- Symbol Resolver
+
+(defn resolve-fn
+  [func]
+  (let [ns (symbol (namespace func))]
+    (require ns)
+    (resolve func)))
+
 ;; --- Promise & Async blocks
 
 (defprotocol IPromiseAcceptor

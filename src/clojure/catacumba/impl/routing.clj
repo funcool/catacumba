@@ -107,8 +107,8 @@
                   (^void handle [_ ^Context ctx]
                     (.byMethod ctx (hp/fn->action (partial callback ctx))))))))
 
-(defn attach-server-error-handler
-  [^Chain chain handler]
+(defmethod attach-route :error
+  [^Chain chain [_ handler]]
   (letfn [(callback [context throwable]
             (let [response (handler context throwable)]
               (when (satisfies? hs/IHandlerResponse response)
@@ -119,11 +119,6 @@
                      (hs/hydrate-context ctx #(callback % throwable))))
                  (.add rspec ServerErrorHandler)))]
     (.register chain ^Action (hp/fn->action on-register))))
-
-
-(defmethod attach-route :error
-  [^Chain chain [_ error-handler]]
-  (attach-server-error-handler chain error-handler))
 
 (defmethod attach-route :setup
   [^Chain chain [_ setup]]

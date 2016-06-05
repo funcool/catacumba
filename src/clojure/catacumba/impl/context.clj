@@ -39,6 +39,7 @@
            ratpack.util.MultiValueMap
            ratpack.server.PublicAddress
            ratpack.registry.Registry
+           io.netty.handler.codec.http.cookie.Cookie
            java.util.Optional))
 
 ;; --- Types
@@ -209,7 +210,7 @@
         (recur (rest headers))))))
 
 (defn- cookie->map
-  [cookie]
+  [^Cookie cookie]
   {:path (.path cookie)
    :value (.value cookie)
    :domain (.domain cookie)
@@ -222,7 +223,7 @@
   {:internal true :no-doc true}
   [^Request request]
   (persistent!
-   (reduce (fn [acc cookie]
+   (reduce (fn [acc ^Cookie cookie]
              (let [name (keyword (.name cookie))]
                (assoc! acc name (cookie->map cookie))))
            (transient {})
@@ -237,7 +238,7 @@
   "Set the response http status."
   [context status]
   (let [^Response response (:catacumba/response context)]
-    (.status response status)))
+    (.status response (int status))))
 
 (defn set-cookies!
   "Set the outgoing cookies.

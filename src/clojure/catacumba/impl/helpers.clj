@@ -38,29 +38,28 @@
            java.util.concurrent.CompletableFuture
            io.netty.buffer.Unpooled))
 
-
 ;; --- Java 8 Interop
 
-(defn ^Action fn->action
+(defn fn->action
   "Coerce a plain clojure function into
   ratpacks's Action interface."
-  [callable]
+  ^Action [callable]
   (reify Action
     (^void execute [_ x]
       (callable x))))
 
-(defn ^Function fn->function
+(defn fn->function
   "Coerce a plain clojure function into
   ratpacks's Function interface."
-  [callable]
+  ^Function [callable]
   (reify Function
     (apply [_ x]
       (callable x))))
 
-(defn ^Block fn->block
+(defn fn->block
   "Coerce a plain clojure function into
   ratpacks's Block interface."
-  [callable]
+  ^Block [callable]
   (reify Block
     (execute [_]
       (callable))))

@@ -41,6 +41,7 @@
            java.util.Map
            java.util.Optional
            java.util.concurrent.CompletableFuture
+           com.google.common.net.HostAndPort
            ratpack.handling.Handler
            ratpack.handling.Context
            ratpack.render.Renderable
@@ -57,8 +58,7 @@
            org.apache.commons.io.IOUtils
            org.reactivestreams.Publisher
            io.netty.buffer.Unpooled
-           io.netty.buffer.ByteBuf
-           io.netty.handler.codec.http.Cookie))
+           io.netty.buffer.ByteBuf))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Protocol Definition
@@ -134,7 +134,8 @@
 
   java.nio.file.Path
   (-send [path ^Context ctx]
-    (.sendFile ctx path))
+    (let [^Response response (.getResponse ctx)]
+      (.sendFile response path)))
 
   String
   (-send [data ^Context ctx]
@@ -294,9 +295,9 @@
 
 (defn build-ring-request
   [^Request request]
-  (let [local-address (.getLocalAddress request)
-        remote-address (.getRemoteAddress request)
-        body (Blocking/on (.getBody request))
+  (let [^HostAndPort local-address (.getLocalAddress request)
+        ^HostAndPort remote-address (.getRemoteAddress request)
+        ^TypedData body (Blocking/on (.getBody request))
         headers (ct/get-headers* request false)]
     (merge
      {:server-port (.getPort local-address)

@@ -32,6 +32,7 @@
            ratpack.handling.Context
            ratpack.handling.ByMethodSpec
            ratpack.handling.Chain
+           ratpack.func.Block
            ratpack.registry.Registry))
 
 (defn- noop-handler

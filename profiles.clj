@@ -41,7 +41,7 @@
                         "-Xms4g"]
    :main ^:skip-aot bench}]
 
- :1.9 {:dependencies [[org.clojure/clojure "1.9.0-alpha1"]]}
+ :1.9 {:dependencies [[org.clojure/clojure "1.9.0-alpha4"]]}
  :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
 
  ;; Examples

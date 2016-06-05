@@ -82,6 +82,10 @@
   (let [callback #(reduce attach-route % handlers)]
     (.insert chain ^Action (hp/fn->action callback))))
 
+;; WARN: this route directive should be considered deprecated because
+;; you are already allowed to setup different handlers for the same
+;; path but different http method.
+
 (defmethod attach-route :by-method
   [^Chain chain [_ handlersmap]]
   {:pre [(map? handlersmap)]}

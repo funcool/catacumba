@@ -383,6 +383,14 @@ following example:
 (ct/set-cookies! context {:cookiename {:value "foobar" :max-age 3600}})
 ----
 
+[NOTE]
+====
+Take care that the cookie value is restricted to a very limited set of characters as
+spcified in link:https://tools.ietf.org/html/rfc6265[RFC6265] that netty/ratpack
+implements. There also a relevant link:http://stackoverflow.com/a/1969339/1022392[SO answer].
+====
+
+
 [[routing]]
 === Routing
 

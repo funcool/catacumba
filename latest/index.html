@@ -654,6 +654,22 @@ following example:</p>
 <pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">(</span><span class="tok-nf">ct/set-cookies!</span> <span class="tok-nv">context</span> <span class="tok-p">{</span><span class="tok-ss">:cookiename</span> <span class="tok-p">{</span><span class="tok-ss">:value</span> <span class="tok-s">&quot;foobar&quot;</span> <span class="tok-ss">:max-age</span> <span class="tok-mi">3600</span><span class="tok-p">}})</span></code></pre>
 </div>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Take care that the cookie value is restricted to a very limited set of characters as
+spcified in <a href="https://tools.ietf.org/html/rfc6265">RFC6265</a> that netty/ratpack
+implements. There also a relevant <a href="http://stackoverflow.com/a/1969339/1022392">SO answer</a>.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
 </div>
 <div class="sect2">
 <h3 id="routing"><a class="link" href="#routing">Routing</a></h3>
@@ -2993,7 +3009,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
 <div id="footer">
 <div id="footer-text">
 Version 0.17.0<br>
-Last updated 2016-06-05 10:03:09 EEST
+Last updated 2016-06-10 16:21:35 EEST
 </div>
 </div>
 </body>

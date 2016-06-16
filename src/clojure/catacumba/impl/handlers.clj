@@ -221,6 +221,7 @@
       :else
       (let [metadata (meta handler)]
         (:handler-type metadata))))
+
   :default :catacumba/default)
 
 (defn send!

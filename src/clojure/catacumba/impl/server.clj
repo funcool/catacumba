@@ -23,9 +23,9 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (ns catacumba.impl.server
-  (:require [catacumba.impl.helpers :as hp]
-            [catacumba.impl.websocket :as websocket]
+  (:require [catacumba.impl.websocket]
             [catacumba.impl.handlers :as handlers]
+            [catacumba.impl.routing :as routing]
             [catacumba.impl.helpers :as hp]
             [clojure.java.io :as io]
             [environ.core :refer [env]])
@@ -40,28 +40,11 @@
            ratpack.func.Function
            java.nio.file.Path))
 
-(defmulti setup-handler
-  "A polymorphic function for setup the handler
-  to the reatpack server instance builder."
-  (fn [handler spec]
-    (let [metadata (meta handler)]
-      (:handler-type metadata))))
-
-(defmethod setup-handler :catacumba/router
-  [factory ^RatpackServerSpec spec]
-  (.handlers spec ^Action (hp/fn->action factory)))
-
-(defmethod setup-handler :default
-  [handler ^RatpackServerSpec spec]
-  (.handler spec (reify Function
-                   (apply [_ _]
-                     (handlers/adapter handler)))))
-
 (defn- bootstrap-registry
   "A bootstrap server hook for setup initial
   registry entries and execute a user provided
   hook for do the same thing."
-  [^RegistrySpec spec {:keys [setup debug decorators]}]
+  [^RegistrySpec spec {:keys [setup decorators]}]
   (when (fn? setup)
     (setup spec))
   (when (seq decorators)
@@ -78,7 +61,7 @@
   [^String name]
   (BaseDir/find name))
 
-(defn- build-server-config
+(defn- build-config
   "Given user specified options, return a `ServerConfig` instance."
   [{:keys [port debug threads basedir public-address
            max-body-size marker-file]
@@ -110,9 +93,11 @@
 (defn- configure-server
   "The ratpack server configuration callback."
   [^RatpackServerSpec spec handler options]
-  (.serverConfig spec ^ServerConfig (build-server-config options))
+  (.serverConfig spec ^ServerConfig (build-config options))
   (.registryOf spec (hp/fn->action #(bootstrap-registry % options)))
-  (setup-handler handler spec))
+  (if (routing/routes? handler)
+    (.handlers spec (hp/fn->action handler))
+    (.handler spec (hp/fn->function (fn [_] (handlers/adapter handler))))))
 
 (defn run-server
   "Start and ratpack webserver to serve the given handler according

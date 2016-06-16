@@ -33,10 +33,10 @@
            ratpack.handling.Handler
            ratpack.handling.ByMethodSpec
            ratpack.func.Block
+           ratpack.func.Action
            ratpack.file.FileHandlerSpec
            ratpack.error.ServerErrorHandler
            ratpack.registry.RegistrySpec
-           ratpack.func.Action
            java.util.List))
 
 (defn- combine-handlers
@@ -50,7 +50,8 @@
   (let [handler (hs/adapter handler)]
     (reify Handler
       (^void handle [_ ^Context ctx]
-       (let [current-method (keyword (.. ctx getRequest getMethod getName toLowerCase))]
+       (let [current-method (keyword (.. ctx getRequest getMethod
+                                         getName toLowerCase))]
          (if (identical? current-method method)
            (.insert ctx (into-array Handler [handler]))
            (.next ctx)))))))
@@ -191,9 +192,17 @@
       (.all chain ^Handler handler)
       (.path chain path ^Handler handler))))
 
+(deftype Routes [routes]
+  clojure.lang.IFn
+  (invoke [_ chain]
+    (run! (partial attach-route chain) routes)))
+
 (defn routes
   "Is a high order function that access a routes vector
   as argument and return a ratpack router type handler."
   [routes]
-  (with-meta (fn [chain] (reduce attach-route chain routes))
-    {:handler-type :catacumba/router}))
+  (Routes. routes))
+
+(defn routes?
+  [v]
+  (instance? Routes v))

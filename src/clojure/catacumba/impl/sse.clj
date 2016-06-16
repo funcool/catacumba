@@ -39,8 +39,7 @@
            ratpack.func.Action
            org.reactivestreams.Publisher
            org.reactivestreams.Subscriber
-           org.reactivestreams.Subscription
-           catacumba.impl.context.DefaultContext))
+           org.reactivestreams.Subscription))
 
 (defprotocol IEvent
   (^:private event [_] "Create a event"))
@@ -68,7 +67,7 @@
 (defn sse
   "Start the sse connection with the client
   and dispatch it in a special hanlder."
-  [^DefaultContext context handler]
+  [context handler]
   (let [^Context ctx (:catacumba/context context)
         out (async/chan 1 (map event))
         pub (->> (schannel/publisher out {:close true})

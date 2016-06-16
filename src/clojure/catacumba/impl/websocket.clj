@@ -35,7 +35,6 @@
            ratpack.exec.ExecController
            java.util.concurrent.ExecutorService
            io.netty.buffer.ByteBuf
-           catacumba.impl.context.DefaultContext
            catacumba.websocket.WebSocketHandler
            catacumba.websocket.WebSocketMessage
            catacumba.websocket.WebSockets
@@ -86,7 +85,7 @@
    (.close this)))
 
 (defn websocket
-  [^DefaultContext context handler]
+  [context handler]
  (let [in (a/chan 16)
         out (a/chan 16)
         ctrl (a/chan (a/sliding-buffer 1))]
@@ -97,5 +96,5 @@
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]
-      (hs/hydrate-context ctx (fn [^DefaultContext context]
+      (hs/hydrate-context ctx (fn [context]
                                 (websocket context handler))))))

@@ -32,8 +32,7 @@
             [catacumba.impl.helpers :as hp]
             [catacumba.impl.context :as ct]
             [catacumba.impl.http :as http])
-  (:import catacumba.impl.context.DefaultContext
-           catacumba.impl.context.ContextData
+  (:import catacumba.impl.context.ContextData
            java.io.InputStream
            java.io.BufferedReader
            java.io.InputStreamReader
@@ -76,7 +75,7 @@
 
 (extend-protocol IHandlerResponse
   catacumba.impl.context.ContextData
-  (-handle-response [data ^DefaultContext context]
+  (-handle-response [data context]
     (let [^Context ctx (:catacumba/context context)]
       (if (:payload data)
         (let [^Optional odata (.maybeGet ctx ContextData)]
@@ -87,43 +86,43 @@
         (.next ctx))))
 
   java.nio.file.Path
-  (-handle-response [path ^DefaultContext context]
+  (-handle-response [path context]
     (-send path (:catacumba/context context)))
 
   String
-  (-handle-response [data ^DefaultContext context]
+  (-handle-response [data context]
     (-send data (:catacumba/context context)))
 
   clojure.lang.IPersistentMap
-  (-handle-response [data ^DefaultContext context]
+  (-handle-response [data context]
     (let [{:keys [status headers body]} data]
       (when status (ct/set-status! context status))
       (when headers (ct/set-headers! context headers))
       (-send body (:catacumba/context context))))
 
   catacumba.impl.http.Response
-  (-handle-response [data ^DefaultContext context]
+  (-handle-response [data context]
     (ct/set-status! context (:status data))
     (ct/set-headers! context (:headers data))
     (-send (:body data) (:catacumba/context context)))
 
   clojure.core.async.impl.channels.ManyToManyChannel
-  (-handle-response [data ^DefaultContext context]
+  (-handle-response [data context]
     (-> (hp/promise #(a/take! data %))
         (hp/then #(-handle-response % context))))
 
   manifold.deferred.IDeferred
-  (-handle-response [data ^DefaultContext context]
+  (-handle-response [data context]
     (-> (hp/promise #(md/on-realized data %1 %1))
         (hp/then #(-handle-response % context))))
 
   CompletableFuture
-  (-handle-response [data ^DefaultContext context]
+  (-handle-response [data context]
     (let [promise (hp/completable-future->promise data)]
       (-handle-response promise context)))
 
   ratpack.exec.Promise
-  (-handle-response [data ^DefaultContext context]
+  (-handle-response [data context]
     (hp/then data #(-handle-response % context))))
 
 (extend-protocol ISend
@@ -187,17 +186,7 @@
   (make-input-stream [d opts]
     (BufferedInputStream. (.getInputStream d)))
   (make-output-stream [d opts]
-    (throw (UnsupportedOperationException. "Cannot open as Reader.")))
-
-  DefaultContext
-  (make-reader [ctx opts]
-    (io/make-reader (:body ctx) opts))
-  (make-writer [ctx opts]
-    (io/make-writer (:body ctx) opts))
-  (make-input-stream [ctx opts]
-    (io/make-input-stream (:body ctx) opts))
-  (make-output-stream [ctx opts]
-    (io/make-output-stream (:body ctx) opts)))
+    (throw (UnsupportedOperationException. "Cannot open as Reader."))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Public Api
@@ -233,46 +222,47 @@
 ;; Adapters Implementation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defrecord ContextHolder [data])
+
 (defn hydrate-context
   {:internal true :no-doc true}
   [^Context ctx next]
   (letfn [(build-context [^Context ctx next]
             (let [^Request request (.getRequest ctx)
                   ^Response response (.getResponse ctx)
-                  contextdata {:catacumba/context ctx
-                               :catacumba/request request
-                               :catacumba/response response
-                               :path (str "/" (.getPath request))
-                               :query (.getQuery request)
-                               :method (keyword (.. request getMethod getName toLowerCase))
-                               :query-params (ct/get-query-params* request)
-                               :cookies (ct/get-cookies* request)
-                               :headers (ct/get-headers* request true)}
-                  context (ct/context contextdata)]
+                  context {:catacumba/context ctx
+                           :catacumba/request request
+                           :catacumba/response response
+                           :path (str "/" (.getPath request))
+                           :query (.getQuery request)
+                           :method (keyword (.. request getMethod getName toLowerCase))
+                           :query-params (ct/get-query-params request)
+                           :cookies (ct/get-cookies request)
+                           :headers (ct/get-headers request true)}]
               (hp/then (.getBody request)
                        (fn [^TypedData body]
                          (next (assoc context :body body))))))
 
           (retrieve-context [^Context ctx next]
             (let [^Request request (.getRequest ctx)
-                  ^Optional odata (.maybeGet request DefaultContext)]
+                  ^Optional odata (.maybeGet request ContextHolder)]
               (if (.isPresent odata)
-                (next (.get odata))
+                (next (:data (.get odata)))
                 (build-context ctx #(cache-context request % next)))))
 
-          (cache-context [^Request request ^DefaultContext context next]
-            (.add request DefaultContext context)
+          (cache-context [^Request request context next]
+            (.add request ContextHolder (ContextHolder. context))
             (next context))]
-    (retrieve-context ctx (fn [^DefaultContext context]
+    (retrieve-context ctx (fn [context]
                             (next (merge context
-                                         {:route-params (ct/get-route-params* ctx)}
-                                         (ct/get-context-params* ctx)))))))
+                                         {:route-params (ct/get-route-params ctx)}
+                                         (ct/get-context-params ctx)))))))
 
 (defmethod adapter :catacumba/default
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]
-      (hydrate-context ctx (fn [^DefaultContext context]
+      (hydrate-context ctx (fn [context]
                              (let [response (handler context)]
                                (when (satisfies? IHandlerResponse response)
                                  (-handle-response response context))))))))
@@ -289,7 +279,7 @@
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]
-      (hydrate-context ctx (fn [^DefaultContext context]
+      (hydrate-context ctx (fn [context]
                              (-> (hp/blocking
                                   (handler context))
                                  (hp/then (fn [response]
@@ -300,7 +290,7 @@
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]
-      (hydrate-context ctx (fn [^DefaultContext context]
+      (hydrate-context ctx (fn [context]
                              (-> (hp/promise (fn [resolve] (handler context #(resolve %))))
                                  (hp/then #(-handle-response % context))))))))
 
@@ -309,7 +299,7 @@
   (let [^HostAndPort local-address (.getLocalAddress request)
         ^HostAndPort remote-address (.getRemoteAddress request)
         ^TypedData body (Blocking/on (.getBody request))
-        headers (ct/get-headers* request false)]
+        headers (ct/get-headers request false)]
     (merge
      {:server-port (.getPort local-address)
       :server-name (.getHostText local-address)
@@ -328,9 +318,9 @@
 (defn- basic-context
   {:internal true :no-doc true}
   [^Context ctx]
-  (ct/context {:catacumba/context ctx
-               :catacumba/request (.getRequest ctx)
-               :catacumba/response (.getResponse ctx)}))
+  {:catacumba/context ctx
+   :catacumba/request (.getRequest ctx)
+   :catacumba/response (.getResponse ctx)})
 
 (defmethod adapter :catacumba/ring
   [handler]

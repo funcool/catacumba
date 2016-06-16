@@ -44,11 +44,8 @@
 
 ;; --- Types
 
-(defrecord DefaultContext [])
 (defrecord ContextData [payload])
 
-(alter-meta! #'->DefaultContext assoc :private true)
-(alter-meta! #'map->DefaultContext assoc :private true)
 (alter-meta! #'->ContextData assoc :private true)
 (alter-meta! #'map->ContextData assoc :private true)
 
@@ -64,21 +61,31 @@
               [cur val])
             val)))
 
+(defn get-response*
+  {:internal true}
+  [context]
+  (cond
+    (instance? Response context) context
+    (map? context) (:catacumba/response context)
+    :else (throw (ex-info "Invalid arguments" {}))))
+
+(defn get-context*
+  {:internal true}
+  [context]
+  (cond
+    (instance? Context context) context
+    (map? context) (:catacumba/context context)
+    :else (throw (ex-info "Invalid arguments" {}))))
+
+(defn get-request*
+  {:internal true}
+  [context]
+  (cond
+    (instance? Request context) context
+    (map? context) (:catacumba/request context)
+    :else (throw (ex-info "Invalid arguments" {}))))
+
 ;; --- Public Api
-
-(defn context
-  "A catacumba context constructor."
-  {:internal true :no-doc true}
-  [data]
-  (map->DefaultContext data))
-
-(defn get-context-params*
-  {:internal true :no-doc true}
-  [^Context ctx]
-  (let [^Optional odata (.maybeGet ctx ContextData)]
-    (if (.isPresent odata)
-      (:payload (.get odata))
-      {})))
 
 (defn get-context-params
   "Get the current context params.
@@ -86,11 +93,13 @@
   The current params can be passed to the next
   handler using the `delegate` function. Is a simple
   way to communicate the handlers chain."
-  [^DefaultContext context]
-  (get-context-params* (:catacumba/context context)))
-
-(def ^{:no-doc true :internal true}
-  +empty-ctxdata+ (ContextData. nil))
+  {:internal true :no-doc true}
+  [ctx]
+  (let [^Context ctx (get-context* ctx)
+        ^Optional odata (.maybeGet ctx ContextData)]
+    (if (.isPresent odata)
+      (:payload (.get odata))
+      {})))
 
 (defn delegate
   "Delegate handling to the next handler in line.
@@ -99,10 +108,8 @@
   pass context parameters to the next handlers, and
   that can be obtained with `context-params`
   function."
-  ([]
-   +empty-ctxdata+)
-  ([data]
-   (ContextData. data)))
+  ([] (ContextData. nil))
+  ([data] (ContextData. data)))
 
 (defn public-address
   "Get the current public address as URI instance.
@@ -117,15 +124,15 @@
   - Absolute request URI (if included in request)
   - Host header (if included in request)
   - Service's bind address and scheme (http vs. https)"
-  [^DefaultContext context]
-  (let [^Context ctx (:catacumba/context context)
+  [context]
+  (let [^Context ctx (get-context* context)
         ^PublicAddress addr (.get ctx PublicAddress)]
     (.get addr ctx)))
 
 (defn on-close
   "Register a callback in the context that will be called
   when the connection with the client is closed."
-  [^DefaultContext context callback]
+  [context callback]
   (let [^Context ctx (:catacumba/context context)]
     (.onClose ctx (hp/fn->action callback))))
 
@@ -134,7 +141,7 @@
   just before send the response to the client. Is a useful
   hook for set some additional cookies, headers or similar
   response transformations."
-  [^DefaultContext context callback]
+  [context callback]
   (let [^Response response (:catacumba/response context)]
     (.beforeSend response (hp/fn->action callback))))
 
@@ -149,12 +156,12 @@
     (.setAccessible field true)
     (.get field form)))
 
-(defn get-query-params*
+(defn get-query-params
   "Parse query params from request and return a
   maybe multivalue map."
-  {:internal :true :no-doc true}
-  [^Request request]
-  (let [^MultiValueMap params (.getQueryParams request)]
+  [context]
+  (let [^Request request (get-request* context)
+        ^MultiValueMap params (.getQueryParams request)]
     (persistent!
      (reduce (fn [acc key]
                (let [values (.getAll params key)]
@@ -162,47 +169,36 @@
              (transient {})
              (.keySet params)))))
 
-(defn get-query-params
-  "Parse query params from context and return a
-  maybe multivalue map."
-  [^DefaultContext context]
-  (get-query-params* (:catacumba/request context)))
-
-(defn get-route-params*
-  "Return a hash-map with parameters extracted from
-  routing patterns."
-  [^Context ctx]
-  (into {} hp/keywordice-keys-t (.getAllPathTokens ctx)))
-
 (defn get-route-params
   "Return a hash-map with parameters extracted from
   routing patterns."
-  [^DefaultContext context]
-  (get-route-params* (:catacumba/context context)))
+  [context]
+  (let [^Context ctx (get-context* context)]
+    (into {} hp/keywordice-keys-t (.getAllPathTokens ctx))))
 
-(defn headers->map [^MultiValueMap headers keywordize]
+(defn headers->map
+  {:internal true :no-doc true}
+  [^MultiValueMap headers keywordize]
   (persistent!
-     (reduce (fn [acc ^String key]
-               (let [values (.getAll headers key)
-                     key (if keywordize
+   (reduce (fn [acc ^String key]
+             (let [values (.getAll headers key)
+                   key (if keywordize
                            (keyword (.toLowerCase key))
                            (.toLowerCase key))]
-                 (reduce #(assoc-conj! %1 key %2) acc values)))
-             (transient {})
-             (.keySet headers))))
-
-(defn get-headers*
-  [^Request request keywordize]
-  (let [^Headers headers (.getHeaders request)]
-    (headers->map (.asMultiValueMap headers) keywordize)))
+               (reduce #(assoc-conj! %1 key %2) acc values)))
+           (transient {})
+           (.keySet headers))))
 
 (defn get-headers
-  [^DefaultContext context]
-  (get-headers* (:catacumba/request context) true))
+  ([context] (get-headers context true))
+  ([context keywordize?]
+   (let [^Request request (get-request* context)
+         ^Headers headers (.getHeaders request)]
+     (headers->map (.asMultiValueMap headers) keywordize?))))
 
 (defn set-headers!
-  [^DefaultContext context headers]
-  (let [^Response response (:catacumba/response context)
+  [context headers]
+  (let [^Response response (get-response* context)
         ^MutableHeaders headersmap (.getHeaders response)]
     (loop [headers headers]
       (when-let [[key vals] (first headers)]
@@ -218,26 +214,21 @@
    :secure (.isSecure cookie)
    :max-age (.maxAge cookie)})
 
-(defn get-cookies*
-  "Get the incoming cookies."
-  {:internal true :no-doc true}
-  [^Request request]
-  (persistent!
-   (reduce (fn [acc ^Cookie cookie]
-             (let [name (keyword (.name cookie))]
-               (assoc! acc name (cookie->map cookie))))
-           (transient {})
-           (into [] (.getCookies request)))))
-
 (defn get-cookies
   "Get the incoming cookies."
-  [^DefaultContext context]
-  (get-cookies* (:catacumba/request context)))
+  [context]
+  (let [^Request request (get-request* context)]
+    (persistent!
+     (reduce (fn [acc ^Cookie cookie]
+               (let [name (keyword (.name cookie))]
+                 (assoc! acc name (cookie->map cookie))))
+             (transient {})
+             (into [] (.getCookies request))))))
 
 (defn set-status!
   "Set the response http status."
   [context status]
-  (let [^Response response (:catacumba/response context)]
+  (let [^Response response (get-response* context)]
     (.status response (int status))))
 
 (defn set-cookies!
@@ -257,9 +248,9 @@
 
   As you can observe is almost identical hash map structure
   as used in the ring especification."
-  [^DefaultContext context cookies]
+  [context cookies]
   ;; TODO: remove nesed blocks using properly the reduce.
-  (let [^Response response (:catacumba/response context)]
+  (let [^Response response (get-response* context)]
     (loop [cookies (into [] cookies)]
       (when-let [[cookiename cookiedata] (first cookies)]
         (let [cookie (.cookie response (name cookiename) "")]
@@ -296,6 +287,7 @@
       (.keySet form))))
 
 (defn get-formdata*
+  {:internal true}
   [^Context ctx ^TypedData body]
   (let [^Form form (.parse ctx body (Parse/of Form))
         ^MultiValueMap files (.files form)]
@@ -304,15 +296,15 @@
       (parse-form-fields form))))
 
 (defn get-formdata
-  [^DefaultContext context]
-  (get-formdata* (:catacumba/context context)
-                 (:body context)))
+  [context]
+  (let [ctx (get-context* context)
+        body (:body context)]
+    (get-formdata* ctx body)))
 
 (defn resolve-file
   "Resolve file using the current filesystem binding
   configuration. The path will be resolved as relative
   to the filesystem binding root."
-  [^DefaultContext context ^String path]
-  {:pre [(string? path)]}
+  [context ^String path]
   (let [^Context ctx (:catacumba/context context)]
     (.file ctx path)))

@@ -26,6 +26,7 @@
   (:require [catacumba.impl.websocket]
             [catacumba.impl.handlers :as handlers]
             [catacumba.impl.routing :as routing]
+            [catacumba.impl.context :as context]
             [catacumba.impl.helpers :as hp]
             [clojure.java.io :as io]
             [environ.core :refer [env]])

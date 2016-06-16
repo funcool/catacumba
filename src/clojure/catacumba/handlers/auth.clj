@@ -32,8 +32,7 @@
             [catacumba.impl.helpers :as hp]
             [buddy.sign.jwt :as jwt]
             [promesa.core :as p])
-  (:import catacumba.impl.context.DefaultContext
-           ratpack.exec.Downstream
+  (:import ratpack.exec.Downstream
            ratpack.exec.Promise
            ratpack.handling.Chain
            ratpack.handling.Handler))

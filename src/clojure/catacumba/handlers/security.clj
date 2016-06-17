@@ -28,7 +28,8 @@
             [catacumba.http :as http]
             [cuerdas.core :as str]
             [clj-uuid :as uuid])
-  (:import ratpack.http.Response))
+  (:import ratpack.http.Response
+           ratpack.http.Request))
 
 (defn hsts-headers
   "A chain handler that adds the Strict-Transport-Security
@@ -39,9 +40,11 @@
 
   For more information, see the following rfc: https://tools.ietf.org/html/rfc6797"
   ([] (hsts-headers {}))
-  ([{:keys [max-age subdomains] :or {max-age 31536000 subdomains true}}]
+  ([{:keys [max-age subdomains]
+     :or {max-age 31536000 subdomains true}}]
    (fn [context]
-     (let [header-value (str "max-age=" max-age (when subdomains "; includeSubDomains"))]
+     (let [header-value (str "max-age=" max-age
+                             (when subdomains "; includeSubDomains"))]
        (ct/set-headers! context {:strict-transport-security header-value})
        (ct/delegate)))))
 
@@ -118,12 +121,12 @@
   (ct/delegate))
 
 (defn- form-post?
-  [context]
-  (let [method (:method context)
-        content-type (.getType (.getContentType (:body context)))]
+  [{:keys [method] :as context}]
+  (let [^Request request (:catacumba/request context)
+        ^String mime (.getType (.getContentType request))]
     (and (= :post method)
-         (or (= content-type "application/x-www-form-urlencoded")
-             (= content-type "multipart/form-data")))))
+         (or (= mime "application/x-www-form-urlencoded")
+             (= mime "multipart/form-data")))))
 
 ;; (deftype CSRFStore [value])
 
@@ -141,7 +144,7 @@
 
 (defn- csrf-tokens-match?
   [token context header-name field-name]
-  (let [formdata (ct/get-formdata context)
+  (let [formdata (:data context)
         headers (:headers context)]
     (and (not (nil? token))
          (or (= token (get formdata field-name))

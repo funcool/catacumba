@@ -30,9 +30,10 @@
             [promesa.core :as p]
             [catacumba.stream :as stream]
             [catacumba.impl.helpers :as hp]
-            [catacumba.impl.context :as ct]
+            [catacumba.impl.context :as ctx]
             [catacumba.impl.http :as http])
-  (:import catacumba.impl.context.ContextData
+  (:import catacumba.impl.DelegatedContext
+           catacumba.impl.ContextHolder
            java.io.InputStream
            java.io.BufferedReader
            java.io.InputStreamReader
@@ -74,16 +75,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (extend-protocol IHandlerResponse
-  catacumba.impl.context.ContextData
-  (-handle-response [data context]
+  DelegatedContext
+  (-handle-response [this context]
     (let [^Context ctx (:catacumba/context context)]
-      (if (:payload data)
-        (let [^Optional odata (.maybeGet ctx ContextData)]
-          (if (.isPresent odata)
-            (.next ctx (Registry/single (ContextData. (merge (:payload (.get odata))
-                                                             (:payload data)))))
-            (.next ctx (Registry/single data))))
-        (.next ctx))))
+      (if (.isEmpty this)
+        (.next ctx)
+        (if-let [^DelegatedContext dc (hp/maybe-get ctx DelegatedContext)]
+          (.next ctx (Registry/single
+                      (DelegatedContext. (merge (.-data dc)
+                                                (.-data this)))))
+          (.next ctx (Registry/single this))))))
 
   java.nio.file.Path
   (-handle-response [path context]
@@ -96,14 +97,14 @@
   clojure.lang.IPersistentMap
   (-handle-response [data context]
     (let [{:keys [status headers body]} data]
-      (when status (ct/set-status! context status))
-      (when headers (ct/set-headers! context headers))
+      (when status (ctx/set-status! context status))
+      (when headers (ctx/set-headers! context headers))
       (-send body (:catacumba/context context))))
 
   catacumba.impl.http.Response
   (-handle-response [data context]
-    (ct/set-status! context (:status data))
-    (ct/set-headers! context (:headers data))
+    (ctx/set-status! context (:status data))
+    (ctx/set-headers! context (:headers data))
     (-send (:body data) (:catacumba/context context)))
 
   clojure.core.async.impl.channels.ManyToManyChannel
@@ -123,7 +124,9 @@
 
   ratpack.exec.Promise
   (-handle-response [data context]
-    (hp/then data #(-handle-response % context))))
+    (hp/then data (fn [response]
+                    (when (satisfies? IHandlerResponse data)
+                      (-handle-response response context))))))
 
 (extend-protocol ISend
   (Class/forName "[B")
@@ -222,50 +225,14 @@
 ;; Adapters Implementation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defrecord ContextHolder [data])
-
-(defn hydrate-context
-  {:internal true :no-doc true}
-  [^Context ctx next]
-  (letfn [(build-context [^Context ctx next]
-            (let [^Request request (.getRequest ctx)
-                  ^Response response (.getResponse ctx)
-                  context {:catacumba/context ctx
-                           :catacumba/request request
-                           :catacumba/response response
-                           :path (str "/" (.getPath request))
-                           :query (.getQuery request)
-                           :method (keyword (.. request getMethod getName toLowerCase))
-                           :query-params (ct/get-query-params request)
-                           :cookies (ct/get-cookies request)
-                           :headers (ct/get-headers request true)}]
-              (hp/then (.getBody request)
-                       (fn [^TypedData body]
-                         (next (assoc context :body body))))))
-
-          (retrieve-context [^Context ctx next]
-            (let [^Request request (.getRequest ctx)
-                  ^Optional odata (.maybeGet request ContextHolder)]
-              (if (.isPresent odata)
-                (next (:data (.get odata)))
-                (build-context ctx #(cache-context request % next)))))
-
-          (cache-context [^Request request context next]
-            (.add request ContextHolder (ContextHolder. context))
-            (next context))]
-    (retrieve-context ctx (fn [context]
-                            (next (merge context
-                                         {:route-params (ct/get-route-params ctx)}
-                                         (ct/get-context-params ctx)))))))
-
 (defmethod adapter :catacumba/default
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]
-      (hydrate-context ctx (fn [context]
-                             (let [response (handler context)]
-                               (when (satisfies? IHandlerResponse response)
-                                 (-handle-response response context))))))))
+     (let [context (ctx/create-context ctx)
+           response (handler context)]
+       (when (satisfies? IHandlerResponse response)
+         (-handle-response response context))))))
 
 (defmethod adapter :catacumba/native
   [handler]
@@ -279,17 +246,16 @@
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]
-      (hydrate-context ctx (fn [context]
-                             (-> (hp/blocking
-                                  (handler context))
-                                 (hp/then (fn [response]
-                                            (when (satisfies? IHandlerResponse response)
-                                              (-handle-response response context))))))))))
+     (let [context (ctx/create-context ctx)]
+       (-> (hp/blocking (handler context))
+           (hp/then (fn [response]
+                      (when (satisfies? IHandlerResponse response)
+                        (-handle-response response context)))))))))
 
 (defmethod adapter :catacumba/cps
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]
-      (hydrate-context ctx (fn [context]
-                             (-> (hp/promise (fn [resolve] (handler context #(resolve %))))
-                                 (hp/then #(-handle-response % context))))))))
+     (let [context (ctx/create-context ctx)]
+       (-> (hp/promise (fn [resolve] (handler context #(resolve %))))
+           (hp/then #(-handle-response % context)))))))

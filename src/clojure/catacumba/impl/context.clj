@@ -25,8 +25,11 @@
 (ns catacumba.impl.context
   "Functions and helpers for work in a clojure
   way with ratpack types."
-  (:require [catacumba.impl.helpers :as hp])
-  (:import ratpack.handling.Handler
+  (:require [catacumba.impl.helpers :as hp]
+            [promesa.core :as p])
+  (:import catacumba.impl.DelegatedContext
+           catacumba.impl.ContextHolder
+           ratpack.handling.Handler
            ratpack.handling.Context
            ratpack.handling.RequestOutcome
            ratpack.form.Form
@@ -41,13 +44,6 @@
            ratpack.registry.Registry
            io.netty.handler.codec.http.cookie.Cookie
            java.util.Optional))
-
-;; --- Types
-
-(defrecord ContextData [payload])
-
-(alter-meta! #'->ContextData assoc :private true)
-(alter-meta! #'map->ContextData assoc :private true)
 
 ;; --- Helpers
 
@@ -66,8 +62,9 @@
   [context]
   (cond
     (instance? Response context) context
+    (instance? Context context) (.getResponse context)
     (map? context) (:catacumba/response context)
-    :else (throw (ex-info "Invalid arguments" {}))))
+    :else (throw (ex-info "Invalid arguments2" {}))))
 
 (defn get-context*
   {:internal true}
@@ -75,15 +72,16 @@
   (cond
     (instance? Context context) context
     (map? context) (:catacumba/context context)
-    :else (throw (ex-info "Invalid arguments" {}))))
+    :else (throw (ex-info "Invalid arguments1" {}))))
 
 (defn get-request*
   {:internal true}
   [context]
   (cond
     (instance? Request context) context
+    (instance? Context context) (.getRequest context)
     (map? context) (:catacumba/request context)
-    :else (throw (ex-info "Invalid arguments" {}))))
+    :else (throw (ex-info "Invalid arguments3" {}))))
 
 ;; --- Public Api
 
@@ -95,11 +93,9 @@
   way to communicate the handlers chain."
   {:internal true :no-doc true}
   [ctx]
-  (let [^Context ctx (get-context* ctx)
-        ^Optional odata (.maybeGet ctx ContextData)]
-    (if (.isPresent odata)
-      (:payload (.get odata))
-      {})))
+  (when-let [dc (-> (get-context* ctx)
+                    (hp/maybe-get DelegatedContext))]
+    (.-data dc)))
 
 (defn delegate
   "Delegate handling to the next handler in line.
@@ -108,8 +104,8 @@
   pass context parameters to the next handlers, and
   that can be obtained with `context-params`
   function."
-  ([] (ContextData. nil))
-  ([data] (ContextData. data)))
+  ([] (DelegatedContext. nil))
+  ([data] (DelegatedContext. data)))
 
 (defn public-address
   "Get the current public address as URI instance.
@@ -308,3 +304,48 @@
   [context ^String path]
   (let [^Context ctx (:catacumba/context context)]
     (.file ctx path)))
+
+(defn get-body!
+  "Reads asynchronously the body from context. This
+  function return a promise (CompletableFuture instance).
+
+  NOTE: it can only be done once, consider using specialized
+  body parsing handlers instead of this. This function
+  should be considered low-level."
+  [context]
+  (p/promise
+   (fn [resolve reject]
+     (let [^Request request (get-request* context)]
+       (-> (.getBody request)
+           (hp/on-error reject)
+           (hp/then resolve))))))
+
+;; --- Impl
+
+(defn build-context
+  {:internal true}
+  [^Context ctx]
+  (let [^Request request (.getRequest ctx)
+        ^Response response (.getResponse ctx)]
+    {:catacumba/context ctx
+     :catacumba/request request
+     :catacumba/response response
+
+     :path (str "/" (.getPath request))
+     :query (.getQuery request)
+     :method (keyword (.. request getMethod getName toLowerCase))
+     :query-params (get-query-params request)
+     :cookies (get-cookies request)
+     :headers (get-headers request true)}))
+
+(defn create-context
+  {:internal true}
+  [^Context ctx]
+  (let [holder (-> (.getRequest ctx)
+                   (hp/maybe-get ContextHolder))]
+    (merge (if holder
+             (.-data ^ContextHolder holder)
+             (build-context ctx))
+           {:route-params (get-route-params ctx)}
+           (get-context-params ctx))))
+

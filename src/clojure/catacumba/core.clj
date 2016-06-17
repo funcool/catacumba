@@ -32,6 +32,7 @@
 (defalias before-send catacumba.impl.context/before-send)
 (defalias delegate catacumba.impl.context/delegate)
 (defalias public-address catacumba.impl.context/public-address)
+(defalias get-body! catacumba.impl.context/get-body!)
 (defalias get-headers catacumba.impl.context/get-headers)
 (defalias set-headers! catacumba.impl.context/set-headers!)
 (defalias get-cookies catacumba.impl.context/get-cookies)

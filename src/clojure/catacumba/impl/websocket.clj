@@ -96,5 +96,5 @@
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]
-      (hs/hydrate-context ctx (fn [context]
-                                (websocket context handler))))))
+     (let [context (ctx/create-context ctx)]
+       (websocket context handler)))))

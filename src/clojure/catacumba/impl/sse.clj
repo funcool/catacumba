@@ -28,6 +28,7 @@
   (:require [clojure.core.async :refer [chan go-loop close! >! <! put!] :as async]
             [catacumba.stream :as stream]
             [catacumba.impl.helpers :as hp]
+            [catacumba.impl.context :as ctx]
             [catacumba.impl.executor :as exec]
             [catacumba.impl.handlers :as handlers]
             [catacumba.impl.stream.channel :as schannel])
@@ -82,7 +83,7 @@
   [handler]
   (reify Handler
     (^void handle [_ ^Context ctx]
-      (handlers/hydrate-context ctx (fn [context]
-                                      (sse context handler))))))
+     (let [context (ctx/create-context ctx)]
+       (sse context handler)))))
 
 

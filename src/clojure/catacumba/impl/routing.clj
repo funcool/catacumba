@@ -24,7 +24,7 @@
 
 (ns catacumba.impl.routing
   (:require [catacumba.impl.handlers :as hs]
-            [catacumba.impl.context :as ct]
+            [catacumba.impl.context :as ctx]
             [catacumba.impl.helpers :as hp])
   (:import ratpack.handling.Context
            ratpack.handling.Chain
@@ -116,7 +116,8 @@
           (on-register [^RegistrySpec rspec]
             (->> (reify ServerErrorHandler
                    (error [_ ctx throwable]
-                     (hs/hydrate-context ctx #(callback % throwable))))
+                     (let [context (ctx/create-context ctx)]
+                       (callback context throwable))))
                  (.add rspec ServerErrorHandler)))]
     (.register chain ^Action (hp/fn->action on-register))))
 

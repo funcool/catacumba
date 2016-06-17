@@ -23,11 +23,11 @@
 ;; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 (ns catacumba.handlers.parse
-  (:require [catacumba.impl.context :as ct]
+  (:require [catacumba.impl.context :as ctx]
+            [promesa.core :as p]
             [cheshire.core :as json]
             [cognitect.transit :as transit])
-  (:import ratpack.http.Request
-           ratpack.http.TypedData
+  (:import ratpack.http.TypedData
            ratpack.handling.Context))
 
 (defmulti parse-body
@@ -42,11 +42,11 @@
 
 (defmethod parse-body :multipart/form-data
   [^Context ctx ^TypedData body]
-  (ct/get-formdata* ctx body))
+  (ctx/get-formdata* ctx body))
 
 (defmethod parse-body :application/x-www-form-urlencoded
   [^Context ctx ^TypedData body]
-  (ct/get-formdata* ctx body))
+  (ctx/get-formdata* ctx body))
 
 (defmethod parse-body :application/json
   [^Context ctx ^TypedData body]
@@ -76,8 +76,9 @@
   ([] (body-params {}))
   ([{:keys [parsefn attr] :or {parsefn parse-body attr :data}}]
    (fn [context]
-     (let [^Context ctx (:catacumba/context context)
-           ^TypedData body (:body context)]
-       (if (not= (:method context) :get)
-         (ct/delegate {attr (parsefn ctx body)})
-         (ct/delegate {attr nil}))))))
+     (let [^Context ctx (:catacumba/context context)]
+       (if (= (:method context) :get)
+         (ctx/delegate {attr nil})
+         (p/then (ctx/get-body! ctx)
+                 (fn [^TypedData body]
+                   (ctx/delegate {attr (parsefn ctx body)}))))))))

@@ -85,12 +85,18 @@
 
   This function optionally accept a used defined method
   or multimethod where to delegate the body parsing."
-  ([] (body-params {}))
+  ([] (body-params nil))
   ([{:keys [parsefn attr] :or {parsefn parse-body attr :data}}]
-   (fn [context]
-     (let [^Context ctx (:catacumba/context context)]
-       (if (= (:method context) :get)
+   (fn [{:keys [method body] :as context}]
+     (let [ctx (ctx/get-context* context)]
+       (cond
+         (= method :get)
          (ctx/delegate {attr nil})
-         (p/then (ctx/get-body! ctx)
-                 (fn [^TypedData body]
-                   (ctx/delegate {attr (parsefn ctx body)}))))))))
+
+         body
+         (ctx/delegate {attr (parsefn ctx body)})
+
+         (nil? body)
+         (->> (ctx/get-body! ctx)
+              (p/map (fn [^TypedData body]
+                       (ctx/delegate {attr (parsefn ctx body)})))))))))

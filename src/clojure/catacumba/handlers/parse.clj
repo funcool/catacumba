@@ -67,6 +67,18 @@
   (let [reader (transit/reader (.getInputStream body) :msgpack)]
     (transit/read reader)))
 
+;; --- Handlers
+
+(defn read-body
+  "A handler that just reads the body from request and puts
+  it on the context under `:body` key."
+  [{:keys [method] :as context}]
+  (if (= method :get)
+    (ctx/delegate {:body nil})
+    (->> (ctx/get-body! context)
+         (p/map (fn [^TypedData body]
+                  (ctx/delegate {:body body}))))))
+
 (defn body-params
   "A route chain that parses the body into
   a clojure friendly data structure.

@@ -291,11 +291,15 @@
       (parse-form-files files)
       (parse-form-fields form))))
 
+(declare get-body!)
+
 (defn get-formdata
-  [context]
-  (let [ctx (get-context* context)
-        body (:body context)]
-    (get-formdata* ctx body)))
+  [{:keys [body] :as context}]
+  (let [ctx (get-context* context)]
+    (if body
+      (p/resolved (get-formdata* ctx body))
+      (->> (get-body! ctx)
+           (p/map #(get-formdata* ctx %))))))
 
 (defn resolve-file
   "Resolve file using the current filesystem binding

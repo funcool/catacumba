@@ -6,6 +6,7 @@
             [clojure.pprint :refer [pprint]]
             [clojure.core.async :as async]
             [clj-http.client :as client]
+            [promesa.core :as p]
             [buddy.sign.jwt :as jwt]
             [buddy.sign.jwe :as jwe]
             [buddy.core.hash :as hash]
@@ -22,18 +23,17 @@
             [catacumba.testing :as test-utils :refer [with-server]]
             [catacumba.core-tests :refer [base-url]]))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Body params parsing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest body-parsing
-  #_(testing "Explicit body parsing with multipart request with multiple files."
+  (testing "Explicit body parsing with multipart request with multiple files."
     (let [p (promise)
           handler (fn [context]
-                    (let [form (ct/get-formdata context)]
-                      (deliver p form)
-                      "hello world"))]
+                    (->> (ct/get-formdata context)
+                         (p/map #(deliver p %))
+                         (p/map (fn [_] "hello world"))))]
       (with-server {:handler handler}
         (let [multipart {:multipart [{:name "foo" :content "bar"}
                                      {:name "myfile"
@@ -52,12 +52,12 @@
           (let [formdata (deref p 1000 nil)]
             (is (= (get formdata :foo) "bar")))))))
 
-  #_(testing "Form data with more than 8 fields"
+  (testing "Form data with more than 8 fields"
     (let [p (promise)
           handler (fn [context]
-                    (let [form-dt (ct/get-formdata context)]
-                      (deliver p form-dt)
-                      "OK"))]
+                    (->> (ct/get-formdata context)
+                         (p/map #(deliver p %))
+                         (p/map (fn [_] "OK"))))]
       (with-server {:handler handler}
         (let [res (client/post base-url
                                {:form-params {:a 1, :b 2, :c 3, :d 4, :e 5

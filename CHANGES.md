@@ -1,5 +1,30 @@
 # Changelog #
 
+## Version 1.0.0 ##
+
+Date: ---
+
+Important changes (mostly breaking):
+
+- Remove useless open abstraction for handler factory.
+- Remove DefaultContext type and simplify realted functions.
+- Remove ring adapter (seems like it not very useful).
+- Remove postal handlers.
+  After using it some time, seems that it has no advantadges over
+  standard REST api and has a lot of disadvantatges. If someone want
+  continue using it, the code-base is very small and it can be
+  maintained out of main codebase.
+- Body reading is now **asynchronous**.
+  This change implies removing `:body` key from context and provide
+  a special function for asynchronously reading body.
+  You will be able to restore the previous behavior adding a new
+  `parse/read-body` handler on the start of the routing pipeline
+  or server decorators (that just reads the body and puts it inside
+  the context).
+- `get-formdata` function becomes asynchronous and now returns
+  a promise of parsed files.
+
+
 ## Version 0.17.0 ##
 
 Date: 2016-06-05

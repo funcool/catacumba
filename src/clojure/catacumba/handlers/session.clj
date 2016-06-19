@@ -152,16 +152,14 @@
                  (resolve [key data])))))))
 
       (-write [_ key data]
-        (p/promise
-         (fn [resolve reject]
-           (swap! internalstore assoc key data)
-           (resolve key))))
+        (p/do*
+         (swap! internalstore assoc key data)
+         key))
 
       (-delete [_ key]
-        (p/promise
-         (fn [resolve reject]
-           (swap! internalstore dissoc key)
-           (resolve key)))))))
+        (p/do*
+         (swap! internalstore dissoc key)
+         key)))))
 
 (defn signed-cookie
   [& {:keys [key] :as opts}]
@@ -178,14 +176,11 @@
                  (resolve [(jwt/sign {} pkey opts) {}])))))))
 
       (-write [_ key data]
-        (p/promise
-         (fn [resolve reject]
-           (resolve (jwt/sign data pkey opts)))))
+        (p/do*
+         (jwt/sign data pkey opts)))
 
       (-delete [_ key]
-        (p/promise
-         (fn [resolve reject]
-           (resolve key)))))))
+        (p/do* key)))))
 
 (defn lookup-storage
   "A helper for create session storages with

@@ -33,21 +33,12 @@
            ratpack.exec.Downstream
            ratpack.exec.Blocking
            ratpack.handling.Context
-           ratpack.registry.Registry
-           java.util.Optional
            java.nio.file.Path
            java.nio.file.Paths
            java.util.concurrent.CompletableFuture
            io.netty.buffer.Unpooled))
 
 ;; --- Java 8 Interop
-
-(defn maybe-get
-  [^Registry reg clazz]
-  (let [^Optional v (.maybeGet reg clazz)]
-    (when (.isPresent v)
-      (.get v))))
-
 
 (defn fn->action
   "Coerce a plain clojure function into

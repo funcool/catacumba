@@ -26,6 +26,7 @@
   "Functions and helpers for work in a clojure
   way with ratpack types."
   (:require [catacumba.impl.helpers :as hp]
+            [catacumba.impl.registry :as reg]
             [promesa.core :as p])
   (:import catacumba.impl.DelegatedContext
            catacumba.impl.ContextHolder
@@ -92,10 +93,11 @@
   handler using the `delegate` function. Is a simple
   way to communicate the handlers chain."
   {:internal true :no-doc true}
-  [ctx]
-  (when-let [dc (-> (get-context* ctx)
-                    (hp/maybe-get DelegatedContext))]
-    (.-data dc)))
+  [context]
+  (let [^Context ctx (get-context* context)
+        ^DelegatedContext dctx (reg/maybe-get ctx DelegatedContext)]
+    (when dctx
+      (.-data dctx))))
 
 (defn delegate
   "Delegate handling to the next handler in line.
@@ -324,7 +326,7 @@
            (hp/on-error reject)
            (hp/then resolve))))))
 
-;; --- Impl
+;; --- Implementation
 
 (defn build-context
   {:internal true}
@@ -345,11 +347,15 @@
 (defn create-context
   {:internal true}
   [^Context ctx]
-  (let [holder (-> (.getRequest ctx)
-                   (hp/maybe-get ContextHolder))]
-    (merge (if holder
-             (.-data ^ContextHolder holder)
-             (build-context ctx))
-           {:route-params (get-route-params ctx)}
-           (get-context-params ctx))))
-
+  (let [^Request req (get-request* ctx)
+        ^ContextHolder holder (reg/maybe-get req ContextHolder)]
+    (if holder
+      (merge (.-data ^ContextHolder holder)
+             {:route-params (get-route-params ctx)}
+             (get-context-params ctx))
+      (let [context (build-context ctx)
+            holder (ContextHolder. context)]
+        (reg/add! req holder)
+        (merge context
+               {:route-params (get-route-params ctx)}
+               (get-context-params ctx))))))

@@ -31,6 +31,7 @@
             [catacumba.stream :as stream]
             [catacumba.impl.helpers :as hp]
             [catacumba.impl.context :as ctx]
+            [catacumba.impl.registry :as reg]
             [catacumba.impl.http :as http])
   (:import catacumba.impl.DelegatedContext
            catacumba.impl.ContextHolder
@@ -60,9 +61,7 @@
            io.netty.buffer.Unpooled
            io.netty.buffer.ByteBuf))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Protocol Definition
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; --- Base Handling Protocols
 
 (defprotocol ISend
   (-send [data ctx] "Send data."))
@@ -70,9 +69,7 @@
 (defprotocol IHandlerResponse
   (-handle-response [_ context] "Handle the ratpack handler response."))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Protocol Implementations
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; --- Implementation
 
 (extend-protocol IHandlerResponse
   DelegatedContext
@@ -80,11 +77,10 @@
     (let [^Context ctx (:catacumba/context context)]
       (if (.isEmpty this)
         (.next ctx)
-        (if-let [^DelegatedContext dc (hp/maybe-get ctx DelegatedContext)]
-          (.next ctx (Registry/single
-                      (DelegatedContext. (merge (.-data dc)
-                                                (.-data this)))))
-          (.next ctx (Registry/single this))))))
+        (if-let [^DelegatedContext dc (reg/maybe-get ctx DelegatedContext)]
+          (.next ctx (reg/single (DelegatedContext. (merge (.-data dc)
+                                                           (.-data this)))))
+          (.next ctx (reg/single this))))))
 
   java.nio.file.Path
   (-handle-response [path context]

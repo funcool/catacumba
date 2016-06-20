@@ -223,7 +223,7 @@
 
 (defn session
   "A session chain handler constructor."
-  ([] (session {}))
+  ([] (session nil))
   ([{:keys [storage cookie-name]
      :or {storage :inmemory cookie-name default-cookie-name}
      :as options}]

@@ -13,11 +13,11 @@
   :dependencies [[org.clojure/clojure "1.8.0" :scope "provided"]
                  [org.slf4j/slf4j-simple "1.7.21" :scope "provided"]
                  [org.clojure/core.async "0.2.385"]
-                 [io.ratpack/ratpack-core "1.3.3"
+                 [io.ratpack/ratpack-core "1.4.0-rc-2"
                   :exclusions [io.netty/netty-codec-http
                                io.netty/netty-handler
                                io.netty/netty-transport-native-epoll]]
-                 [io.netty/netty-all "4.1.0.CR7"]
+                 [io.netty/netty-all "4.1.4.Final"]
                  [cheshire "5.6.3"
                   :exclusions [com.fasterxml.jackson.core/jackson-core]]
                  [ns-tracker "0.3.0"]

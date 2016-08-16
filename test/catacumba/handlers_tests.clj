@@ -131,6 +131,18 @@
         (let [headers {:content-type "application/transit+json"}
               response (client/get base-url headers)]
           (is (= nil (deref p 1000 :nothing)))))))
+
+  (testing "EDN encoded body parsing using chain handler"
+    (let [p (promise)
+          app (ct/routes [[:any (parse/body-params)]
+                          [:any #(do
+                                   (deliver p (:data %))
+                                   "hello world")]])]
+      (with-server {:handler app}
+        (let [params {:body (pr-str [1 2 3])
+                      :content-type "application/edn"}
+              response (client/post base-url params)]
+          (is (= [1 2 3] (deref p 1000 nil)))))))
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -543,6 +555,3 @@
       (let [response (client/get base-url)]
         (is (= (:body response) "hello world cps"))
         (is (= (:status response) 200))))))
-
-
-

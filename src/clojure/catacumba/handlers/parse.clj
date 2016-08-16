@@ -26,9 +26,12 @@
   (:require [catacumba.impl.context :as ctx]
             [promesa.core :as p]
             [cheshire.core :as json]
-            [cognitect.transit :as transit])
+            [cognitect.transit :as transit]
+            [clojure.edn :as edn])
   (:import ratpack.http.TypedData
-           ratpack.handling.Context))
+           ratpack.handling.Context
+           (java.io InputStreamReader
+                    PushbackReader)))
 
 (defmulti parse-body
   "A polymorophic method for parse body into clojure
@@ -66,6 +69,13 @@
   [^Context ctx ^TypedData body]
   (let [reader (transit/reader (.getInputStream body) :msgpack)]
     (transit/read reader)))
+
+(defmethod parse-body :application/edn
+  [^Context ctx ^TypedData body]
+  (edn/read {:eof nil :readers *data-readers*}
+            (-> (.getInputStream body)
+                (InputStreamReader. "UTF-8")
+                (PushbackReader.))))
 
 ;; --- Handlers
 

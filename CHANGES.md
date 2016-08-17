@@ -2,12 +2,12 @@
 
 ## Version 1.0.0 ##
 
-Date: ---
+Date: 2016-08-17
 
 Important changes (mostly breaking):
 
 - Remove useless open abstraction for handler factory.
-- Remove DefaultContext type and simplify realted functions.
+- Remove DefaultContext type and simplify related functions.
 - Remove ring adapter (seems like it not very useful).
 - Remove postal handlers.
   After using it some time, seems that it has no advantadges over
@@ -23,6 +23,8 @@ Important changes (mostly breaking):
   the context).
 - `get-formdata` function becomes asynchronous and now returns
   a promise of parsed files.
+- Upgrade ratpack version to 1.4.0.
+- Upgrade netty version to 4.1.4 Final.
 
 
 ## Version 0.17.0 ##

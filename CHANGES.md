@@ -25,7 +25,7 @@ Important changes (mostly breaking):
   a promise of parsed files.
 - Upgrade ratpack version to 1.4.0.
 - Upgrade netty version to 4.1.4 Final.
-
+- Add edn `application/edn` support for `body-params` handler.
 
 ## Version 0.17.0 ##
 

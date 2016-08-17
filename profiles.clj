@@ -73,7 +73,7 @@
 
  :debugging-example
  [:examples
-  {:dependencies [[funcool/catacumba-prone "0.3.0"]]
+  {:dependencies [[funcool/catacumba-prone "0.4.0"]]
    :source-paths ["examples/debugging/src"]
    :resource-paths ["examples/debugging/resources"]
    :main ^:skip-aot debugging.core}]

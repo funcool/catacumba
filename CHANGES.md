@@ -1,5 +1,13 @@
 # Changelog #
 
+## Version 1.0.1 ##
+
+Date: 2016-08-23
+
+- Update ratpack to 1.4.1
+- Update promesa to 1.5.0
+
+
 ## Version 1.0.0 ##
 
 Date: 2016-08-17

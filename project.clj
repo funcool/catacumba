@@ -13,7 +13,7 @@
   :dependencies [[org.clojure/clojure "1.8.0" :scope "provided"]
                  [org.slf4j/slf4j-simple "1.7.21" :scope "provided"]
                  [org.clojure/core.async "0.2.385"]
-                 [io.ratpack/ratpack-core "1.4.0"
+                 [io.ratpack/ratpack-core "1.4.1"
                   :exclusions [io.netty/netty-codec-http
                                io.netty/netty-handler
                                io.netty/netty-transport-native-epoll]]
@@ -28,7 +28,7 @@
                   :exclusions [com.fasterxml.jackson.core/jackson-core]]
 
                  [funcool/cuerdas "0.8.0"]
-                 [funcool/promesa "1.4.0"]
+                 [funcool/promesa "1.5.0"]
                  [danlentz/clj-uuid "0.1.6"]
                  [environ "1.1.0"]
                  [com.cognitect/transit-clj "0.8.288"]])

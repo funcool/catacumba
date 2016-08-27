@@ -32,7 +32,7 @@
         handler (fn [context]
                   (deliver p (ct/public-address context))
                   "hello world")]
-    (with-server {:handler handler}
+    (with-server {:handler handler :address "::0"}
       (let [response (client/get base-url)
             uri (deref p 1000 nil)]
         (is (= (str uri) "http://localhost:5050"))))))

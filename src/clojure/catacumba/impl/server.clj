@@ -39,7 +39,8 @@
            ratpack.ssl.SSLContexts
            ratpack.func.Action
            ratpack.func.Function
-           java.nio.file.Path))
+           java.nio.file.Path
+           java.net.InetAddress))
 
 (defn- bootstrap-registry
   "A bootstrap server hook for setup initial
@@ -64,7 +65,7 @@
 
 (defn- build-config
   "Given user specified options, return a `ServerConfig` instance."
-  [{:keys [port debug threads basedir public-address
+  [{:keys [port debug threads basedir public-address address
            max-body-size marker-file]
     :or {debug false marker-file ".catacumba.basedir"}
     :as options}]
@@ -83,6 +84,7 @@
         (catch IllegalStateException e
           ;; Excplicitly ignore this exception
           )))
+    (when address (.address config (InetAddress/getByName address)))
     (when sslcontext (.ssl config sslcontext))
     (when public-address (.publicAddress config (java.net.URI. public-address)))
     (when max-body-size (.maxContentLength config max-body-size))
@@ -105,6 +107,7 @@
   to the supplied options:
 
   - `:port`: the port to listen on (defaults to 5050).
+  - `:address`: the ip address to listen on (defaults to localhost).
   - `:threads`: the number of threads (default: number of cores * 2).
   - `:debug`: start in development mode or not (default: `true`).
   - `:setup`: callback for add additional entries in ratpack registry.

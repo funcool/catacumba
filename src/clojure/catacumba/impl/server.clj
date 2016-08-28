@@ -65,11 +65,12 @@
 
 (defn- build-config
   "Given user specified options, return a `ServerConfig` instance."
-  [{:keys [port debug threads basedir public-address address
+  [{:keys [port host debug threads basedir public-address
            max-body-size marker-file]
     :or {debug false marker-file ".catacumba.basedir"}
     :as options}]
   (let [port (or (:catacumba-port env) port ServerConfig/DEFAULT_PORT)
+        host (or (:catacumba-host env) host)
         threads (or (:catacumba-threads env) threads ServerConfig/DEFAULT_THREADS)
         basedir (or (:catacumba-basedir env) basedir)
         debug (or (:catacumba-debug env) debug)
@@ -84,7 +85,10 @@
         (catch IllegalStateException e
           ;; Excplicitly ignore this exception
           )))
-    (when address (.address config (InetAddress/getByName address)))
+    (when host
+      (if (instance? InetAddress host)
+        (.address config host)
+        (.address config (InetAddress/getByName host))))
     (when sslcontext (.ssl config sslcontext))
     (when public-address (.publicAddress config (java.net.URI. public-address)))
     (when max-body-size (.maxContentLength config max-body-size))
@@ -107,6 +111,7 @@
   to the supplied options:
 
   - `:port`: the port to listen on (defaults to 5050).
+  - `:host`: the host to listen on.
   - `:address`: the ip address to listen on (defaults to localhost).
   - `:threads`: the number of threads (default: number of cores * 2).
   - `:debug`: start in development mode or not (default: `true`).

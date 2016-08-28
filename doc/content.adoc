@@ -699,7 +699,8 @@ the `run-server` function:
 [options="header", cols="^1,^1,3"]
 |===========================================================================
 | Keyword   | Default | Description
-| `:port`   | `5050` | The port to listen on.
+| `:port`   | `5050` | The port used to bind the socket.
+| `:host` |   `nil`  | The host used to bind the socket.
 | `:threads` | (num of cores * 2) | The number of threads for handler requests.
 | `:debug` | `false` | Start in development mode.
 | `:setup` | `nil`    | A callback for configuration step (low level ratpack access).

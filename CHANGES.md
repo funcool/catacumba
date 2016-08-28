@@ -1,5 +1,13 @@
 # Changelog #
 
+## Version 1.0.2 ##
+
+Date: 2016-08-28
+
+- Add `:host` parameter to server (allowing setting the socket bind host).
+  (many thanks to @hamidr)
+
+
 ## Version 1.0.1 ##
 
 Date: 2016-08-23

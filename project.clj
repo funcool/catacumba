@@ -24,10 +24,8 @@
                  [manifold "0.1.5"]
                  [com.stuartsierra/component "0.3.1"]
                  [commons-io/commons-io "2.5"]
-                 [buddy/buddy-sign "1.1.0"
-                  :exclusions [com.fasterxml.jackson.core/jackson-core]]
-
-                 [funcool/cuerdas "0.8.0"]
+                 [buddy/buddy-sign "1.2.0"]
+                 [funcool/cuerdas "1.0.1"]
                  [funcool/promesa "1.5.0"]
                  [danlentz/clj-uuid "0.1.6"]
                  [environ "1.1.0"]

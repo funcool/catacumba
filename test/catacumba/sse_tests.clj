@@ -29,8 +29,8 @@
                     "data: 2\n\n"
                     "event: foobar\n\n"
                     "id: foobar\n\n"
-                    "data: 3\n"
-                    "id: foobar\n\n")))))))
+                    "id: foobar\n"
+                    "data: 3\n\n")))))))
 
 (deftest sse-specific-handler
   (letfn [(sse-handler [context out]
@@ -51,5 +51,5 @@
                     "data: 2\n\n"
                     "event: foobar\n\n"
                     "id: foobar\n\n"
-                    "data: 3\n"
-                    "id: foobar\n\n")))))))
+                    "id: foobar\n"
+                    "data: 3\n\n")))))))

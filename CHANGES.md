@@ -1,5 +1,13 @@
 # Changelog #
 
+## Version 1.1.1 ##
+
+Date: 2016-09-17
+
+- Update ratpack to 1.4.2
+- Update netty to 4.1.5.Final
+
+
 ## Version 1.1.0 ##
 
 Date: 2016-09-01

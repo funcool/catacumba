@@ -241,13 +241,13 @@
           (is (= (:status response) 200))))))
 
   (testing "Chaining handlers in more than one route."
-    (let [handler1 (fn [ctx]
-                     (ct/delegate {:foo "bar"}))
-          handler2 (fn [ctx]
-                     (str "hello " (:foo ctx)))
+    (let [handler1 (fn [ctx] (ct/delegate {:foo "bar"}))
+          handler2 (fn [ctx] (ct/delegate))
+          handler3 (fn [ctx] (str "hello " (:foo ctx)))
           router (ct/routes [[:prefix "foo"
                               [:any handler1]
-                              [:get handler2]]])]
+                              [:any handler2]
+                              [:get handler3]]])]
       (with-server {:handler router}
         (let [response (client/get (str base-url "/foo"))]
           (is (= (:body response) "hello bar"))

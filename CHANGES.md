@@ -1,5 +1,18 @@
 # Changelog #
 
+## Version 1.2.0 ##
+
+Date: 2016-11-15
+
+- Update `buddy-sign` to 1.3.0
+- Update `transit-clj` to 0.8.293
+- Update `promesa` to 1.6.0
+- Update `cuerdas` to 2.0.1
+- Update `ns-tracker` to 0.3.1
+- Update `core.async` to 0.2.395
+- Update `ratpack` to 1.4.4
+
+
 ## Version 1.1.1 ##
 
 Date: 2016-09-17

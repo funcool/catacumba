@@ -61,16 +61,6 @@
    :resource-paths ["examples/component-chat/resources"]
    :main ^:skip-aot compchat.core}]
 
- :postal-chat-example
- [:examples
-  {:source-paths ["examples/postal-chat/src/clj"
-                  "examples/postal-chat/src/cljs"]
-   :resource-paths ^:replace ["examples/postal-chat/resources"]
-   :dependencies [[funcool/postal "0.2.0"]
-                  [org.clojure/clojurescript "1.7.189"]]
-   :main ^:skip-aot compchat.core}
-  ]
-
  :debugging-example
  [:examples
   {:dependencies [[funcool/catacumba-prone "0.4.0"]]

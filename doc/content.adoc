@@ -690,6 +690,9 @@ is the `run-server` function that receives a handler chain and a map with option
 (ct/run-server #'my-handler {:port 4040 :debug true})
 ----
 
+If you want to stop the server, you just need to call the `.close` method on
+the object returned by the `run-server` function.
+
 
 ==== Configuration Options
 

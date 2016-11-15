@@ -612,67 +612,6 @@ additional parameter to the `delegate` function:
 In the example above, the second handler prints the message found in the context.
 
 
-
-=== Modular components
-
-_Catacumba_ is build from its ground with optional support for the
-`stuartsierra/component` library, and exposes a `catacumba-server` component with an
-API for adding routes and handlers from other components.
-
-Let see a little example on how it can be used:
-
-[source, clojure]
-----
-(ns yourapp.system
-  (:require [com.stuartsierra.component :as component]
-            [catacumba.components :refer (catacumba-server assoc-routes!)]))
-
-;; Define your web application component, it will be responsible to setup
-;; the routes to the catacumba-server component of your handlers
-
-(defrecord WebApp [server]
-  component/Lifecycle
-  (start [this]
-    (let [routes [[:get "foo" some-handler]
-                  [:get "bar" other-handler]]]
-      (assoc-routes! server ::web routes)))
-
-  (stop [this]
-    ;; noop
-    ))
-
-;; Define a simple constructor for your web application component
-(defn webapp []
-  (->WebApp nil))
-
-;; Define the system with two main components: catacumba-server and webapp
-;; and explicitly specify the dependency of catacumba-server for webapp/
-
-(defn application-system
-  "The application system constructor."
-  []
-  (-> (component/system-map
-       :catacumba (catacumba-server {:port 5050})
-       :app (webapp))
-      (component/system-using
-       {:app {:server :catacumba}})))
-
-;; Just define an entry point for the application.
-
-(defn -main
-  "The main entry point to your application."
-  [& args]
-  (component/start (application-system)))
-----
-
-Be aware that each call to the `assoc-routes!` function will cause the server to
-reload. In the majority of circumstances this is completely irrelevant because it is
-done at application bootstrap time.
-
-To understand it better, _catacumba_ comes with an <<sse-component-example,example>>
-that builds a multiuser chat using "Server-Sent events" and component, so you can
-experiment with real code. See the <<examples,examples>> section for it.
-
 [[launching-the-server]]
 === Launching the server
 
@@ -1758,19 +1697,18 @@ You can found the source code of this example
 link:https://github.com/funcool/catacumba/tree/master/examples/websocket-echo[here].
 
 
-[[sse-component-example]]
+[[sse-example]]
 === Multiuser chat with SSE
 
 This example tries to demonstrate how can you build a simple chat using "Server-Sent
-Events" for communicating events to the client and using *stuartsierra/component*
-for a modular application architecture.
+Events" for communicating events to the client:
 
 For make this example application run, follow this commands:
 
 ```bash
 $ git clone git@github.com:funcool/catacumba.git
 $ cd catacumba/
-$ lein with-profile component-chat-example run
+$ lein with-profile sse-chat-example run
 [main] INFO ratpack.server.RatpackServer - Ratpack started for http://localhost:5050
 ```
 
@@ -1778,7 +1716,7 @@ Now, open http://localhost:5050 in two different browsers and try send messages
 between them.
 
 You can found the source code of this example
-link:https://github.com/funcool/catacumba/tree/master/examples/component-chat[here].
+link:https://github.com/funcool/catacumba/tree/master/examples/sse-chat[here].
 
 
 [[prone-example]]

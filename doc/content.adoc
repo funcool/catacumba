@@ -1329,7 +1329,7 @@ Following of our new login handler:
 
 [source, clojure]
 ----
-(require '[buddy.sign.jws :as jws])
+(require '[buddy.sign.jwt :as jwt])
 (require '[cheshire.core :as json])
 
 (defn login-handler
@@ -1337,7 +1337,7 @@ Following of our new login handler:
   (let [data (:body context)
         user (find-user (:username data)   ;; (implementation omitted)
                         (:password data))]
-    (-> (json/encode {:token (jws/sign {:user (:id user)} secret)})
+    (-> (json/encode {:token (jwt/sign {:user (:id user)} secret)})
         (http/ok {:content-type "application/json"}))))
 ----
 
@@ -1370,7 +1370,7 @@ You can create the backend instance so:
 
 [source, clojure]
 ----
-(require '[buddy.sign.jwe :as jwe])
+(require '[buddy.sign.jwt :as jwt])
 (require '[buddy.core.keys :as keys])
 
 (def pubkey (keys/public-key "pubkey.pem"))
@@ -1389,7 +1389,7 @@ The login handler is almost identical:
 
 [source, clojure]
 ----
-(require '[buddy.sign.jws :as jws])
+(require '[buddy.sign.jwt :as jwt])
 (require '[cheshire.core :as json])
 
 (defn login-handler
@@ -1397,7 +1397,7 @@ The login handler is almost identical:
   (let [data (:body context)
         user (find-user (:username data)   ;; (implementation ommited)
                         (:password data))]
-    (-> (json/encode {:token (jwe/encrypt {:user (:id user)} pubkey)})
+    (-> (json/encode {:token (jwt/encrypt {:user (:id user)} pubkey)})
         (http/ok {:content-type "application/json"}))))
 ----
 

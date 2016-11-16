@@ -105,9 +105,16 @@
   This function accept an additiona parameter for
   pass context parameters to the next handlers, and
   that can be obtained with `context-params`
-  function."
+  function.
+
+  Returns an instance of DelegatedContext."
   ([] (DelegatedContext. nil))
   ([data] (DelegatedContext. data)))
+
+(defn delegated-context?
+  "Check if the provided value is a DelegatedContext instance."
+  [v]
+  (instance? DelegatedContext v))
 
 (defn public-address
   "Get the current public address as URI instance.

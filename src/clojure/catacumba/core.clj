@@ -31,6 +31,7 @@
 (defalias on-close catacumba.impl.context/on-close)
 (defalias before-send catacumba.impl.context/before-send)
 (defalias delegate catacumba.impl.context/delegate)
+(defalias delegated-context? catacumba.impl.context/delegated-context?)
 (defalias public-address catacumba.impl.context/public-address)
 (defalias get-body! catacumba.impl.context/get-body!)
 (defalias get-headers catacumba.impl.context/get-headers)

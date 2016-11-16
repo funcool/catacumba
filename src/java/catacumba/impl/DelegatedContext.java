@@ -1,6 +1,8 @@
 package catacumba.impl;
 
-public final class DelegatedContext {
+import clojure.lang.IDeref;
+
+public final class DelegatedContext implements IDeref {
   public final Object data;
 
   public DelegatedContext(final Object data) {
@@ -11,4 +13,7 @@ public final class DelegatedContext {
     return this.data == null;
   }
 
+  public Object deref() {
+    return this.data;
+  }
 }

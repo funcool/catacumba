@@ -1,5 +1,14 @@
 # Changelog #
 
+## Version 2.0.0 ##
+
+Date: unreleased
+
+- Add `delegated-context?` predicate (useful for tests).
+- Add `response?` predicated (also useful for tests).
+- Remove builtin support for stuartsierra component.
+
+
 ## Version 1.2.0 ##
 
 Date: 2016-11-15

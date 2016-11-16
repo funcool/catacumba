@@ -38,3 +38,8 @@
   ([body] (Response. body 200 {}))
   ([body status] (Response. body status {}))
   ([body status headers] (Response. body status headers)))
+
+(defn response?
+  "Check if the provided value is an instance of Response."
+  [v]
+  (instance? Response v))

@@ -31,6 +31,11 @@
   ([body status] (http/response body status {}))
   ([body status headers] (http/response body status headers)))
 
+(defn response?
+  "Check if the provided value is an instance of Response."
+  [v]
+  (http/response? v))
+
 (defn continue
   ([body] (http/response body 100))
   ([body headers] (http/response body 100 headers)))

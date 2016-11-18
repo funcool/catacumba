@@ -1,4 +1,4 @@
-(ns catacumba.impl-executor-tests
+(ns catacumba.tests.test-impl-executor
   (:require [clojure.core.async :as a]
             [clojure.test :refer :all]
             [catacumba.impl.executor :as exec]))

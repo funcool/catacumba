@@ -1,9 +1,8 @@
-(ns catacumba.websocket-tests
-  (:require [clojure.core.async :refer [put! take! chan <! <!! >! >!! go close! go-loop onto-chan timeout thread]]
+(ns catacumba.tests.test-websockets
+  (:require [clojure.core.async :as a]
             [clojure.test :refer :all]
             [clojure.java.io :as io]
             [clojure.pprint :refer [pprint]]
-            [clojure.core.async :as async]
             [aleph.http :as http]
             [manifold.deferred :as d]
             [manifold.stream :as s]
@@ -13,10 +12,10 @@
 
 (deftest websocket-handshake-standard-handler
   (letfn [(websocket [{:keys [in out]}]
-            (go
-              (let [received (<! in)]
-                (>! out "PONG")
-                (close! out))))
+            (a/go
+              (let [received (a/<! in)]
+                (a/>! out "PONG")
+                (a/close! out))))
           (handler [context]
             (ct/websocket context websocket))]
     (with-server {:handler handler}
@@ -28,10 +27,10 @@
 
 (deftest websocket-handshake-websocket-handler
   (letfn [(handler [{:keys [in out]}]
-            (go
-              (let [received (<! in)]
-                (>! out "PONG")
-                (close! out))))]
+            (a/go
+              (let [received (a/<! in)]
+                (a/>! out "PONG")
+                (a/close! out))))]
     (with-server {:handler (with-meta handler
                              {:handler-type :catacumba/websocket})}
 
@@ -47,23 +46,23 @@
         p3 (promise)
         p4 (promise)]
     (letfn [(handler [{:keys [in out]}]
-              (go
-                (let [received (<! in)]
+              (a/go
+                (let [received (a/<! in)]
                   (deliver p1 received))
-                (let [received (<! in)]
+                (let [received (a/<! in)]
                   (deliver p2 received))
-                (let [received (<! in)]
+                (let [received (a/<! in)]
                   (deliver p3 received))
-                (>! out "PONG")
-                (close! out)))]
+                (a/>! out "PONG")
+                (a/close! out)))]
 
       (with-server {:handler (with-meta handler {:handler-type :catacumba/websocket})}
-        (thread
+        (a/thread
           (let [conn @(http/websocket-client "ws://localhost:5050/")]
             @(s/put! conn "foo")
-            (<!! (timeout 100))
+            (a/<!! (a/timeout 100))
             @(s/put! conn "bar")
-            (<!! (timeout 100))
+            (a/<!! (a/timeout 100))
             @(s/put! conn "baz")
             (let [rsp @(s/take! conn)]
               (when (= rsp "PONG")

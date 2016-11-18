@@ -1,16 +1,10 @@
-(ns catacumba.handlers-tests
-  (:require [clojure.core.async :refer [put! take! chan <! >! go close!
-                                        go-loop onto-chan timeout <!!] :as a]
+(ns catacumba.tests.test-handlers
+  (:require [clojure.core.async :as a]
             [clojure.java.io :as io]
             [clojure.test :refer :all]
-            [clojure.pprint :refer [pprint]]
-            [clojure.core.async :as async]
-            [clj-http.client :as client]
             [promesa.core :as p]
             [buddy.sign.jwt :as jwt]
-            [buddy.sign.jwe :as jwe]
             [buddy.core.hash :as hash]
-            [slingshot.slingshot :refer [try+]]
             [cheshire.core :as json]
             [catacumba.core :as ct]
             [catacumba.http :as http]
@@ -20,8 +14,9 @@
             [catacumba.handlers.auth :as cauth]
             [catacumba.handlers.restful :as rest]
             [catacumba.handlers.misc :as misc]
+            [catacumba.tests.helpers :as th]
             [catacumba.testing :as test-utils :refer [with-server]]
-            [catacumba.core-tests :refer [base-url]]))
+            [catacumba.tests.test-core :refer [base-url]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Body params parsing
@@ -46,7 +41,7 @@
                                                    (io/file))
                                       :encoding "UTF-8"
                                       :mime-type "text/plain"}]}
-              response (client/post base-url multipart)]
+              response (th/post "/" multipart)]
           (is (= (:status response) 200))
           (is (= (:body response) "hello world"))
           (let [formdata (deref p 1000 nil)]
@@ -59,8 +54,7 @@
                          (p/map #(deliver p %))
                          (p/map (fn [_] "OK"))))]
       (with-server {:handler handler}
-        (let [res (client/post base-url
-                               {:form-params {:a 1, :b 2, :c 3, :d 4, :e 5
+        (let [res (th/post "/" {:form-params {:a 1, :b 2, :c 3, :d 4, :e 5
                                               :f 6, :g 7, :h 8, :i 9, :j 10
                                               :k 11 :l 12 :m 13 :n 14 :o 15}})]
           (is (= (:status res) 200))
@@ -81,7 +75,7 @@
                                    "hello world")]])]
       (with-server {:handler app}
         (let [params {:form-params {:foo "bar"}}
-              response (client/post base-url params)]
+              response (th/post "/" params)]
           (is (= {:foo "bar"} (deref p 1000 nil)))))))
 
   (testing "Json encoded body parsing using chain handler"
@@ -91,9 +85,9 @@
                                    (deliver p (:data %))
                                    "hello world")]])]
       (with-server {:handler app}
-        (let [params {:body (json/generate-string {:foo "bar"})
+        (let [params {:body (json/encode {:foo "bar"})
                       :content-type "application/json"}
-              response (client/post base-url params)]
+              response (th/post "/" params)]
           (is (= {:foo "bar"} (deref p 1000 nil)))))))
 
   (testing "Transit + json encoded body parsing using chain handler"
@@ -105,7 +99,7 @@
       (with-server {:handler app}
         (let [params {:body (test-utils/data->transit {:foo/bar "bar"})
                       :content-type "application/transit+json"}
-              response (client/post base-url params)]
+              response (th/post "/" params)]
           (is (= {:foo/bar "bar"} (deref p 1000 nil)))))))
 
   (testing "Transit + msgpack encoded body parsing using chain handler"
@@ -117,7 +111,7 @@
       (with-server {:handler app}
         (let [params {:body (test-utils/data->transit {:foo/bar "bar"} :msgpack)
                       :content-type "application/transit+msgpack"}
-              response (client/post base-url params)]
+              response (th/post "/" params)]
           (is (= {:foo/bar "bar"} (deref p 1000 nil)))))))
 
 
@@ -129,7 +123,7 @@
                                    "hello world")]])]
       (with-server {:handler app}
         (let [headers {:content-type "application/transit+json"}
-              response (client/get base-url headers)]
+              response (th/get "/" headers)]
           (is (= nil (deref p 1000 :nothing)))))))
 
   (testing "EDN encoded body parsing using chain handler"
@@ -141,7 +135,7 @@
       (with-server {:handler app}
         (let [params {:body (pr-str [1 2 3])
                       :content-type "application/edn"}
-              response (client/post base-url params)]
+              response (th/post "/" params)]
           (is (= [1 2 3] (deref p 1000 nil)))))))
   )
 
@@ -161,7 +155,7 @@
         (let [params {:form-params {:foo "bar"
                                     :csrftoken "baz"}
                       :cookies {:csrftoken {:value "baz"}}}
-              response (client/get base-url params)]
+              response (th/get "/" params)]
           (is (= (:status response) 200))
           (is (= (deref p 1000 nil) "baz"))))))
 
@@ -170,9 +164,9 @@
                           [:any (parse/body-params)]
                           [:any (fn [context] "hello world")]])]
       (with-server {:handler app}
-        (let [response (client/get base-url {:form-params {:foo "bar"}
-                                             :headers {:x-csrftoken "baz"}
-                                             :cookies {:csrftoken {:value "baz"}}})]
+        (let [response (th/get "/" {:form-params {:foo "bar"}
+                                    :headers {:x-csrftoken "baz"}
+                                    :cookies {:csrftoken {:value "baz"}}})]
           (is (= (:status response) 200))))))
 
   (testing "Post without csrf"
@@ -180,13 +174,10 @@
                           [:any (parse/body-params)]
                           [:any (fn [context] "hello world")]])]
       (with-server {:handler app}
-        (let [response (client/get base-url)]
+        (let [response (th/get "/")]
           (is (= (:status response) 200)))
-        (try+
-         (let [response (client/post base-url {:form-params {:foo "bar"}})]
-           (is (= (:status response) 400)))
-         (catch [:status 400] {:keys [status]}
-           (is (= status 400))))))))
+        (let [response (th/post "/" {:form-params {:foo "bar"}})]
+          (is (= (:status response) 400)))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -205,7 +196,7 @@
           handler (ct/routes [[:any (misc/cors cors-config1)]
                               [:get handler]])]
       (with-server {:handler handler}
-        (let [response (client/get base-url {:headers {:origin "http://localhost/"}})
+        (let [response (th/get "/" {:headers {:origin "http://localhost/"}})
               headers (:headers response)]
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200))
@@ -217,8 +208,9 @@
           handler (ct/routes [[:any (misc/cors cors-config1)]
                               [:get handler]])]
       (with-server {:handler handler}
-        (let [response (client/options base-url {:headers {:origin "http://localhost/"
-                                                           :access-control-request-method "post"}})
+        (let [response (th/options "/" {:headers
+                                        {:origin "http://localhost/"
+                                         :access-control-request-method "post"}})
               headers (:headers response)]
           (is (= (:body response) ""))
           (is (= (:status response) 200))
@@ -230,8 +222,9 @@
           handler (ct/routes [[:any (misc/cors cors-config2)]
                               [:get handler]])]
       (with-server {:handler handler}
-        (let [response (client/options base-url {:headers {"Origin" "http://localhast/"
-                                                           "access-control-request-method" "post"}})
+        (let [response (th/options "/" {:headers
+                                        {"Origin" "http://localhast/"
+                                         "access-control-request-method" "post"}})
               headers (:headers response)]
           (is (= (:body response) ""))
           (is (= (:status response) 200))
@@ -264,12 +257,12 @@
                           [:get "h2" handler2]
                           [:get "h3" handler3]])]
       (with-server {:handler app}
-        (let [response (client/get (str base-url "/h1"))
+        (let [response (th/get "/h1")
               cookie (get-in response [:cookies "sessionid"])]
           (is (= (:status response) 200))
-          (let [response (client/get (str base-url "/h2") {:cookies {"sessionid" cookie}})]
+          (let [response (th/get "/h2" {:cookies {"sessionid" cookie}})]
             (is (= (:status response) 200)))
-          (let [response (client/get (str base-url "/h3") {:cookies {"sessionid" cookie}})]
+          (let [response (th/get "/h3" {:cookies {"sessionid" cookie}})]
             (is (= (:status response) 200)))
           (let [data (deref p 1000 nil)]
             (is (= (:foo data) 3)))))
@@ -283,8 +276,7 @@
           app (ct/routes [[:any (cses/session {:storage storage})]
                           [:get "h1" handler]])]
       (with-server {:handler app}
-        (let [response (client/get (str base-url "/h1")
-                                   {:cookies {"sessionid" {:value "foobar"}}})
+        (let [response (th/get "/h1" {:cookies {"sessionid" {:value "foobar"}}})
               cookie (get-in response [:cookies "sessionid"])]
           (is (= (:status response) 200))
           (is (not= (:value cookie) "foobar"))))))
@@ -304,11 +296,10 @@
                           [:get "h1" handler1]
                           [:get "h2" handler2]])]
       (with-server {:handler app}
-        (let [response (client/get (str base-url "/h1"))
+        (let [response (th/get "/h1")
               cookie (get-in response [:cookies "sessionid"])]
           (is (= (:status response) 200))
-          (let [response (client/get (str base-url "/h2")
-                                     {:cookies {"sessionid" cookie}})]
+          (let [response (th/get "/h2" {:cookies {"sessionid" cookie}})]
             (is (= (:status response) 200))
             (is (empty? @storage)))))
       )))
@@ -351,13 +342,13 @@
                         [:get "h2" handler2]
                         [:get "h3" handler3]])]
     (with-server {:handler app}
-      (let [response (client/get (str base-url "/h1"))
+      (let [response (th/get "/h1")
             cookie (get-in response [:cookies "sessionid"])]
         (is (= (:status response) 200))
-        (let [response (client/get (str base-url "/h2") {:cookies {"sessionid" cookie}})
+        (let [response (th/get "/h2" {:cookies {"sessionid" cookie}})
               cookie (get-in response [:cookies "sessionid"])]
           (is (= (:status response) 200))
-          (let [response (client/get (str base-url "/h3") {:cookies {"sessionid" cookie}})]
+          (let [response (th/get "/h3" {:cookies {"sessionid" cookie}})]
             (is (= (:status response) 200))
             (let [data (deref p 1000 nil)]
               (is (= (:foo data) 3)))))))
@@ -382,7 +373,7 @@
 ;;       (with-server {:handler (ct/routes [[:interceptor interceptor]
 ;;                                          [:any handler2]
 ;;                                          [:any handler3]])}
-;;         (let [response (client/get base-url)]
+;;         (let [response (th/get "/")]
 ;;           (is (nil? (deref p1 1000 nil)))
 ;;           (is (= (:body response) "hello world"))
 ;;           (is (= (:status response) 200))
@@ -406,15 +397,12 @@
                 (http/unauthorized "Unauthorized")))]
       (with-server {:handler (ct/routes [[:auth jws-backend]
                                          [:any handler]])}
-        (try+
-         (let [response (client/get base-url)]
-           (is (= (:status response) 401)))
-         (catch Object e
-           (is (= (:status e) 401))))
+        (let [response (th/get "/")]
+          (is (= (:status response) 401)))
 
         (let [token (jwt/sign {:userid 1} jws-secret)
               headers {"Authorization" (str "Token " token)}
-              response (client/get base-url {:headers headers})]
+              response (th/get "/" {:headers headers})]
           (is (= (:status response) 200))))))
 
   (testing "JWE"
@@ -424,15 +412,12 @@
                 (http/unauthorized "Unauthorized")))]
       (with-server {:handler (ct/routes [[:auth jwe-backend]
                                          [:any handler]])}
-        (try+
-         (let [response (client/get base-url)]
-           (is (= (:status response) 401)))
-         (catch Object e
-           (is (= (:status e) 401))))
+        (let [response (th/get "/")]
+          (is (= (:status response) 401)))
 
         (let [token (jwt/encrypt {:userid 1} jwe-secret)
               headers {"Authorization" (str "Token " token)}
-              response (client/get base-url {:headers headers})]
+              response (th/get "/" {:headers headers})]
           (is (= (:status response) 200)))))))
 
 
@@ -460,53 +445,37 @@
   (testing "Resource with all methods"
     (let [app (ct/routes [[:restful/resource "foo" simple-resource-1]])]
       (with-server {:handler app}
-        (let [response (client/get (str base-url "/foo"))]
+        (let [response (th/get "/foo")]
           (is (= (:body response) "1"))
           (is (= (:status response) 200)))
-        (let [response (client/post (str base-url "/foo"))]
+        (let [response (th/post "/foo")]
           (is (= (:body response) "3"))
           (is (= (:status response) 200)))
-        (let [response (client/get (str base-url "/foo/1"))]
+        (let [response (th/get "/foo/1")]
           (is (= (:body response) "2"))
           (is (= (:status response) 200)))
-        (let [response (client/put (str base-url "/foo/1"))]
+        (let [response (th/put "/foo/1")]
           (is (= (:body response) "4"))
           (is (= (:status response) 200)))
-        (let [response (client/delete (str base-url "/foo/1"))]
+        (let [response (th/delete "/foo/1")]
           (is (= (:body response) "5"))
           (is (= (:status response) 200)))
-        (try
-          (client/put (str base-url "/foo"))
-          (throw (Exception. "unexpected"))
-          (catch clojure.lang.ExceptionInfo e
-            (let [response (ex-data e)]
-              (is (= (:status response) 405)))))
-        (try
-          (client/delete (str base-url "/foo"))
-          (throw (Exception. "unexpected"))
-          (catch clojure.lang.ExceptionInfo e
-            (let [response (ex-data e)]
-              (is (= (:status response) 405)))))
+        (let [response (th/put "/foo")]
+          (is (= (:status response) 405)))
+        (let [response (th/delete "/foo")]
+          (is (= (:status response) 405)))
         )))
 
   (testing "Resource with some methods"
     (let [app (ct/routes [[:restful/resource "foo" simple-resource-2]])]
       (with-server {:handler app}
-        (let [response (client/get (str base-url "/foo/1"))]
+        (let [response (th/get "/foo/1")]
           (is (= (:body response) "2"))
           (is (= (:status response) 200)))
-        (try
-          (client/get (str base-url "/foo"))
-          (throw (Exception. "unexpected"))
-          (catch clojure.lang.ExceptionInfo e
-            (let [response (ex-data e)]
-              (is (= (:status response) 405)))))
-        (try
-          (client/delete (str base-url "/foo"))
-          (throw (Exception. "unexpected"))
-          (catch clojure.lang.ExceptionInfo e
-            (let [response (ex-data e)]
-              (is (= (:status response) 405)))))
+        (let [response (th/get "/foo")]
+          (is (= (:status response) 405)))
+        (let [response (th/delete "/foo")]
+          (is (= (:status response) 405)))
         ))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -524,23 +493,21 @@
   (testing "Custom log function"
     (with-logged (constantly (http/ok "" {:x "hi"}))
       (fn [p]
-        (client/get base-url)
+        (th/get "/")
         (let [[context {:keys [headers] :as outcome}] (deref p 1000 nil)]
           (is (= "/" (:path context)))
           (is (= "hi" (:x headers)))))))
   (testing "Custom log function w/ error"
     (with-logged (fn [_] (throw (Exception. "oops")))
       (fn [p]
-        (try+
-          (client/get base-url)
-          (catch [:status 500] _))
+        (th/get "/")
         (let [[_ {{:keys [code]} :status}] (deref p 1000 nil)]
           (is (= 500 code))))))
   (testing "Default log function"
     (with-server {:handler (ct/routes [[:any (misc/log)]
                                        [:get (constantly "")]])}
       ;; Having it not explode is about the best we can do
-      (client/get base-url))))
+      (th/get "/"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; CPS handler type
@@ -552,6 +519,6 @@
                      (a/<!! (a/timeout 500))
                      (next "hello world cps")))]
     (with-server {:handler (with-meta handler {:handler-type :catacumba/cps})}
-      (let [response (client/get base-url)]
+      (let [response (th/get "/")]
         (is (= (:body response) "hello world cps"))
         (is (= (:status response) 200))))))

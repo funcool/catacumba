@@ -1,4 +1,4 @@
-(ns catacumba.impl-atomic-tests
+(ns catacumba.tests.test-impl-atomic
   (:require [clojure.test :refer :all]
             [catacumba.impl.atomic :as atomic]))
 

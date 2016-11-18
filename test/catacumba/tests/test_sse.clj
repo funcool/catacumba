@@ -1,4 +1,4 @@
-(ns catacumba.sse-tests
+(ns catacumba.tests.test-sse
   (:require [clojure.core.async :refer [put! take! chan <! >! go close!
                                         go-loop onto-chan timeout <!!]]
             [clojure.test :refer :all]

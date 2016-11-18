@@ -1,4 +1,4 @@
-(ns catacumba.impl-stream-tests
+(ns catacumba.tests.test-impl-stream
   (:require [clojure.core.async :refer [put! take! chan <! >! <!! close!] :as a]
             [clojure.test :refer :all]
             [manifold.stream :as ms]

@@ -3,7 +3,6 @@
             [clojure.test :refer :all]
             [clojure.java.io :as io]
             [clojure.pprint :refer [pprint]]
-            [clojure.core.async :as async]
             [clj-http.client :as client]
             [promesa.core :as p]
             [catacumba.stream :as stream]
@@ -101,7 +100,7 @@
   (testing "Using completable future as response."
     (letfn [(handler [ctx]
               (p/promise (fn [resolve reject]
-                           (async/<!! (async/timeout 1000))
+                           (a/<!! (a/timeout 1000))
                            (resolve (http/ok "hello world")))))]
       (with-server {:handler handler}
         (let [response (client/get base-url)]
@@ -111,7 +110,7 @@
   (testing "Using completable future as body."
     (letfn [(handler [ctx]
               (http/ok (p/promise (fn [resolve reject]
-                                    (async/<!! (async/timeout 1000))
+                                    (a/<!! (a/timeout 1000))
                                     (resolve "hello world")))))]
       (with-server {:handler handler}
         (let [response (client/get base-url)]
@@ -131,7 +130,7 @@
   (testing "Using manifold deferred as response."
     (letfn [(handler [ctx]
               (let [d (md/deferred)]
-                (async/thread
+                (a/thread
                   (md/success! d (http/accepted "hello world")))
                 d))]
       (with-server {:handler handler}
@@ -142,7 +141,7 @@
   (testing "Using manifold deferred as body."
     (letfn [(handler [ctx]
               (let [d (md/deferred)]
-                (async/thread
+                (a/thread
                   (md/success! d "hello world"))
                 (http/accepted d)))]
       (with-server {:handler handler}
@@ -153,7 +152,7 @@
   (testing "Using manifold stream as body."
     (letfn [(handler [ctx]
               (let [d (ms/stream 3)]
-                (async/thread
+                (a/thread
                   @(ms/put! d "hello")
                   @(ms/put! d " ")
                   @(ms/put! d "world")

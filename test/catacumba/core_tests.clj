@@ -27,7 +27,7 @@
 ;; Tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(deftest public-address
+(deftest public-address-test
   (let [p (promise)
         handler (fn [context]
                   (deliver p (ct/public-address context))
@@ -37,7 +37,7 @@
             uri (deref p 1000 nil)]
         (is (= (str uri) "http://localhost:5050"))))))
 
-(deftest cookies
+(deftest cookies-test
   (testing "Setting new cookie."
     (letfn [(handler [context]
               (ct/set-cookies! context {:foo {:value "bar" :secure true :http-only true}})
@@ -49,7 +49,7 @@
           (is (= (get-in response [:cookies "foo" :value]) "bar"))
           (is (= (get-in response [:cookies "foo" :secure]) true)))))))
 
-(deftest request-response-handling
+(deftest request-response-handling-test
   (testing "Using send! with context"
     (let [handler (fn [ctx] (ct/send! ctx "hello world"))]
       (with-server {:handler handler}
@@ -181,23 +181,9 @@
         (let [response (client/get base-url)]
           (is (= (:body response) "Hello world!"))
           (is (= (:status response) 200))))))
+  )
 
-  #_(testing "Read body as text"
-    (let [p (promise)
-          handler (fn [ctx]
-                    (let [body (:body ctx)]
-                      (deliver p (slurp body)))
-                    "hello world")]
-      (with-server {:handler handler}
-        (let [response (client/post base-url {:body "Hello world"
-                                              :content-type "text/plain"})]
-          (is (= (:body response) "hello world"))
-          (is (= (:status response) 200))
-          (let [bodydata (deref p 1000 nil)]
-            (is (= bodydata "Hello world")))))))
-)
-
-(deftest routing
+(deftest routing-test
   (testing "Routing with parameter."
     (let [handler (fn [ctx]
                     (let [params (:route-params ctx)]
@@ -354,9 +340,7 @@
             (catch clojure.lang.ExceptionInfo e
               (let [data (ex-data e)]
                 (is (= (:status data) 404)))))))))
-)
 
-(deftest routing-1
   (testing "Serving authenticated assets in root."
     (letfn [(handler1 [state context]
               (reset! state 1)
@@ -375,10 +359,10 @@
           (let [response (client/get (str base-url "/test.txt"))]
             (is (= (:body response) "hello world from test.txt\n"))
             (is (= (:status response) 200))
-            (is (= 2 @state))))))))
+            (is (= 2 @state)))))))
+  )
 
-
-(deftest context-data-forwarding
+(deftest context-data-forwarding-test
   (letfn [(handler1 [context]
             (ct/delegate {:foo 1}))
           (handler2 [context]
@@ -401,7 +385,7 @@
                {:foo 1 :bar 2 :baz 3})))))))
 
 
-(deftest basic-request-handler
+(deftest basic-request-handler-test
   (testing "Simple cors request"
     (let [p (promise)
           handler (fn [ctx] (deliver p ctx) "hello world")
@@ -421,7 +405,7 @@
           (is (= (:body response) "hello world"))
           (is (= (:status response) 200)))))))
 
-(deftest async-context-delegation
+(deftest async-context-delegation-test
   (letfn [(handler1 [context]
             (md/future
               (ct/delegate)))

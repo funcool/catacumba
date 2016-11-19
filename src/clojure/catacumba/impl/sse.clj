@@ -74,8 +74,7 @@
         pub (->> (schannel/publisher out {:close true})
                  (stream/bind-exec))
         tfm (hp/fn->action transform-event)]
-    (exec/execute
-     #(handler context out))
+    (exec/execute #(handler context out))
     (->> (ServerSentEvents/serverSentEvents pub tfm)
          (.render ctx))))
 

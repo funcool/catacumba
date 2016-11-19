@@ -1,12 +1,15 @@
 # Changelog #
 
-## Version 2.0.0 ##
+## Version 2.0.0-SNAPSHOT ##
 
 Date: unreleased
 
 - Add `delegated-context?` predicate (useful for tests).
 - Add `response?` predicated (also useful for tests).
 - Remove builtin support for stuartsierra component.
+- The `body-params` handler now attaches body to the context if
+  it is not already attached to it (this is useful when no appropiate
+  parser is found for the incoming content type).
 
 
 ## Version 1.2.0 ##

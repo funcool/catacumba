@@ -109,4 +109,4 @@
          (nil? body)
          (->> (ctx/get-body! ctx)
               (p/map (fn [^TypedData body]
-                       (ctx/delegate {attr (parsefn ctx body)})))))))))
+                       (ctx/delegate {attr (parsefn ctx body) :body body})))))))))

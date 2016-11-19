@@ -22,7 +22,6 @@
                   :exclusions [com.fasterxml.jackson.core/jackson-core]]
                  [ns-tracker "0.3.1"]
                  [manifold "0.1.5"]
-                 [com.stuartsierra/component "0.3.1"]
                  [commons-io/commons-io "2.5"]
                  [buddy/buddy-sign "1.3.0"]
                  [funcool/cuerdas "2.0.1"]

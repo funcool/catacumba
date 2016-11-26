@@ -33,9 +33,11 @@
            ratpack.exec.Downstream
            ratpack.exec.Blocking
            ratpack.handling.Context
+           java.nio.ByteBuffer
            java.nio.file.Path
            java.nio.file.Paths
            java.util.concurrent.CompletableFuture
+           io.netty.buffer.ByteBuf
            io.netty.buffer.Unpooled))
 
 ;; --- Java 8 Interop
@@ -139,6 +141,13 @@
   (bytebuffer [_] "Coerce to byte buffer."))
 
 (extend-protocol IByteBuffer
+  ByteBuf
+  (bytebuffer [s] s)
+
+  ByteBuffer
+  (bytebuffer [s]
+    (Unpooled/wrappedBuffer s))
+
   String
   (bytebuffer [s]
     (Unpooled/wrappedBuffer (.getBytes s "UTF-8"))))

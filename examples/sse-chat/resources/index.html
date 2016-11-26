@@ -86,7 +86,9 @@
        var es = new EventSource("/events");
        es.addEventListener("message", function(event) {
          var data = JSON.parse(event.data);
+         console.log("received:", data)
          addMessage(data);
+
        });
 
        dom.on("keyup", ".input input[type=text]", function(event) {

@@ -55,11 +55,16 @@
    :resource-paths ["examples/websocket-echo/resources"]
    :main ^:skip-aot websocket-echo.core}]
 
- :component-chat-example
+ :sse-chat-example
  [:examples
-  {:source-paths ["examples/component-chat/src"]
-   :resource-paths ["examples/component-chat/resources"]
+  {:source-paths ["examples/sse-chat/src"]
+   :resource-paths ["examples/sse-chat/resources"]
+   :jvm-opts ^:replace ["-XX:+AggressiveOpts"
+                        "-XX:+UseG1GC"
+                        "-Xmx100m"
+                        "-Xms100m"]
    :main ^:skip-aot compchat.core}]
+
 
  :debugging-example
  [:examples

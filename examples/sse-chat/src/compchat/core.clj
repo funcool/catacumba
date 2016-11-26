@@ -57,28 +57,26 @@
   "A server-sent envents endpoint for send
   the messages to the client."
   {:handler-type :catacumba/sse}
-  [context output close]
+  [{:keys [out ctrl] :as context}]
   (let [sub (a/tap bus (a/chan))
         id (str (gensym "ev"))]
     (a/go-loop []
       ;; (log ">>>" id "go-loop:start")
-      (let [[msg port] (a/alts! [sub close])]
+      (let [[msg port] (a/alts! [sub ctrl])]
         ;; (log ">>>" id "go-loop:received close? =" (= port close))
-
         (if (= port sub)
-          (let [[msg port] (a/alts! [(a/timeout 200) [output msg]])]
+          (let [[msg port] (a/alts! [(a/timeout 200) [out msg]])]
             ;; (log ">>>" id "go-loop:sent timeout? =" (not= port output))
-
-            (if (= port output)
+            (if (= port out)
               (when msg (recur))
               (do
                 (log ">>>" id "go-loop:close because timeout")
                 (a/close! sub)
-                (a/close! output))))
+                (a/close! out))))
           (do
             (log ">>>" id "go-loop:close because client")
             (a/close! sub)
-            (a/close! output)))))))
+            (a/close! out)))))))
 
 (defn routes
   []

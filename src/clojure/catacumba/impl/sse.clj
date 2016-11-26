@@ -83,19 +83,20 @@
         xform (comp (map -make-event)
                     (map str)
                     (map hp/bytebuffer))
-        input-ch (a/chan 1 xform)
-        close-ch (a/chan)
+        out (a/chan 16 xform)
+        ctrl (a/chan (a/sliding-buffer 1))
         on-cancel (fn []
-                    (a/close! input-ch)
-                    (a/close! close-ch))
-        stream (->> (schannel/publisher input-ch {:on-cancel on-cancel})
-                    (stream/bind-exec))]
-    (handler context input-ch close-ch)
-    (ctx/set-headers! response {:content-type "text/event-stream;charset=UTF-8"
-                                :transfer-encoding "chunked"
-                                :cache-control "no-cache, no-store, max-age=0, must-revalidate"
-                                :pragma "no-cache"})
-    (.sendStream response stream)))
+                    (a/close! out)
+                    (a/put! ctrl [:close nil])
+                    (a/close! ctrl))
+        stream (schannel/publisher out {:on-cancel on-cancel})
+        headers {:content-type "text/event-stream;charset=UTF-8"
+                 :transfer-encoding "chunked"
+                 :cache-control "no-cache, no-store, max-age=0, must-revalidate"
+                 :pragma "no-cache"}]
+    (handler (assoc context :out out :ctrl ctrl))
+    (ctx/set-headers! response headers)
+    (.sendStream response (stream/bind-exec stream))))
 
 (defmethod handlers/adapter :catacumba/sse
   [handler]

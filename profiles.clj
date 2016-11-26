@@ -2,7 +2,7 @@
  {:global-vars {*warn-on-reflection* false}
   :aliases {"test-all" ["with-profile" "dev,1.9:dev,1.7:dev" "test"]}
   :source-paths ["dev"]
-  :dependencies [[clj-http "3.0.0" :exclusions [org.clojure/tools.reader]]
+  :dependencies [[clj-http "3.4.1" :exclusions [org.clojure/tools.reader]]
                  [aleph "0.4.1" :exclusions [primitive-math io.netty/netty-all]]
                  [org.clojure/tools.namespace "0.2.11"]
                  [ring/ring-core "1.4.0" :exclusions [javax.servlet/servlet-api

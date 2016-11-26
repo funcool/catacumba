@@ -86,7 +86,7 @@
 
 (defn websocket
   [context handler]
- (let [in (a/chan 16)
+  (let [in (a/chan 16)
         out (a/chan 16)
         ctrl (a/chan (a/sliding-buffer 1))]
     (->> (WebSocketSession. in out ctrl context handler)

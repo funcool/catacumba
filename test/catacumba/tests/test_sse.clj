@@ -10,7 +10,7 @@
             [catacumba.testing :refer [with-server]]))
 
 (deftest sse-standard-handler
-  (letfn [(sse-handler [context out]
+  (letfn [(sse-handler [{:keys [out] :as context}]
             (go
               (>! out "1")
               (>! out {:data "2"})
@@ -21,10 +21,9 @@
           (handler [context]
             (ct/sse context sse-handler))]
     (with-server {:handler handler}
-      (let [p (promise)
-            response (client/get "http://localhost:5050/")]
-        (is (= (:status response) 200))
-        (is (= (:body response)
+      (let [rsp (client/get "http://localhost:5050/")]
+        (is (= (:status rsp) 200))
+        (is (= (:body rsp)
                (str "data: 1\n\n"
                     "data: 2\n\n"
                     "event: foobar\n\n"
@@ -33,7 +32,7 @@
                     "data: 3\n\n")))))))
 
 (deftest sse-specific-handler
-  (letfn [(sse-handler [context out]
+  (letfn [(sse-handler [{:keys [out] :as context}]
             (go
               (>! out "1")
               (>! out {:data "2"})
@@ -41,12 +40,10 @@
               (>! out {:id "foobar"})
               (>! out {:id "foobar" :data "3"})
               (close! out)))]
-    (with-server {:handler (with-meta sse-handler
-                             {:handler-type :catacumba/sse})}
-      (let [p (promise)
-            response (client/get "http://localhost:5050/" {:fold-chunked-response? false})]
-        (is (= (:status response) 200))
-        (is (= (:body response)
+    (with-server {:handler (with-meta sse-handler {:handler-type :catacumba/sse})}
+      (let [rsp (client/get "http://localhost:5050/")]
+        (is (= (:status rsp) 200))
+        (is (= (:body rsp)
                (str "data: 1\n\n"
                     "data: 2\n\n"
                     "event: foobar\n\n"

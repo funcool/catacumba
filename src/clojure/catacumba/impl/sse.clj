@@ -41,12 +41,12 @@
            org.reactivestreams.Subscriber
            org.reactivestreams.Subscription))
 
-(deftype Event [id name data]
+(deftype Event [id event data]
   Object
   (toString [_]
     (with-out-str
       (when id (println "id:" id))
-      (when name (println "event:" name))
+      (when event (println "event:" event))
       (when data (println "data:" data))
       (println))))
 
@@ -68,10 +68,10 @@
 
   clojure.lang.IPersistentMap
   (-make-event [data]
-    (let [{:keys [id name data]} data]
-      (when (and (not id) (not name) (not data))
-        (throw (ex-info "You must supply at least one of data, name, id" {})))
-      (Event. id name data))))
+    (let [{:keys [id event data]} data]
+      (when (and (not id) (not event) (not data))
+        (throw (ex-info "You must supply at least one of data, event, id" {})))
+      (Event. id event data))))
 
 
 (defn sse
@@ -83,7 +83,7 @@
         xform (comp (map -make-event)
                     (map str)
                     (map hp/bytebuffer))
-        out (a/chan 16 xform)
+        out (a/chan 1 xform)
         ctrl (a/chan (a/sliding-buffer 1))
         on-cancel (fn []
                     (a/close! out)

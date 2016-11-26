@@ -24,6 +24,7 @@
 
 (ns catacumba.impl.registry
   "Functions and helpers for work with ratpack registry."
+  (:refer-clojure :exclude [get])
   (:import ratpack.registry.Registry
            ratpack.registry.RegistrySpec
            java.util.Optional))
@@ -34,6 +35,11 @@
   (let [^Optional v (.maybeGet reg clazz)]
     (when (.isPresent v)
       (.get v))))
+
+(defn get
+  {:internal true}
+  [^Registry reg clazz]
+  (.get reg clazz))
 
 (defn add!
   {:internal true}

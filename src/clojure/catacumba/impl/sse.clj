@@ -25,7 +25,7 @@
 (ns catacumba.impl.sse
   "Server-Sent Events handler adapter implementation."
   ;; TODO: replace direct var usage to fully namespaced calls of core.async
-  (:require [clojure.core.async :refer [chan go-loop close! >! <! put!] :as async]
+  (:require [clojure.core.async :as a]
             [catacumba.stream :as stream]
             [catacumba.impl.helpers :as hp]
             [catacumba.impl.context :as ctx]
@@ -34,49 +34,68 @@
             [catacumba.impl.stream.channel :as schannel])
   (:import ratpack.handling.Handler
            ratpack.handling.Context
-           ratpack.sse.Event
-           ratpack.sse.internal.DefaultEvent
-           ratpack.sse.ServerSentEvents
+           ratpack.http.Response
            ratpack.func.Action
+           io.netty.buffer.ByteBufAllocator
            org.reactivestreams.Publisher
            org.reactivestreams.Subscriber
            org.reactivestreams.Subscription))
 
-(defprotocol IEvent
-  (^:private event [_] "Create a event"))
+(deftype Event [id name data]
+  Object
+  (toString [_]
+    (with-out-str
+      (when id (println "id:" id))
+      (when name (println "event:" name))
+      (when data (println "data:" data))
+      (println))))
 
-(extend-protocol IEvent
+(defprotocol IEventFactory
+  (-make-event [_] "coerce to new event instance"))
+
+(extend-protocol IEventFactory
   String
-  (event [d]
-    {:data d})
+  (-make-event [data]
+    (Event. nil nil data))
 
   Long
-  (event [d]
-    {:data (str d)})
+  (-make-event [d]
+    (-make-event (str d)))
+
+  Event
+  (-make-event [event]
+    event)
 
   clojure.lang.IPersistentMap
-  (event [d] d))
+  (-make-event [data]
+    (let [{:keys [id name data]} data]
+      (when (and (not id) (not name) (not data))
+        (throw (ex-info "You must supply at least one of data, name, id" {})))
+      (Event. id name data))))
 
-(defn- transform-event
-  [^Event event']
-  (let [{:keys [data event id]} (.getItem event')]
-    (when data (.data event' data))
-    (when event (.event event' event))
-    (when id (.id event' id))
-    event'))
 
 (defn sse
   "Start the sse connection with the client
   and dispatch it in a special hanlder."
   [context handler]
   (let [^Context ctx (:catacumba/context context)
-        out (async/chan 1 (map event))
-        pub (->> (schannel/publisher out {:close true})
-                 (stream/bind-exec))
-        tfm (hp/fn->action transform-event)]
-    (exec/execute #(handler context out))
-    (->> (ServerSentEvents/serverSentEvents pub tfm)
-         (.render ctx))))
+        ^Response response (:catacumba/response context)
+        xform (comp (map -make-event)
+                    (map str)
+                    (map hp/bytebuffer))
+        input-ch (a/chan 1 xform)
+        close-ch (a/chan)
+        on-cancel (fn []
+                    (a/close! input-ch)
+                    (a/close! close-ch))
+        stream (->> (schannel/publisher input-ch {:on-cancel on-cancel})
+                    (stream/bind-exec))]
+    (handler context input-ch close-ch)
+    (ctx/set-headers! response {:content-type "text/event-stream;charset=UTF-8"
+                                :transfer-encoding "chunked"
+                                :cache-control "no-cache, no-store, max-age=0, must-revalidate"
+                                :pragma "no-cache"})
+    (.sendStream response stream)))
 
 (defmethod handlers/adapter :catacumba/sse
   [handler]

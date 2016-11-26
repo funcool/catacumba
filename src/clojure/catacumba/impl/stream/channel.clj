@@ -184,13 +184,12 @@
   (let [^Publisher publisher (.-publisher sub)
         ^Set subscriptions (.-subscriptions publisher)
         canceled (.-canceled sub)
-        options (.-options publisher)
-        source (.-source publisher)]
+        options (.-options publisher)]
     (when (not @canceled)
       (atomic/set! canceled true)
       (.remove subscriptions sub)
-      (when (:close options)
-        (a/close! source)))))
+      (when-let [callback (:on-cancel options)]
+        (callback)))))
 
 (defn- handle-subscribe
   [^Subscription sub]

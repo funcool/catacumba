@@ -57,9 +57,7 @@
            ratpack.exec.Blocking
            ratpack.registry.Registry
            org.apache.commons.io.IOUtils
-           org.reactivestreams.Publisher
-           io.netty.buffer.Unpooled
-           io.netty.buffer.ByteBuf))
+           org.reactivestreams.Publisher))
 
 ;; --- Base Handling Protocols
 

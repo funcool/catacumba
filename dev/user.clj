@@ -1,24 +1,20 @@
 (ns user
+  (:refer-clojure :exclude [test])
   (:require [clojure.tools.namespace.repl :as repl]
             [clojure.pprint :refer [pprint]]
             [clojure.test :as test]))
 
+(defn test
+  ([] (test #"^catacumba.tests.*"))
+  ([o]
+   (repl/refresh)
+   (cond
+     (instance? java.util.regex.Pattern o)
+     (test/run-all-tests o)
 
-(defonce ^:dynamic
-  *namespaces*
-  ['catacumba.core-tests
-   'catacumba.sse-tests
-   'catacumba.ring-tests
-   'catacumba.handlers-tests
-   'catacumba.websocket-tests])
+     (symbol? o)
+     (if-let [sns (namespace o)]
+       (do (require (symbol sns))
+           (test/test-vars [(resolve o)]))
+       (test/test-ns o)))))
 
-(defn run-tests'
-  []
-  (apply test/run-tests *namespaces*))
-
-(defn run-tests
-  [& nss]
-  (if (pos? (count nss))
-    (binding [*namespaces* nss]
-      (repl/refresh :after 'user/run-tests'))
-    (repl/refresh :after 'user/run-tests')))

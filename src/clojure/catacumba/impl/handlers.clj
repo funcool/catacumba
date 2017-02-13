@@ -25,10 +25,11 @@
 (ns catacumba.impl.handlers
   (:require [clojure.java.io :as io]
             [clojure.core.async :as a]
+            [beicon.core :as rx]
             [manifold.stream :as ms]
             [manifold.deferred :as md]
             [promesa.core :as p]
-            [catacumba.stream :as stream]
+            [catacumba.impl.streams :as streams]
             [catacumba.impl.helpers :as hp]
             [catacumba.impl.context :as ctx]
             [catacumba.impl.registry :as reg]
@@ -56,6 +57,7 @@
            ratpack.exec.Promise
            ratpack.exec.Blocking
            ratpack.registry.Registry
+           io.reactivex.Observable
            org.apache.commons.io.IOUtils
            org.reactivestreams.Publisher))
 
@@ -140,12 +142,12 @@
 
   clojure.core.async.impl.channels.ManyToManyChannel
   (-send [data ^Context ctx]
-    (-> (stream/publisher data)
+    (-> (streams/channel->publisher data)
         (-send ctx)))
 
   manifold.stream.default.Stream
   (-send [data ^Context ctx]
-    (-> (stream/publisher data)
+    (-> (streams/manifold-stream->publisher data)
         (-send ctx)))
 
   manifold.deferred.IDeferred
@@ -158,12 +160,17 @@
     (-> (hp/promise (fn [resolve] (resolve future')))
         (hp/then #(-send % ctx))))
 
+  Observable
+  (-send [data ^Context ctx]
+    (-> (rx/to-flowable :buffer data)
+        (-send ctx)))
+
   Publisher
   (-send [data ^Context ctx]
     (let [^Response response (.getResponse ctx)]
-      (->> (stream/publisher data)
-           (stream/transform (map hp/bytebuffer))
-           (stream/bind-exec)
+      (->> (rx/from-publisher data)
+           (rx/map hp/bytebuffer)
+           (streams/bind-exec)
            (.sendStream response))))
 
   InputStream

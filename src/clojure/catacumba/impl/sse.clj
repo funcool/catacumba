@@ -1,4 +1,4 @@
-;; Copyright (c) 2015-2016 Andrey Antukh <niwi@niwi.nz>
+;; Copyright (c) 2015-2017 Andrey Antukh <niwi@niwi.nz>
 ;; All rights reserved.
 ;;
 ;; Redistribution and use in source and binary forms, with or without
@@ -24,14 +24,12 @@
 
 (ns catacumba.impl.sse
   "Server-Sent Events handler adapter implementation."
-  ;; TODO: replace direct var usage to fully namespaced calls of core.async
   (:require [clojure.core.async :as a]
-            [catacumba.stream :as stream]
+            [catacumba.impl.streams :as streams]
             [catacumba.impl.helpers :as hp]
             [catacumba.impl.context :as ctx]
             [catacumba.impl.executor :as exec]
-            [catacumba.impl.handlers :as handlers]
-            [catacumba.impl.stream.channel :as schannel])
+            [catacumba.impl.handlers :as handlers])
   (:import ratpack.handling.Handler
            ratpack.handling.Context
            ratpack.http.Response
@@ -73,7 +71,6 @@
         (throw (ex-info "You must supply at least one of data, event, id" {})))
       (Event. id event data))))
 
-
 (defn sse
   "Start the sse connection with the client
   and dispatch it in a special hanlder."
@@ -85,18 +82,17 @@
                     (map hp/bytebuffer))
         out (a/chan 1 xform)
         ctrl (a/chan (a/sliding-buffer 1))
-        on-cancel (fn []
-                    (a/close! out)
+        dispose (fn []
                     (a/put! ctrl [:close nil])
                     (a/close! ctrl))
-        stream (schannel/publisher out {:on-cancel on-cancel})
+        stream (streams/channel->publisher out dispose)
         headers {:content-type "text/event-stream;charset=UTF-8"
                  :transfer-encoding "chunked"
                  :cache-control "no-cache, no-store, max-age=0, must-revalidate"
                  :pragma "no-cache"}]
     (handler (assoc context :out out :ctrl ctrl))
     (ctx/set-headers! response headers)
-    (.sendStream response (stream/bind-exec stream))))
+    (.sendStream response (streams/bind-exec stream))))
 
 (defmethod handlers/adapter :catacumba/sse
   [handler]

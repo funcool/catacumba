@@ -3,9 +3,9 @@
             [clojure.test :refer :all]
             [clojure.java.io :as io]
             [clojure.pprint :refer [pprint]]
+            [beicon.core :as rx]
             [clj-http.client :as client]
             [promesa.core :as p]
-            [catacumba.stream :as stream]
             [cuerdas.core :as str]
             [manifold.stream :as ms]
             [manifold.deferred :as md]
@@ -120,8 +120,8 @@
 
   (testing "Using publisher as body"
     (letfn [(handler [ctx]
-              (let [p (stream/publisher ["hello" " " "world"])
-                    p (stream/transform (map str/upper) p)]
+              (let [p (rx/from-coll ["hello" " " "world"])
+                    p (rx/map str/upper p)]
                 (http/accepted p)))]
       (with-server {:handler handler}
         (let [response (th/get "/")]

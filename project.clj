@@ -17,7 +17,7 @@
                   :exclusions [io.netty/netty-codec-http
                                io.netty/netty-handler
                                io.netty/netty-transport-native-epoll]]
-                 [io.netty/netty-all "4.1.5.Final"]
+                 [io.netty/netty-all "4.1.6.Final"]
                  [cheshire "5.6.3"
                   :exclusions [com.fasterxml.jackson.core/jackson-core]]
                  [ns-tracker "0.3.1"]

@@ -24,6 +24,7 @@
                  [manifold "0.1.5"]
                  [commons-io/commons-io "2.5"]
                  [buddy/buddy-sign "1.3.0"]
+                 [funcool/beicon "3.0.0"]
                  [funcool/cuerdas "2.0.1"]
                  [funcool/promesa "1.6.0"]
                  [danlentz/clj-uuid "0.1.6"]

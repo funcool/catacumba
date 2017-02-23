@@ -10,7 +10,7 @@
                                                       org.clojure/clojure
                                                       clj-time]]]
   :plugins [[lein-ancient "0.6.10"]
-            [funcool/codeina "0.4.0"]]
+            [funcool/codeina "0.5.0"]]
   :codeina {:sources ["src/clojure"]
             :exclude [catacumba.impl.context
                       catacumba.impl.atomic

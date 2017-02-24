@@ -4,18 +4,20 @@
 <meta charset="UTF-8">
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 1.5.4">
+<meta name="generator" content="Asciidoctor 1.5.5">
 <meta name="author" content="Andrey Antukh, &lt;niwi@niwi.nz&gt;">
 <title>Catacumba - Web toolkit for Clojure.</title>
 <style>
 .listingblock .pygments .hll { background-color: #ffffcc }
-.listingblock .pygments  { background: #f0f0f0; }
+.listingblock .pygments, .listingblock .pygments code { background: #f0f0f0; }
 .listingblock .pygments .tok-c { color: #60a0b0; font-style: italic } /* Comment */
 .listingblock .pygments .tok-err { border: 1px solid #FF0000 } /* Error */
 .listingblock .pygments .tok-k { color: #007020; font-weight: bold } /* Keyword */
 .listingblock .pygments .tok-o { color: #666666 } /* Operator */
+.listingblock .pygments .tok-ch { color: #60a0b0; font-style: italic } /* Comment.Hashbang */
 .listingblock .pygments .tok-cm { color: #60a0b0; font-style: italic } /* Comment.Multiline */
 .listingblock .pygments .tok-cp { color: #007020 } /* Comment.Preproc */
+.listingblock .pygments .tok-cpf { color: #60a0b0; font-style: italic } /* Comment.PreprocFile */
 .listingblock .pygments .tok-c1 { color: #60a0b0; font-style: italic } /* Comment.Single */
 .listingblock .pygments .tok-cs { color: #60a0b0; background-color: #fff0f0 } /* Comment.Special */
 .listingblock .pygments .tok-gd { color: #A00000 } /* Generic.Deleted */
@@ -55,8 +57,10 @@
 .listingblock .pygments .tok-mh { color: #40a070 } /* Literal.Number.Hex */
 .listingblock .pygments .tok-mi { color: #40a070 } /* Literal.Number.Integer */
 .listingblock .pygments .tok-mo { color: #40a070 } /* Literal.Number.Oct */
+.listingblock .pygments .tok-sa { color: #4070a0 } /* Literal.String.Affix */
 .listingblock .pygments .tok-sb { color: #4070a0 } /* Literal.String.Backtick */
 .listingblock .pygments .tok-sc { color: #4070a0 } /* Literal.String.Char */
+.listingblock .pygments .tok-dl { color: #4070a0 } /* Literal.String.Delimiter */
 .listingblock .pygments .tok-sd { color: #4070a0; font-style: italic } /* Literal.String.Doc */
 .listingblock .pygments .tok-s2 { color: #4070a0 } /* Literal.String.Double */
 .listingblock .pygments .tok-se { color: #4070a0; font-weight: bold } /* Literal.String.Escape */
@@ -67,9 +71,11 @@
 .listingblock .pygments .tok-s1 { color: #4070a0 } /* Literal.String.Single */
 .listingblock .pygments .tok-ss { color: #517918 } /* Literal.String.Symbol */
 .listingblock .pygments .tok-bp { color: #007020 } /* Name.Builtin.Pseudo */
+.listingblock .pygments .tok-fm { color: #06287e } /* Name.Function.Magic */
 .listingblock .pygments .tok-vc { color: #bb60d5 } /* Name.Variable.Class */
 .listingblock .pygments .tok-vg { color: #bb60d5 } /* Name.Variable.Global */
 .listingblock .pygments .tok-vi { color: #bb60d5 } /* Name.Variable.Instance */
+.listingblock .pygments .tok-vm { color: #bb60d5 } /* Name.Variable.Magic */
 .listingblock .pygments .tok-il { color: #40a070 } /* Literal.Number.Integer.Long */
 </style>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic|Liberation+Mono:400|Roboto+Slab:400,700"/>
@@ -80,7 +86,7 @@
 <h1>Catacumba - Web toolkit for Clojure.</h1>
 <div class="details">
 <span id="author" class="author">Andrey Antukh, &lt;niwi@niwi.nz&gt;</span><br>
-<span id="revnumber">version 1.2.0</span>
+<span id="revnumber">version 2.0.0</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -204,7 +210,7 @@ dependency vector on your <strong><em>project.clj</em></strong> file:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">funcool/catacumba</span> <span class="tok-s">&quot;1.2.0&quot;</span><span class="tok-p">]</span></code></pre>
+<pre class="pygments highlight"><code data-lang="clojure"><span class="tok-p">[</span><span class="tok-nv">funcool/catacumba</span> <span class="tok-s">&quot;2.0.0&quot;</span><span class="tok-p">]</span></code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -1114,8 +1120,8 @@ in deployments.</p>
 <div class="listingblock">
 <div class="title">Example using enviroment variables</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span class="tok-nb">export </span><span class="tok-nv">CATACUMBA_PORT</span><span class="tok-o">=</span>8000
-<span class="tok-nb">export </span><span class="tok-nv">CATACUMBA_BASEDIR</span><span class="tok-o">=</span><span class="tok-sb">`</span><span class="tok-nb">pwd</span><span class="tok-sb">`</span>
+<pre class="pygments highlight"><code data-lang="bash"><span class="tok-nb">export</span> <span class="tok-nv">CATACUMBA_PORT</span><span class="tok-o">=</span><span class="tok-m">8000</span>
+<span class="tok-nb">export</span> <span class="tok-nv">CATACUMBA_BASEDIR</span><span class="tok-o">=</span><span class="tok-sb">`</span><span class="tok-nb">pwd</span><span class="tok-sb">`</span>
 java -jar yourjarhere.jar</code></pre>
 </div>
 </div>
@@ -1451,7 +1457,8 @@ without an additional step:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>As you can observe, the var metadata is used for properly choice the right adapter.</p>
+<p>As you can observe, the var metadata is used for properly choice the
+right adapter.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -1460,9 +1467,9 @@ without an additional step:</p>
 <div class="title">Note</div>
 </td>
 <td class="content">
-Is very important pass a var reference to the router instead of the function
-directly, because the metadata defined in the function is bound to the var and not
-to the function.
+Is very important pass a var reference to the router instead of the
+function directly, because the metadata defined in the function is bound to the
+var and not to the function.
 </td>
 </tr>
 </table>
@@ -1487,15 +1494,15 @@ handler type in the way that you prefer.</p>
 <h3 id="sse-server-sent-events"><a class="link" href="#sse-server-sent-events">SSE (Server-Sent Events)</a></h3>
 <div class="paragraph">
 <p>WebSockets are cool because they allow bi-directional communication, but in some
-circumstances we only need something unidirectional, for notifying the client about
-some changes or any other events. For this purpose exists
-<a href="https://developer.mozilla.org/en-US/docs/Server-sent_events">Server-Sent Events</a>
-(SSE) and <em>catacumba</em> also has support for it.</p>
+circumstances we only need something unidirectional, for notifying the client
+about some changes or any other events. For this purpose exists
+<a href="https://developer.mozilla.org/en-US/docs/Server-sent_events">Server-Sent
+Events</a> (SSE) and <em>catacumba</em> also has support for it.</p>
 </div>
 <div class="paragraph">
-<p>The handler for SSE does not differs much from websockets (that we have seen in the
-previous section). The main difference is that server-sent events are unidirectional
-and they only can send data in the server to client direction.</p>
+<p>The handler for SSE does not differs much from websockets (that we have seen in
+the previous section). The main difference is that server-sent events are
+unidirectional and they only can send data in the server to client direction.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1503,7 +1510,7 @@ and they only can send data in the server to client direction.</p>
   <span class="tok-s">&quot;Handler that notifies each second</span>
 <span class="tok-s">  the current server time to the client.&quot;</span>
   <span class="tok-p">{</span><span class="tok-ss">:handler-type</span> <span class="tok-ss">:catacumba/sse</span><span class="tok-p">}</span>
-  <span class="tok-p">[</span><span class="tok-nv">context</span> <span class="tok-nv">out</span><span class="tok-p">]</span>
+  <span class="tok-p">[{</span><span class="tok-ss">:keys</span> <span class="tok-p">[</span><span class="tok-nv">out</span> <span class="tok-nv">ctrl</span><span class="tok-p">]</span> <span class="tok-ss">:as</span> <span class="tok-nv">context</span><span class="tok-p">}]</span>
   <span class="tok-p">(</span><span class="tok-nf">go-loop</span> <span class="tok-p">[]</span>
     <span class="tok-p">(</span><span class="tok-nb">when-let </span><span class="tok-p">[</span><span class="tok-nv">_</span> <span class="tok-p">(</span><span class="tok-nf">&gt;!</span> <span class="tok-nv">out</span> <span class="tok-p">(</span><span class="tok-nb">str </span><span class="tok-p">(</span><span class="tok-nf">java.time.Instant/now</span><span class="tok-p">)))]</span>
       <span class="tok-p">(</span><span class="tok-nf">&lt;!</span> <span class="tok-p">(</span><span class="tok-nf">timeout</span> <span class="tok-mi">1000</span><span class="tok-p">))</span>
@@ -1515,8 +1522,8 @@ and they only can send data in the server to client direction.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>In a similar way to websockets, you can start SSE in any place, such as a standard
-<em>catacumba</em> handler:</p>
+<p>In a similar way to websockets, you can start SSE in any place, such as a
+standard <em>catacumba</em> handler:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1525,7 +1532,7 @@ and they only can send data in the server to client direction.</p>
 <span class="tok-s">  the current server time to the client.&quot;</span>
   <span class="tok-p">[</span><span class="tok-nv">context</span><span class="tok-p">]</span>
   <span class="tok-p">(</span><span class="tok-nf">ct/sse</span> <span class="tok-nv">context</span>
-          <span class="tok-p">(</span><span class="tok-k">fn </span><span class="tok-p">[</span><span class="tok-nv">_</span> <span class="tok-nv">out</span><span class="tok-p">]</span>
+          <span class="tok-p">(</span><span class="tok-k">fn </span><span class="tok-p">[{</span><span class="tok-ss">:keys</span> <span class="tok-p">[</span><span class="tok-nv">out</span> <span class="tok-nv">ctrl</span><span class="tok-p">]}]</span>
             <span class="tok-p">(</span><span class="tok-nf">go-loop</span> <span class="tok-p">[]</span>
               <span class="tok-p">(</span><span class="tok-nb">when-let </span><span class="tok-p">[</span><span class="tok-nv">_</span> <span class="tok-p">(</span><span class="tok-nf">&gt;!</span> <span class="tok-nv">out</span> <span class="tok-p">(</span><span class="tok-nb">str </span><span class="tok-p">(</span><span class="tok-nf">java.time.Instant/now</span><span class="tok-p">)))]</span>
                 <span class="tok-p">(</span><span class="tok-nf">&lt;!</span> <span class="tok-p">(</span><span class="tok-nf">timeout</span> <span class="tok-mi">1000</span><span class="tok-p">))</span>
@@ -1560,10 +1567,10 @@ and they only can send data in the server to client direction.</p>
 </td>
 <td class="content">
 The <em>catacumba</em>'s SSE support uses core.async channels, but if you are not
-happy with core.async and want use something different (such as manifold streams),
-you may want know that everything in <em>catacumba</em> is implemented using abstractions
-and to implement your own SSE type of handler that uses manifold streams is very
-easy.
+happy with core.async and want use something different (such as manifold streams
+or beicon), you may want know that everything in <em>catacumba</em> is implemented
+using abstractions and to implement your own SSE type of handler that uses
+manifold streams is very easy.
 </td>
 </tr>
 </table>
@@ -1572,10 +1579,10 @@ easy.
 <div class="sect2">
 <h3 id="cps-continuation-passing-style"><a class="link" href="#cps-continuation-passing-style">CPS (Continuation-passing style)</a></h3>
 <div class="paragraph">
-<p>Is a low level handler type that works in a cps style (in other words, they works
-with callbacks). This is not general purpose handler type but you maybe found it
-useful for integrate catacumba with other scenarios that it is not initially
-designed to work.</p>
+<p>Is a low level handler type that works in a cps style (in other words, they
+works with callbacks). This is not general purpose handler type but you maybe
+found it useful for integrate catacumba with other scenarios that it is not
+initially designed to work.</p>
 </div>
 <div class="paragraph">
 <p>This is the aspect ot the cps style handler:</p>
@@ -1598,16 +1605,16 @@ designed to work.</p>
 <h2 id="built-in-handlers"><a class="link" href="#built-in-handlers">Built-in Handlers</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This section will cover different kind of built-in additional handlers to make the
-experience of using <em>catacumba</em> more pleasant.</p>
+<p>This section will cover different kind of built-in additional handlers to make
+the experience of using <em>catacumba</em> more pleasant.</p>
 </div>
 <div class="sect2">
 <h3 id="body-parsing"><a class="link" href="#body-parsing">Body parsing</a></h3>
 <div class="paragraph">
-<p><em>Catacumba</em> comes with builtin support for conditional body parsing depending on the
-incoming content type. It consists of a routing chain handler that adds the <code>:data</code>
-entry in the context with the parsed data or <code>nil</code> in case of an incoming content
-type does not have an attached parser implementation.</p>
+<p><em>Catacumba</em> comes with builtin support for conditional body parsing depending on
+the incoming content type. It consists of a routing chain handler that adds the
+<code>:data</code> entry in the context with the parsed data or <code>nil</code> in case of an
+incoming content type does not have an attached parser implementation.</p>
 </div>
 <div class="paragraph">
 <p>In order to use it you should prepending the <code>body-params</code> handler to your route
@@ -1633,8 +1640,9 @@ chain:</p>
 <div class="paragraph">
 <p>By default, the <code>application/x-www-form-urlencoded</code>, <code>multipart/form-data</code>,
 <code>application/json</code>, <code>application/transit+json</code> and <code>application/transit+msgpack</code>
-parsers come out of the box. The <a href="https://github.com/dakrone/cheshire">cheshire</a>
-json parser is used for parsing the body with the <code>application/json</code> content type.</p>
+parsers come out of the box. The
+<a href="https://github.com/dakrone/cheshire">cheshire</a> json parser is used for
+parsing the body with the <code>application/json</code> content type.</p>
 </div>
 <div class="paragraph">
 <p>The body parsing is a open system, implemented using clojure&#8217;s polymorphism
@@ -1700,9 +1708,9 @@ definition instead resolved values. In same way as the previous example.</p>
 <div class="sect3">
 <h4 id="getting-started-2"><a class="link" href="#getting-started-2">Getting Started</a></h4>
 <div class="paragraph">
-<p>The HTTP sessions in <em>catacumba</em> are also implemented as chain handler. So you can
-add session handling support to you application just by adding the handler to your
-routing chain:</p>
+<p>The HTTP sessions in <em>catacumba</em> are also implemented as chain handler. So you
+can add session handling support to you application just by adding the handler
+to your routing chain:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1715,9 +1723,9 @@ routing chain:</p>
 </div>
 <div class="paragraph">
 <p>All handlers in the route pipeline that are going after the session handler will
-come with <code>:session</code> key in the context with a "atom" like object. You just treat it
-as atom, so for attaching some data to the session you should use the well known
-<code>swap!</code> function:</p>
+come with <code>:session</code> key in the context with a "atom" like object. You just
+treat it as atom, so for attaching some data to the session you should use the
+well known <code>swap!</code> function:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1737,9 +1745,9 @@ as atom, so for attaching some data to the session you should use the well known
 </div>
 </div>
 <div class="paragraph">
-<p>One of the big advantages of using the routing chain for session set up, is that you
-can restrict session handling to a concrete subset of urls/resources avoiding
-unnecessary code execution for handlers that do not need sessions:</p>
+<p>One of the big advantages of using the routing chain for session set up, is that
+you can restrict session handling to a concrete subset of urls/resources
+avoiding unnecessary code execution for handlers that do not need sessions:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1756,8 +1764,8 @@ unnecessary code execution for handlers that do not need sessions:</p>
 <div class="sect3">
 <h4 id="session-storages"><a class="link" href="#session-storages">Session storages</a></h4>
 <div class="paragraph">
-<p>Currently <em>catacumba</em> comes with one basic session storage, the <code>:inmemory</code>. But the
-session storage system is pluggable and is defined in terms of the following
+<p>Currently <em>catacumba</em> comes with one basic session storage, the <code>:inmemory</code>. But
+the session storage system is pluggable and is defined in terms of the following
 protocol:</p>
 </div>
 <div class="listingblock">
@@ -1769,11 +1777,11 @@ protocol:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>If you are familiar with the ring based session storages, you can observe that the
-<em>catacumba</em> session storage abstraction is almost identical to the ring session
-abstraction, so migrating from or adapting the ring session storages is really
-easy. The unique difference is that functions should return a promise (from promesa
-library).</p>
+<p>If you are familiar with the ring based session storages, you can observe that
+the <em>catacumba</em> session storage abstraction is almost identical to the ring
+session abstraction, so migrating from or adapting the ring session storages is
+really easy. The unique difference is that functions should return a promise
+(from promesa library).</p>
 </div>
 <div class="paragraph">
 <p>To use a concrete session storage, just pass a instance of it as value of the
@@ -1785,8 +1793,8 @@ library).</p>
 </div>
 </div>
 <div class="paragraph">
-<p>If you want implement own session storage, take a look to the <code>:inmemory</code> builtin
-one.</p>
+<p>If you want implement own session storage, take a look to the <code>:inmemory</code>
+builtin one.</p>
 </div>
 </div>
 </div>
@@ -1798,28 +1806,28 @@ one.</p>
 </div>
 <div class="paragraph">
 <p>We do not have used directly <strong>buddy-auth</strong> because it is designed for ring based
-applications, therefore the buddy-auth abstractions are blocking, and blocking api
-is not well suited for async based applications.</p>
+applications, therefore the buddy-auth abstractions are blocking, and blocking
+api is not well suited for async based applications.</p>
 </div>
 <div class="paragraph">
-<p>So, <em>catacumba</em> defines own abstractions for handle authentication, that are very
-very similar to the <em>buddy-auth</em>, with the exception that them expose asynchronous
-api, so adapt existing <em>buddy-auth</em> backends should be very easy.</p>
+<p>So, <em>catacumba</em> defines own abstractions for handle authentication, that are
+very very similar to the <em>buddy-auth</em>, with the exception that them expose
+asynchronous api, so adapt existing <em>buddy-auth</em> backends should be very easy.</p>
 </div>
 <div class="paragraph">
-<p>Like <strong>buddy-auth</strong>, <em>catacumba</em> comes with a little set of builtin backends that can
-be used directly: <strong>session</strong>, <strong>jws</strong> (token) and <strong>jwe</strong> (encrypted token).</p>
+<p>Like <strong>buddy-auth</strong>, <em>catacumba</em> comes with a little set of builtin backends that
+can be used directly: <strong>session</strong>, <strong>jws</strong> (token) and <strong>jwe</strong> (encrypted token).</p>
 </div>
 <div class="sect3">
 <h4 id="session"><a class="link" href="#session">Session</a></h4>
 <div class="paragraph">
-<p>Let start with session authentication backend. This backend is mainly used for web
-based applications and consists in verify some value on the session. So this is the
-easiest authentication scheme and fits perfectly for the first contact.</p>
+<p>Let start with session authentication backend. This backend is mainly used for
+web based applications and consists in verify some value on the session. So this
+is the easiest authentication scheme and fits perfectly for the first contact.</p>
 </div>
 <div class="paragraph">
-<p>Start importing some needed namespaces and create an instance of the authentication
-backend:</p>
+<p>Start importing some needed namespaces and create an instance of the
+authentication backend:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1832,8 +1840,8 @@ backend:</p>
 </div>
 <div class="paragraph">
 <p>Now, continue defining a handler for the login action. It consists in receive
-credentials from the user input and verify them. In case of success verification, we
-just need setup the <code>:identity</code> key in the session.</p>
+credentials from the user input and verify them. In case of success
+verification, we just need setup the <code>:identity</code> key in the session.</p>
 </div>
 <div class="paragraph">
 <p>Let see a partially implemented example:</p>
@@ -1873,10 +1881,10 @@ authentication handler to the routing chain:</p>
 <div class="sect3">
 <h4 id="jws-token"><a class="link" href="#jws-token">JWS Token</a></h4>
 <div class="paragraph">
-<p>This authentication backend consists in use self contained tokens for authenticate
-the user. It behaves very similar to the session one but instead of strong the user
-information in a server storage, it stores it directly in a token, enabling so,
-completely stateless authentication.</p>
+<p>This authentication backend consists in use self contained tokens for
+authenticate the user. It behaves very similar to the session one but instead of
+strong the user information in a server storage, it stores it directly in a
+token, enabling so, completely stateless authentication.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -1885,9 +1893,10 @@ completely stateless authentication.</p>
 <div class="title">Note</div>
 </td>
 <td class="content">
-The security and the implementation of cryptographic primitives for that token
-is relied to the <strong>buddy-sign</strong> library (an other module of buddy) that implements the
-JWS specification. That library should be used for generate JWS tokens.
+The security and the implementation of cryptographic primitives for that
+token is relied to the <strong>buddy-sign</strong> library (an other module of buddy) that
+implements the JWS specification. That library should be used for generate JWS
+tokens.
 </td>
 </tr>
 </table>
@@ -1938,10 +1947,10 @@ JWS specification. That library should be used for generate JWS tokens.
 <div class="title">Warning</div>
 </td>
 <td class="content">
-Take care that using jws for create tokens, the data is serialized using
-json + base64 and signed using strong cryptography signatures. That method ensure
-that the data can not be manipulated by third party but it not protect it from
-privacy. If you need store private data in the token, consider using JWE.
+Take care that using jws for create tokens, the data is serialized
+using json + base64 and signed using strong cryptography signatures. That method
+ensure that the data can not be manipulated by third party but it not protect it
+from privacy. If you need store private data in the token, consider using JWE.
 </td>
 </tr>
 </table>
@@ -1950,10 +1959,10 @@ privacy. If you need store private data in the token, consider using JWE.
 <div class="sect3">
 <h4 id="jwe-token"><a class="link" href="#jwe-token">JWE Token</a></h4>
 <div class="paragraph">
-<p>This authentication backend consists in using self contained tokens for authenticate
-the user. It works identically to the JWS (explained previously) with the exception
-that instead of only signing data, it also encrypts the data, so ensuring the data
-privacy.</p>
+<p>This authentication backend consists in using self contained tokens for
+authenticate the user. It works identically to the JWS (explained previously)
+with the exception that instead of only signing data, it also encrypts the data,
+so ensuring the data privacy.</p>
 </div>
 <div class="paragraph">
 <p>You can create the backend instance so:</p>
@@ -1977,8 +1986,8 @@ privacy.</p>
 <div class="title">Note</div>
 </td>
 <td class="content">
-In this example we use asymmetric encryption scheme, if you want use an other
-encryption scheme, please check
+In this example we use asymmetric encryption scheme, if you want use an
+other encryption scheme, please check
 <a href="https://funcool.github.io/buddy-sign/latest/#_json_web_encryption">buddy-sign
 documentation</a> for the complete list of supported encryption algorithms.
 </td>
@@ -2010,9 +2019,9 @@ chain is completely identical from the JWE Token examples.</p>
 <div class="sect3">
 <h4 id="other"><a class="link" href="#other">Other</a></h4>
 <div class="paragraph">
-<p>If you not happy with the builtin auth facilities, the <em>catacumba</em>'s handler system
-is very flexible and you really don&#8217;t need to use <em>buddy</em>. You can write your own
-auth facilities and attach them to <em>catacumba</em> using the routing chain.</p>
+<p>If you not happy with the builtin auth facilities, the <em>catacumba</em>'s handler
+system is very flexible and you really don&#8217;t need to use <em>buddy</em>. You can write
+your own auth facilities and attach them to <em>catacumba</em> using the routing chain.</p>
 </div>
 </div>
 </div>
@@ -2021,13 +2030,13 @@ auth facilities and attach them to <em>catacumba</em> using the routing chain.</
 <div class="sect3">
 <h4 id="cross-origin-resource-sharing"><a class="link" href="#cross-origin-resource-sharing">Cross-Origin Resource Sharing</a></h4>
 <div class="paragraph">
-<p>Cross-Origin Resource Sharing (CORS) is a mechanism that allows restricted resources
-(e.g. fonts, JavaScript, etc.) on a web page to be requested from another domain
-outside the domain from which the resource originated.</p>
+<p>Cross-Origin Resource Sharing (CORS) is a mechanism that allows restricted
+resources (e.g. fonts, JavaScript, etc.) on a web page to be requested from
+another domain outside the domain from which the resource originated.</p>
 </div>
 <div class="paragraph">
-<p>Is often used for allowing API resources to be accessed in a web browser, out of the
-domain of your web applications.</p>
+<p>Is often used for allowing API resources to be accessed in a web browser, out of
+the domain of your web applications.</p>
 </div>
 <div class="paragraph">
 <p><em>Catacumba</em> has builtin support for CORS, and this is how you can use it:</p>
@@ -2060,10 +2069,10 @@ origins.</p>
 <code>Content-Security-Policy</code> headers.</p>
 </div>
 <div class="paragraph">
-<p>Content Security Policy (CSP) is an added layer of security that helps to detect and
-mitigate certain types of attacks, including Cross Site Scripting (XSS) and data
-injection attacks. These attacks are used for everything from data theft to site
-defacement or distribution of malware.</p>
+<p>Content Security Policy (CSP) is an added layer of security that helps to detect
+and mitigate certain types of attacks, including Cross Site Scripting (XSS) and
+data injection attacks. These attacks are used for everything from data theft to
+site defacement or distribution of malware.</p>
 </div>
 <div class="paragraph">
 <p>Here a simple example on how to use it:</p>
@@ -2096,14 +2105,14 @@ directives can be found here:
 <div class="sect3">
 <h4 id="frame-options"><a class="link" href="#frame-options">Frame Options</a></h4>
 <div class="paragraph">
-<p>This is a security related chain handler that adds <code>X-Frame-Options</code> header to the
-response.</p>
+<p>This is a security related chain handler that adds <code>X-Frame-Options</code> header to
+the response.</p>
 </div>
 <div class="paragraph">
-<p>The X-Frame-Options HTTP response header can be used to indicate whether or not a
-browser should be allowed to render a page in a <code>&lt;frame&gt;</code>, <code>&lt;iframe&gt;</code> or <code>&lt;object&gt;</code>
-. Sites can use this to avoid clickjacking attacks, by ensuring that their content
-is not embedded into other sites.</p>
+<p>The X-Frame-Options HTTP response header can be used to indicate whether or not
+a browser should be allowed to render a page in a <code>&lt;frame&gt;</code>, <code>&lt;iframe&gt;</code> or
+<code>&lt;object&gt;</code> . Sites can use this to avoid clickjacking attacks, by ensuring that
+their content is not embedded into other sites.</p>
 </div>
 <div class="paragraph">
 <p>Example:</p>
@@ -2128,8 +2137,8 @@ is not embedded into other sites.</p>
 <div class="title">Warning</div>
 </td>
 <td class="content">
-The frame-ancestors directive from the CSP Level 2 specification officially
-replaces this non-standard header.
+The frame-ancestors directive from the CSP Level 2 specification
+officially replaces this non-standard header.
 </td>
 </tr>
 </table>
@@ -2138,13 +2147,13 @@ replaces this non-standard header.
 <div class="sect3">
 <h4 id="strict-transport-security"><a class="link" href="#strict-transport-security">Strict Transport Security</a></h4>
 <div class="paragraph">
-<p>This is a security related chain handler that adds the <code>Strict-Transport-Security</code>
-header to the response.</p>
+<p>This is a security related chain handler that adds the
+<code>Strict-Transport-Security</code> header to the response.</p>
 </div>
 <div class="paragraph">
 <p>HTTP Strict Transport Security (often abbreviated as HSTS) is a security feature
-that lets a web site tell browsers that it should only be communicated with using
-HTTPS, instead of using HTTP.</p>
+that lets a web site tell browsers that it should only be communicated with
+using HTTPS, instead of using HTTP.</p>
 </div>
 <div class="paragraph">
 <p>Usage example:</p>
@@ -2168,8 +2177,8 @@ HTTPS, instead of using HTTP.</p>
 <h4 id="content-type-options"><a class="link" href="#content-type-options">Content Type Options</a></h4>
 <div class="paragraph">
 <p>This is a security related chain handler that adds the <code>X-Content-Type-Options</code>
-header to the response. It prevents resources with invalid media types being loaded
-as stylesheets or scripts.</p>
+header to the response. It prevents resources with invalid media types being
+loaded as stylesheets or scripts.</p>
 </div>
 <div class="paragraph">
 <p>This chain handler does not have any additional parameters. Let see an example on
@@ -2219,13 +2228,14 @@ one-click attack.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>The response will be populated automatically with <code>csrftoken</code> cookie that should be
-read by the client side javascript and put the same value under the <code>x-csrftoken</code>
-header or under <code>csrftoken</code> form encoded field.</p>
+<p>The response will be populated automatically with <code>csrftoken</code> cookie that should
+be read by the client side javascript and put the same value under the
+<code>x-csrftoken</code> header or under <code>csrftoken</code> form encoded field.</p>
 </div>
 <div class="paragraph">
-<p>If you want access to the current value of the csrftoken inside catacumba handler,
-you can do it using <code>:catacumba.handlers.security</code> keyword lookup on the context.</p>
+<p>If you want access to the current value of the csrftoken inside catacumba
+handler, you can do it using <code>:catacumba.handlers.security</code> keyword lookup on
+the context.</p>
 </div>
 <div class="paragraph">
 <p>More information:</p>
@@ -2264,8 +2274,8 @@ attaching additional handler to your routing chain:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>The default implementation in most cases is more than enough, but if you don&#8217;t happy
-with it you can provide your own function for logging:</p>
+<p>The default implementation in most cases is more than enough, but if you don&#8217;t
+happy with it you can provide your own function for logging:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2280,9 +2290,9 @@ with it you can provide your own function for logging:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>The <code>context</code> parameter is just a context that you have already used previously, and
-<code>outcome</code> is hash map that contains additional data such as: response headers,
-respose status and request duration time.</p>
+<p>The <code>context</code> parameter is just a context that you have already used previously,
+and <code>outcome</code> is hash map that contains additional data such as: response
+headers, respose status and request duration time.</p>
 </div>
 </div>
 <div class="sect2">
@@ -2303,8 +2313,8 @@ respose status and request duration time.</p>
 <div class="sect2">
 <h3 id="catacumba-prone"><a class="link" href="#catacumba-prone">catacumba-prone</a></h3>
 <div class="paragraph">
-<p><a href="https://github.com/magnars/prone">Prone</a> is a exception reporting middleware for
-ring based applications that show a beautiful, navigable and human readable
+<p><a href="https://github.com/magnars/prone">Prone</a> is a exception reporting middleware
+for ring based applications that show a beautiful, navigable and human readable
 stacktraces when an exception is throwed in your application.</p>
 </div>
 <div class="paragraph">
@@ -2341,9 +2351,9 @@ with <strong>authentication</strong> and <strong>sessions</strong>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span class="tok-nv">$ </span>git clone git@github.com:funcool/catacumba.git
-<span class="tok-nv">$ </span><span class="tok-nb">cd </span>catacumba/
-<span class="tok-nv">$ </span>lein with-profile website-example run
+<pre class="pygments highlight"><code data-lang="bash">$ git clone git@github.com:funcool/catacumba.git
+$ <span class="tok-nb">cd</span> catacumba/
+$ lein with-profile website-example run
 <span class="tok-o">[</span>main<span class="tok-o">]</span> INFO ratpack.server.RatpackServer - Ratpack started <span class="tok-k">for</span> http://localhost:5050</code></pre>
 </div>
 </div>
@@ -2355,17 +2365,17 @@ with <strong>authentication</strong> and <strong>sessions</strong>.</p>
 <div class="sect2">
 <h3 id="websocket-echo-example"><a class="link" href="#websocket-echo-example">WebSocket Echo</a></h3>
 <div class="paragraph">
-<p>This example application tries to show a very simple application
-using the websockets capabilities of <em>catacumba</em></p>
+<p>This example application tries to show a very simple application using the
+websockets capabilities of <em>catacumba</em></p>
 </div>
 <div class="paragraph">
 <p>Get it up and running following this commands:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span class="tok-nv">$ </span>git clone git@github.com:funcool/catacumba.git
-<span class="tok-nv">$ </span><span class="tok-nb">cd </span>catacumba/
-<span class="tok-nv">$ </span>lein with-profile websocket-echo-example run
+<pre class="pygments highlight"><code data-lang="bash">$ git clone git@github.com:funcool/catacumba.git
+$ <span class="tok-nb">cd</span> catacumba/
+$ lein with-profile websocket-echo-example run
 <span class="tok-o">[</span>main<span class="tok-o">]</span> INFO ratpack.server.RatpackServer - Ratpack started <span class="tok-k">for</span> http://localhost:5050</code></pre>
 </div>
 </div>
@@ -2377,17 +2387,17 @@ using the websockets capabilities of <em>catacumba</em></p>
 <div class="sect2">
 <h3 id="sse-example"><a class="link" href="#sse-example">Multiuser chat with SSE</a></h3>
 <div class="paragraph">
-<p>This example tries to demonstrate how can you build a simple chat using "Server-Sent
-Events" for communicating events to the client:</p>
+<p>This example tries to demonstrate how can you build a simple chat using
+"Server-Sent Events" for communicating events to the client:</p>
 </div>
 <div class="paragraph">
 <p>For make this example application run, follow this commands:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span class="tok-nv">$ </span>git clone git@github.com:funcool/catacumba.git
-<span class="tok-nv">$ </span><span class="tok-nb">cd </span>catacumba/
-<span class="tok-nv">$ </span>lein with-profile sse-chat-example run
+<pre class="pygments highlight"><code data-lang="bash">$ git clone git@github.com:funcool/catacumba.git
+$ <span class="tok-nb">cd</span> catacumba/
+$ lein with-profile sse-chat-example run
 <span class="tok-o">[</span>main<span class="tok-o">]</span> INFO ratpack.server.RatpackServer - Ratpack started <span class="tok-k">for</span> http://localhost:5050</code></pre>
 </div>
 </div>
@@ -2412,9 +2422,9 @@ raised in your application.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span class="tok-nv">$ </span>git clone git@github.com:funcool/catacumba.git
-<span class="tok-nv">$ </span><span class="tok-nb">cd </span>catacumba/
-<span class="tok-nv">$ </span>lein with-profile debugging-example run
+<pre class="pygments highlight"><code data-lang="bash">$ git clone git@github.com:funcool/catacumba.git
+$ <span class="tok-nb">cd</span> catacumba/
+$ lein with-profile debugging-example run
 <span class="tok-o">[</span>main<span class="tok-o">]</span> INFO ratpack.server.RatpackServer - Ratpack started <span class="tok-k">for</span> http://localhost:5050</code></pre>
 </div>
 </div>
@@ -2429,9 +2439,9 @@ raised in your application.</p>
 <div class="title">Note</div>
 </td>
 <td class="content">
-Obviously, if you are using the ring type of handler, you can use Prone as is,
-without any additional adaptation. This example shows how it can be used with
-<em>catacumba</em>'s default handler type.
+Obviously, if you are using the ring type of handler, you can use Prone as
+is, without any additional adaptation. This example shows how it can be used
+with <em>catacumba</em>'s default handler type.
 </td>
 </tr>
 </table>
@@ -2441,21 +2451,22 @@ without any additional adaptation. This example shows how it can be used with
 <h3 id="instrumentation-2"><a class="link" href="#instrumentation-2">Instrumentation</a></h3>
 <div class="paragraph">
 <p><em>Catacumba</em> comes with the ability to instrument your application for taking
-different kinds of diagnosis, such as performance, latency, etc. This example shows
-how it can be done.</p>
+different kinds of diagnosis, such as performance, latency, etc. This example
+shows how it can be done.</p>
 </div>
 <div class="paragraph">
-<p>In case of this concrete example application, it uses the instrumentation facilities
-of catacumba for monitoring the time of execution of request handlers.</p>
+<p>In case of this concrete example application, it uses the instrumentation
+facilities of catacumba for monitoring the time of execution of request
+handlers.</p>
 </div>
 <div class="paragraph">
 <p>Follow this steps for get this example up and running:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span class="tok-nv">$ </span>git clone git@github.com:funcool/catacumba.git
-<span class="tok-nv">$ </span><span class="tok-nb">cd </span>catacumba/
-<span class="tok-nv">$ </span>lein with-profile interceptor-example run
+<pre class="pygments highlight"><code data-lang="bash">$ git clone git@github.com:funcool/catacumba.git
+$ <span class="tok-nb">cd</span> catacumba/
+$ lein with-profile interceptor-example run
 <span class="tok-o">[</span>main<span class="tok-o">]</span> INFO ratpack.server.RatpackServer - Ratpack started <span class="tok-k">for</span> http://localhost:5050</code></pre>
 </div>
 </div>
@@ -2467,11 +2478,11 @@ of catacumba for monitoring the time of execution of request handlers.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="bash">Computation :compute elapsed in: 0.025150461 <span class="tok-o">(</span>sec<span class="tok-o">)</span>
-Computation :compute elapsed in: 0.001690894 <span class="tok-o">(</span>sec<span class="tok-o">)</span>
-Computation :compute elapsed in: 0.001541675 <span class="tok-o">(</span>sec<span class="tok-o">)</span>
-Computation :compute elapsed in: 0.001554894 <span class="tok-o">(</span>sec<span class="tok-o">)</span>
-Computation :compute elapsed in: 0.00175033 <span class="tok-o">(</span>sec<span class="tok-o">)</span></code></pre>
+<pre class="pygments highlight"><code data-lang="bash">Computation :compute elapsed in: <span class="tok-m">0</span>.025150461 <span class="tok-o">(</span>sec<span class="tok-o">)</span>
+Computation :compute elapsed in: <span class="tok-m">0</span>.001690894 <span class="tok-o">(</span>sec<span class="tok-o">)</span>
+Computation :compute elapsed in: <span class="tok-m">0</span>.001541675 <span class="tok-o">(</span>sec<span class="tok-o">)</span>
+Computation :compute elapsed in: <span class="tok-m">0</span>.001554894 <span class="tok-o">(</span>sec<span class="tok-o">)</span>
+Computation :compute elapsed in: <span class="tok-m">0</span>.00175033 <span class="tok-o">(</span>sec<span class="tok-o">)</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2495,10 +2506,10 @@ executable.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="bash"><span class="tok-nv">$ </span>git clone git@github.com:funcool/catacumba.git
-<span class="tok-nv">$ </span><span class="tok-nb">cd </span>catacumba/examples/single-file
-<span class="tok-nv">$ </span><span class="tok-nb">export </span><span class="tok-nv">BOOT_CLOJURE_VERSION</span><span class="tok-o">=</span>1.7.0
-<span class="tok-nv">$ </span>./main.clj
+<pre class="pygments highlight"><code data-lang="bash">$ git clone git@github.com:funcool/catacumba.git
+$ <span class="tok-nb">cd</span> catacumba/examples/single-file
+$ <span class="tok-nb">export</span> <span class="tok-nv">BOOT_CLOJURE_VERSION</span><span class="tok-o">=</span><span class="tok-m">1</span>.7.0
+$ ./main.clj
 <span class="tok-o">[</span>main<span class="tok-o">]</span> INFO ratpack.server.RatpackServer - Ratpack started <span class="tok-k">for</span> http://localhost:5050</code></pre>
 </div>
 </div>
@@ -2515,11 +2526,11 @@ executable.</p>
 <div class="sect2">
 <h3 id="difference-with-aleph"><a class="link" href="#difference-with-aleph">What is the difference between <em>catacumba</em> and Aleph?</a></h3>
 <div class="paragraph">
-<p>First of all, Aleph is not a real alternative to catacumba, because its approach is
-so much low level and its web server support is a little bit constrained by ring
-spec.  Furthermore, aleph is already used in catacumba as http client in tests code
-and manifold (async abstractions behind aleph) is a first class abstractions for
-handle async values.</p>
+<p>First of all, Aleph is not a real alternative to catacumba, because its approach
+is so much low level and its web server support is a little bit constrained by
+ring spec. Furthermore, aleph is already used in catacumba as http client in
+tests code and manifold (async abstractions behind aleph) is a first class
+abstractions for handle async values.</p>
 </div>
 <div class="paragraph">
 <p>So, I&#8217;m happy to tell you that you can use the both libraries together because
@@ -2530,8 +2541,8 @@ they are very complementary.</p>
 <h3 id="rationale"><a class="link" href="#rationale">What is the rationale behind this project?</a></h3>
 <div class="paragraph">
 <p>I started writing this library as a research project to provide a simple, non
-obstructive (a la ring) without the constraints of the existing ring spec.
-The aim is to create a web toolkit for building asynchronous web services.</p>
+obstructive (a la ring) without the constraints of the existing ring spec.  The
+aim is to create a web toolkit for building asynchronous web services.</p>
 </div>
 <div class="paragraph">
 <p>Here is an incomplete list of things that <em>catacumba</em> aims to achieve:</p>
@@ -2580,9 +2591,9 @@ manifold, reactive-streams, etc&#8230;&#8203;</p>
 </ul>
 </div>
 <div class="paragraph">
-<p>The result of this research project is a powerful, lightweight, and fully extensible
-asynchronous web toolkit built on top of existing and well designed components such
-as Ratpack and Netty.</p>
+<p>The result of this research project is a powerful, lightweight, and fully
+extensible asynchronous web toolkit built on top of existing and well designed
+components such as Ratpack and Netty.</p>
 </div>
 </div>
 </div>
@@ -2690,8 +2701,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 1.2.0<br>
-Last updated 2016-11-15 22:45:58 CET
+Version 2.0.0<br>
+Last updated 2017-02-24 15:48:26 CET
 </div>
 </div>
 </body>

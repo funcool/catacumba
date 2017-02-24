@@ -14,28 +14,34 @@
                  [org.slf4j/slf4j-simple "1.7.23" :scope "provided"]
                  [org.clojure/core.async "0.3.441"]
                  [io.ratpack/ratpack-core "1.4.5"
-                  :exclusions [io.netty/netty-codec-http
-                               io.netty/netty-handler
-                               io.netty/netty-transport-native-epoll
-                               org.yaml/snakeyaml
-                               com.fasterxml.jackson.core/jackson-core]]
+                  :exclusions [[io.netty/netty-codec-http]
+                               [io.netty/netty-handler]
+                               [io.netty/netty-transport-native-epoll]
+                               [org.yaml/snakeyaml]
+                               [com.fasterxml.jackson.core/jackson-databind]
+                               [com.fasterxml.jackson.dataformat/jackson-dataformat-yaml]
+                               [com.fasterxml.jackson.datatype/jackson-datatype-guava]
+                               [com.fasterxml.jackson.datatype/jackson-datatype-jdk8]
+                               [com.fasterxml.jackson.datatype/jackson-datatype-jsr310]]]
+
                  [io.netty/netty-all "4.1.6.Final"]
 
-                 [cheshire "5.7.0"]
+                 [cheshire "5.7.0"
+                  :exclusions [com.fasterxml.jackson.core/jackson-core
+                               com.fasterxml.jackson.dataformat/jackson-dataformat-cbor
+                               com.fasterxml.jackson.dataformat/jackson-dataformat-smile]]
 
-                 ;; Updated & forced dependencies of jackson (form cheshire)
+                 ;; Updated & forced dependencies of jackson (form cheshire & ratpack)
                  [com.fasterxml.jackson.core/jackson-core "2.8.7"]
+                 [com.fasterxml.jackson.core/jackson-databind "2.8.7"]
                  [com.fasterxml.jackson.dataformat/jackson-dataformat-cbor "2.8.7"]
                  [com.fasterxml.jackson.dataformat/jackson-dataformat-smile "2.8.7"]
-
-                 ;; Updated & forced dependencies of jackson (from ratpack
-                 [com.fasterxml.jackson.core/jackson-databind "2.8.7"]
-                 [com.fasterxml.jackson.core/jackson-annotations "2.8.7"]
                  [com.fasterxml.jackson.dataformat/jackson-dataformat-yaml "2.8.7"]
-                 [com.fasterxml.jackson.datatype/jackson-datatype-guava "2.8.7"
-                  :exclusions [[org.yaml/snakeyaml] [com.google.guava/guava]]]
                  [com.fasterxml.jackson.datatype/jackson-datatype-jdk8 "2.8.7"]
                  [com.fasterxml.jackson.datatype/jackson-datatype-jsr310 "2.8.7"]
+                 [com.fasterxml.jackson.datatype/jackson-datatype-guava "2.8.7"
+                  :exclusions [[org.yaml/snakeyaml]
+                               [com.google.guava/guava]]]
 
                  [ns-tracker "0.3.1"]
                  [manifold "0.1.5"]

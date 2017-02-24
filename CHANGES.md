@@ -1,15 +1,24 @@
 # Changelog #
 
-## Version 2.0.0-SNAPSHOT ##
+## Version 2.0.0 ##
 
-Date: unreleased
+Date: 2017-02-24
 
+- Replce internal reactive-streams adapter for core.async channel
+  with beicon (rxjava2) that removes a lot of code and makes it
+  more maintenable.
+- Update to ratpack 1.4.5 that fixes connection leaking.
+  Caused mainly by SSE connections when the client open and closes
+  the connection before nothing is received from server.
+- Remove builtin support for stuartsierra component.
 - Add `delegated-context?` predicate (useful for tests).
 - Add `response?` predicated (also useful for tests).
-- Remove builtin support for stuartsierra component.
 - The `body-params` handler now attaches body to the context if
   it is not already attached to it (this is useful when no appropiate
   parser is found for the incoming content type).
+- Update dependencies.
+- Make SSE handlers look and work in the same way as websocket
+  handlers, improving usability and fixing unnecesary inconsistencies.
 
 
 ## Version 1.2.0 ##

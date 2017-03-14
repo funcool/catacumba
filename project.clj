@@ -11,8 +11,8 @@
   :javac-options ["-target" "1.8" "-source" "1.8" "-Xlint:-options"
                   "-Xlint:unchecked" "-Xlint:deprecation"]
   :dependencies [[org.clojure/clojure "1.8.0" :scope "provided"]
-                 [org.slf4j/slf4j-simple "1.7.23" :scope "provided"]
-                 [org.clojure/core.async "0.3.441"]
+                 [org.slf4j/slf4j-simple "1.7.24" :scope "provided"]
+                 [org.clojure/core.async "0.3.442"]
                  [io.ratpack/ratpack-core "1.4.5"
                   :exclusions [[io.netty/netty-codec-http]
                                [io.netty/netty-handler]
@@ -44,12 +44,12 @@
                                [com.google.guava/guava]]]
 
                  [ns-tracker "0.3.1"]
-                 [manifold "0.1.5"]
+                 [manifold "0.1.6"]
                  [commons-io/commons-io "2.5"]
                  [buddy/buddy-sign "1.4.0"]
-                 [funcool/beicon "3.1.0"]
+                 [funcool/beicon "3.2.0"]
                  [funcool/cuerdas "2.0.3"]
                  [funcool/promesa "1.8.0"]
                  [danlentz/clj-uuid "0.1.7"]
                  [environ "1.1.0"]
-                 [com.cognitect/transit-clj "0.8.297"]])
+                 [com.cognitect/transit-clj "0.8.300"]])

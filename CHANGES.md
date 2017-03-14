@@ -1,5 +1,15 @@
 # Changelog #
 
+## Version 2.1.0 ##
+
+Date: 2017-03-14
+
+- Update beicon to 3.2.0.
+- Update transit to 0.8.300
+- Update core.async to 0.3.442
+- Update manifold to 0.1.6
+
+
 ## Version 2.0.0 ##
 
 Date: 2017-02-24

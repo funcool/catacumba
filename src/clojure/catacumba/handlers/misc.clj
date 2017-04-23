@@ -80,10 +80,12 @@
     (hs/send! context "")))
 
 (defn- handle-response
-  [context headers {:keys [allow-headers expose-headers origin] :as opts}]
+  [context headers {:keys [allow-headers expose-headers origin allow-credentials] :as opts}]
   (let [^String origin (get headers :origin)]
     (when-let [origin (allow-origin? origin opts)]
       (ct/set-headers! context {:access-control-allow-origin origin})
+      (when allow-credentials
+        (ct/set-headers! context {:access-control-allow-credentials true}))
       (when allow-headers
         (ct/set-headers! context {:access-control-allow-headers (normalize-headers allow-headers)}))
       (when expose-headers
@@ -173,4 +175,3 @@
                        (reify Block
                          (^void execute [_]
                           (.next ctx)))))))
-

@@ -1,5 +1,13 @@
 # Changelog #
 
+## Version 2.2.0 ##
+
+Date: 2017-04-25
+
+- Update dependencies.
+- Add `:allow-credentials` option to CORS handler.
+
+
 ## Version 2.1.0 ##
 
 Date: 2017-03-14

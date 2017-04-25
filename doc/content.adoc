@@ -1,6 +1,6 @@
 = Catacumba - Web toolkit for Clojure.
 Andrey Antukh, <niwi@niwi.nz>
-v2.1.0
+v2.2.0
 :toc: left
 :!numbered:
 :idseparator: -
@@ -38,7 +38,7 @@ dependency vector on your *_project.clj_* file:
 
 [source,clojure]
 ----
-[funcool/catacumba "2.1.0"]
+[funcool/catacumba "2.2.0"]
 ----
 
 NOTE: _Catacumba_ will only run with *JDK8* and *Clojure >= 1.7*.

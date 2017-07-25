@@ -56,9 +56,9 @@ and returns something renderable. Let's see an example:
   "Hello World")
 ----
 
-It looks very similar to ring hand with two main differences:
+It looks very similar to ring handler with two main differences:
 
-* instead of request ir receives a *context* that works like request but with
+* instead of request it receives a *context* that works like request but with
   more responsibilities (explained in other sections).
 * returns a string instead of a hash-map (it is also allowed but is not mandatory,
   also explained later).

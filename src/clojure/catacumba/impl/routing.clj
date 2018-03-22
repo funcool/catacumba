@@ -115,7 +115,7 @@
                 (hs/-handle-response response context))))
           (on-register [^RegistrySpec rspec]
             (->> (reify ServerErrorHandler
-                   (error [_ ctx throwable]
+                   (^void error [_ ^Context ctx ^Throwable throwable]
                      (let [context (ctx/create-context ctx)]
                        (callback context throwable))))
                  (.add rspec ServerErrorHandler)))]

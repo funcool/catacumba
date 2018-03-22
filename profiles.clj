@@ -2,14 +2,14 @@
  {:global-vars {*warn-on-reflection* false}
   :aliases {"test-all" ["with-profile" "dev,1.9:dev,1.7:dev" "test"]}
   :source-paths ["dev"]
-  :dependencies [[clj-http "3.4.1" :exclusions [org.clojure/tools.reader]]
-                 [aleph "0.4.1" :exclusions [primitive-math io.netty/netty-all]]
+  :dependencies [[clj-http "3.8.0" :exclusions [org.clojure/tools.reader]]
+                 [aleph "0.4.4" :exclusions [primitive-math io.netty/netty-all]]
                  [org.clojure/tools.namespace "0.2.11"]
-                 [ring/ring-core "1.4.0" :exclusions [javax.servlet/servlet-api
+                 [ring/ring-core "1.6.3" :exclusions [javax.servlet/servlet-api
                                                       org.clojure/tools.reader
                                                       org.clojure/clojure
                                                       clj-time]]]
-  :plugins [[lein-ancient "0.6.10"]
+  :plugins [[lein-ancient "0.6.15"]
             [funcool/codeina "0.4.0"]]
   :codeina {:sources ["src/clojure"]
             :exclude [catacumba.impl.context
@@ -41,12 +41,12 @@
                         "-Xms4g"]
    :main ^:skip-aot bench}]
 
- :1.9 {:dependencies [[org.clojure/clojure "1.9.0-alpha14"]]}
+ :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]]}
  :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
 
  ;; Examples
  :examples
- {:dependencies [[cheshire "5.5.0"]
+ {:dependencies [[cheshire "5.8.0"]
                  [hiccup "1.0.5"]]}
 
  :websocket-echo-example

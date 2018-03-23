@@ -117,7 +117,7 @@
   http://msdn.microsoft.com/en-us/library/ie/gg622941(v=vs.85).aspx
   https://www.owasp.org/index.php/List_of_useful_HTTP_headers"
   [context]
-  (ct/set-headers! {"X-Content-Type-Options" "nosniff"})
+  (ct/set-headers! context {"X-Content-Type-Options" "nosniff"})
   (ct/delegate))
 
 (defn- form-post?

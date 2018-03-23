@@ -99,7 +99,7 @@
                                :child-src :connect-src :font-src :form-action
                                :img-src :media-src :object-src :reflected-xss])
          value (reduce (fn [acc [key value]]
-                         (conj acc (str (name key) value)))
+                         (conj acc (format "%s %s" (name key) value)))
                        [] (seq options'))]
      (assert (pos? (count value)))
      (fn [context]

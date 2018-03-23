@@ -16,3 +16,5 @@ pom.xml.asc
 .\#*
 /.nrepl-history
 /*-init.clj
+.idea/
+*.iml

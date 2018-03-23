@@ -95,9 +95,9 @@
   https://developer.mozilla.org/en-US/docs/Web/Security/CSP"
   ([] (csp-headers {}))
   ([options]
-   (let [options' (select-keys options :default-src :frame-ancestors :frame-src
+   (let [options' (select-keys options [:default-src :frame-ancestors :frame-src
                                :child-src :connect-src :font-src :form-action
-                               :img-src :media-src :object-src :reflected-xss)
+                               :img-src :media-src :object-src :reflected-xss])
          value (reduce (fn [acc [key value]]
                          (conj acc (str (name key) value)))
                        [] (seq options'))]

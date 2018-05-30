@@ -1,6 +1,6 @@
-(defproject funcool/catacumba "2.2.0-upd1"
-  :description "Asynchronous Web Toolkit for Clojure."
-  :url "http://github.com/funcool/catacumba"
+(defproject updcon/catacumba "2.2.1"
+  :description "Ratpack Based Asynchronous Web Toolkit for Clojure."
+  :url "http://github.com/source-c/catacumba"
   :license {:name "BSD (2-Clause)"
             :url "http://opensource.org/licenses/BSD-2-Clause"}
 
@@ -24,7 +24,7 @@
                                [com.fasterxml.jackson.datatype/jackson-datatype-jdk8]
                                [com.fasterxml.jackson.datatype/jackson-datatype-jsr310]]]
 
-                 [io.netty/netty-all "4.1.22.Final"]
+                 [io.netty/netty-all "4.1.25.Final"]
 
                  [cheshire "5.8.0"
                   :exclusions [com.fasterxml.jackson.core/jackson-core
@@ -32,14 +32,14 @@
                                com.fasterxml.jackson.dataformat/jackson-dataformat-smile]]
 
                  ;; Updated & forced dependencies of jackson (form cheshire & ratpack)
-                 [com.fasterxml.jackson.core/jackson-core "2.9.4"]
-                 [com.fasterxml.jackson.core/jackson-databind "2.9.4"]
-                 [com.fasterxml.jackson.dataformat/jackson-dataformat-cbor "2.9.4"]
-                 [com.fasterxml.jackson.dataformat/jackson-dataformat-smile "2.9.4"]
-                 [com.fasterxml.jackson.dataformat/jackson-dataformat-yaml "2.9.4"]
-                 [com.fasterxml.jackson.datatype/jackson-datatype-jdk8 "2.9.4"]
-                 [com.fasterxml.jackson.datatype/jackson-datatype-jsr310 "2.9.4"]
-                 [com.fasterxml.jackson.datatype/jackson-datatype-guava "2.9.4"
+                 [com.fasterxml.jackson.core/jackson-core "2.9.5"]
+                 [com.fasterxml.jackson.core/jackson-databind "2.9.5"]
+                 [com.fasterxml.jackson.dataformat/jackson-dataformat-cbor "2.9.5"]
+                 [com.fasterxml.jackson.dataformat/jackson-dataformat-smile "2.9.5"]
+                 [com.fasterxml.jackson.dataformat/jackson-dataformat-yaml "2.9.5"]
+                 [com.fasterxml.jackson.datatype/jackson-datatype-jdk8 "2.9.5"]
+                 [com.fasterxml.jackson.datatype/jackson-datatype-jsr310 "2.9.5"]
+                 [com.fasterxml.jackson.datatype/jackson-datatype-guava "2.9.5"
                   :exclusions [[org.yaml/snakeyaml]
                                [com.google.guava/guava]]]
 
@@ -52,4 +52,4 @@
                  [funcool/promesa "1.9.0"]
                  [danlentz/clj-uuid "0.1.7"]
                  [environ "1.1.0"]
-                 [com.cognitect/transit-clj "0.8.300"]])
+                 [com.cognitect/transit-clj "0.8.309"]])

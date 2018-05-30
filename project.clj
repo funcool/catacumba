@@ -1,6 +1,6 @@
 (defproject updcon/catacumba "2.2.1"
   :description "Ratpack Based Asynchronous Web Toolkit for Clojure."
-  :url "http://github.com/source-c/catacumba"
+  :url "http://github.com/updcon/catacumba"
   :license {:name "BSD (2-Clause)"
             :url "http://opensource.org/licenses/BSD-2-Clause"}
 

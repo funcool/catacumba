@@ -2,7 +2,7 @@
 
 The asynchronous web toolkit for clojure built on top of Ratpack
 
-[![Clojars Project](http://clojars.org/updcon/catacumba/latest-version.svg)](http://clojars.org/funcool/catacumba)
+[![Clojars Project](http://clojars.org/updcon/catacumba/latest-version.svg)](http://clojars.org/updcon/catacumba)
 
 Since original version looks like unmaintained -- this project is a complete fork. Previous resources are still available but outdated too.
 

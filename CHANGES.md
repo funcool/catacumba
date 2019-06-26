@@ -1,11 +1,16 @@
 # Changelog #
 
-## Version 2.2.1 ##
+## Version 2.2.2 ##
 
-Date: 2018-06-02
+Date: 2019-06-18
 
 - Update dependencies.
 
+## Version 2.2.1 ##
+
+Date: 2018-05-31
+
+- Update dependencies.
 
 ## Version 2.2.0 ##
 

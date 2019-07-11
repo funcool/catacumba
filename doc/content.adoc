@@ -174,7 +174,7 @@ As you have seen, the examples until now are always returning a simple string th
 in fact is not very useful in real-world use cases. The great news here is that
 return values are handled using open polymorphic abstractions such are protocols.
 
-This means that you can return anything that catacumbla already has implementation
+This means that you can return anything that catacumba already has implementation
 for it or anything that yourself have implemented. Let see some examples:
 
 .Handler example that returns ring style response.
@@ -230,7 +230,7 @@ be considered a central part of both: IO and the control flow (will be
 explained in advanced section).
 
 In other words, it can be considered as a combination of request and response, but
-in most cases you will use it like a request. It exposes the already familiat set of
+in most cases you will use it like a request. It exposes the already familiar set of
 attributes: `:method`, `:query`, `:path`, `:headers` and `:cookies`. And all them
 are accessible with keyword lookup:
 
@@ -240,7 +240,7 @@ are accessible with keyword lookup:
 ;; => :get
 ----
 
-This is a reference table of request attributes are availeble under context:
+This is a reference table of request attributes are available under context:
 
 [cols="1,1,3,2", options="header"]
 |===
@@ -251,7 +251,7 @@ This is a reference table of request attributes are availeble under context:
 
 |`:body`
 |link:http://ratpack.io/manual/current/api/ratpack/http/TypedData.html[`TypedData`]
-|A object that represents a request body (*not always awailable*, see below).
+|A object that represents a request body (*not always available*, see below).
 |
 
 |`:method`
@@ -297,7 +297,7 @@ parsing section>> for more information.
 
 NOTE: In previous versions, body was always available as `:body` attribute in the
 context, although is not very efficient approach, you can return the previous
-behavior just using the `catacumba.handlers.parse/read-body` auxiliar handler on top
+behavior just using the `catacumba.handlers.parse/read-body` auxiliary handler on top
 of your route pipeline or as decorator.
 
 
@@ -455,7 +455,7 @@ handlers for different prefixes:
                [:error my-error-handler-for-this-prefix]
                [:any authentication-handler]
                [:get "users" users-handler]
-               [:put "users" check-permissions-handler update-users-hander]]
+               [:put "users" check-permissions-handler update-users-handler]]
               [:prefix "admin"
                [:error my-error-handler-for-this-other-prefix]
                [:get "dashboard" my-dashboard-handler]]]))
@@ -532,7 +532,7 @@ following example:
 [NOTE]
 ====
 Take care that the cookie value is restricted to a very limited set of characters as
-spcified in link:https://tools.ietf.org/html/rfc6265[RFC6265] that netty/ratpack
+specified in link:https://tools.ietf.org/html/rfc6265[RFC6265] that netty/ratpack
 implements. There also a relevant link:http://stackoverflow.com/a/1969339/1022392[SO answer].
 ====
 
@@ -544,7 +544,7 @@ implements. There also a relevant link:http://stackoverflow.com/a/1969339/102239
 === Handler delegation
 
 A part of the obvious (and previously explained) responsibility of the `context`
-object in catacubla, it has some others responsibilities. Here just a summary of
+object in catacumba, it has some others responsibilities. Here just a summary of
 them:
 
 Here a small summary of the context responsibilities besides the obvious one
@@ -685,7 +685,7 @@ file in the classpath and will set a base dir to its  directory.
 [WARNING]
 ====
 If you are deploying your application as uberjar and you want serve static files
-from the classpath, you should set the `:marker-file` to somethig different that
+from the classpath, you should set the `:marker-file` to something different that
 the default value (e.g. `catacumba.basedir`) without the first `.`, because
 leiningen ignores all files that starts with dot.
 ====
@@ -708,7 +708,7 @@ openssl pkcs12 -export -in cert.pem -inkey key.pem -out store.p12
 ----
 
 This process will ask you for a password that you must memorize and later provide it
-to catacumba. Now, having the properly formated trusted store, just pass some
+to catacumba. Now, having the properly formatted trusted store, just pass some
 additional parameters on starting the server:
 
 
@@ -822,7 +822,7 @@ Like as usual, you can return an instance of `CompletableFuture` as response:
 ----
 
 One of the advantages of using `CompletableFuture` abstraction with _promesa_
-library is because it exposes additional sugar syntax that help workin with
+library is because it exposes additional sugar syntax that help working with
 asynchronous flows in more pleasant way.
 
 Let see an example:
@@ -889,7 +889,7 @@ return them as http response body:
 ;; It will return a chunked response to the client with "HELLO WORLD" string.
 ----
 
-One of the best parts of the reactive-strams is that them comes with back pressure
+One of the best parts of the reactive-streams is that them comes with back pressure
 support out of the box and it native support in ratpack makes them a great glue
 abstraction for similar async primitives. In fact, the support for all stream like
 primitives explained until now are implemented in terms of _reactive-streams_
@@ -1050,12 +1050,12 @@ works with callbacks). This is not general purpose handler type but you maybe
 found it useful for integrate catacumba with other scenarios that it is not
 initially designed to work.
 
-This is the aspect ot the cps style handler:
+This is the aspect of the cps style handler:
 
 [source, clojure]
 ----
 (defn my-cps-handler
-  "Some usefull docstring."
+  "Some useful docstring."
   {:handler-type :catacumba/cps}
   [context callback]
   (future
@@ -1181,7 +1181,7 @@ well known `swap!` function:
     "my response"))
 ----
 
-You can clean the session just reseting to the empty map:
+You can clean the session just resetting to the empty map:
 
 [source, clojure]
 ----
@@ -1398,7 +1398,7 @@ The login handler is almost identical:
 (defn login-handler
   [context]
   (let [data (:body context)
-        user (find-user (:username data)   ;; (implementation ommited)
+        user (find-user (:username data)   ;; (implementation omitted)
                         (:password data))]
     (-> (json/encode {:token (jwt/encrypt {:user (:id user)} pubkey)})
         (http/ok {:content-type "application/json"}))))
@@ -1629,7 +1629,7 @@ happy with it you can provide your own function for logging:
 
 The `context` parameter is just a context that you have already used previously,
 and `outcome` is hash map that contains additional data such as: response
-headers, respose status and request duration time.
+headers, response status and request duration time.
 
 
 === Instrumentation
